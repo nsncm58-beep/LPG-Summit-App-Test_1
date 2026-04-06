@@ -6,6 +6,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0A3D5C">
+<link rel="apple-touch-icon" href="https://industrialpix.com/lpg/promo/2026/Monthly-Promos/MAY/Screenshot%202026-03-20%20at%2010.49.53%E2%80%AFAM.png">
+<link rel="icon" type="image/png" href="https://industrialpix.com/lpg/promo/2026/Monthly-Promos/MAY/Screenshot%202026-03-20%20at%2010.49.53%E2%80%AFAM.png">
 <title>LPGas Growth Summit</title>
 <style>
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -69,38 +71,91 @@ window.iconComponents = {
 };
 </script>
 
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
 <script>
-// Storage polyfill using localStorage
+// Initialize Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyBJqKXfi7Eko-hBZ3D15I8a1ZA8cirXRI8",
+  authDomain: "lpgsummittest-3ea64.firebaseapp.com",
+  databaseURL: "https://lpgsummittest-3ea64-default-rtdb.firebaseio.com",
+  projectId: "lpgsummittest-3ea64",
+  storageBucket: "lpgsummittest-3ea64.firebasestorage.app",
+  messagingSenderId: "352075229471",
+  appId: "1:352075229471:web:c633eae1a813b20fb7682a"
+};
+firebase.initializeApp(firebaseConfig);
+var db = firebase.database();
+
+// Storage: Firebase for shared data, localStorage for personal
 window.storage = {
   async get(key, shared) {
-    try {
-      var prefix = shared ? 'shared_' : 'personal_';
-      var val = localStorage.getItem(prefix + key);
-      if (val !== null) return { key: key, value: val, shared: !!shared };
+    if (shared) {
+      return new Promise(function(resolve, reject) {
+        db.ref('shared/' + key).once('value').then(function(snap) {
+          if (snap.exists()) {
+            resolve({ key: key, value: snap.val(), shared: true });
+          } else {
+            reject(new Error('not found'));
+          }
+        }).catch(reject);
+      });
+    } else {
+      var val = localStorage.getItem('personal_' + key);
+      if (val !== null) return { key: key, value: val, shared: false };
       throw new Error('not found');
-    } catch(e) { throw e; }
+    }
   },
   async set(key, value, shared) {
-    var prefix = shared ? 'shared_' : 'personal_';
-    localStorage.setItem(prefix + key, value);
-    return { key: key, value: value, shared: !!shared };
+    if (shared) {
+      await db.ref('shared/' + key).set(value);
+      return { key: key, value: value, shared: true };
+    } else {
+      localStorage.setItem('personal_' + key, value);
+      return { key: key, value: value, shared: false };
+    }
   },
   async delete(key, shared) {
-    var prefix = shared ? 'shared_' : 'personal_';
-    localStorage.removeItem(prefix + key);
-    return { key: key, deleted: true, shared: !!shared };
+    if (shared) {
+      await db.ref('shared/' + key).remove();
+      return { key: key, deleted: true, shared: true };
+    } else {
+      localStorage.removeItem('personal_' + key);
+      return { key: key, deleted: true, shared: false };
+    }
   },
   async list(prefix, shared) {
-    var storePrefix = shared ? 'shared_' : 'personal_';
-    var keys = [];
-    for (var i = 0; i < localStorage.length; i++) {
-      var k = localStorage.key(i);
-      if (k.indexOf(storePrefix) === 0) {
-        var realKey = k.slice(storePrefix.length);
-        if (!prefix || realKey.indexOf(prefix) === 0) keys.push(realKey);
+    if (shared) {
+      return new Promise(function(resolve, reject) {
+        db.ref('shared').once('value').then(function(snap) {
+          var keys = [];
+          snap.forEach(function(child) {
+            if (!prefix || child.key.indexOf(prefix) === 0) keys.push(child.key);
+          });
+          resolve({ keys: keys, prefix: prefix, shared: true });
+        }).catch(reject);
+      });
+    } else {
+      var keys = [];
+      for (var i = 0; i < localStorage.length; i++) {
+        var k = localStorage.key(i);
+        if (k.indexOf('personal_') === 0) {
+          var realKey = k.slice(9);
+          if (!prefix || realKey.indexOf(prefix) === 0) keys.push(realKey);
+        }
       }
+      return { keys: keys, prefix: prefix, shared: false };
     }
-    return { keys: keys, prefix: prefix, shared: !!shared };
+  },
+  // Real-time listener for shared data
+  subscribe(key, callback) {
+    var ref = db.ref('shared/' + key);
+    ref.on('value', function(snap) {
+      if (snap.exists()) callback({ key: key, value: snap.val(), shared: true });
+    });
+    return function() { ref.off('value'); };
   }
 };
 </script>
