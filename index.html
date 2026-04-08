@@ -4,11 +4,23 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="LPG Summit">
 <meta name="theme-color" content="#0A3D5C">
 <link rel="apple-touch-icon" href="https://industrialpix.com/lpg/promo/2026/Monthly-Promos/MAY/Screenshot%202026-03-20%20at%2010.49.53%E2%80%AFAM.png">
 <link rel="icon" type="image/png" href="https://industrialpix.com/lpg/promo/2026/Monthly-Promos/MAY/Screenshot%202026-03-20%20at%2010.49.53%E2%80%AFAM.png">
 <title>LPGas Growth Summit</title>
+<script>
+(function(){
+  try{
+    var m={"name":"LP Gas Growth Summit","short_name":"LPG Summit","start_url":"/lpgas-booth-guide/","scope":"/lpgas-booth-guide/","display":"standalone","background_color":"#0A3D5C","theme_color":"#0A3D5C","orientation":"portrait-primary"};
+    var b=new Blob([JSON.stringify(m)],{type:'application/manifest+json'});
+    var l=document.createElement('link');l.rel='manifest';l.href=URL.createObjectURL(b);
+    document.head.appendChild(l);
+  }catch(e){}
+})();
+</script>
 <style>
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   body { margin: 0; padding: 0; background: #f5f5f5; overflow-x: hidden; }
