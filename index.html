@@ -417,14 +417,16 @@ const AppComponent = function App(){
       }catch(e){}
       try{const r=await window.storage.get("lpg-photos",true);if(r)setPhotos(JSON.parse(r.value))}catch(e){}
       try{const r=await window.storage.get("lpg-notif");if(r)setNotifEnabled(r.value==="true")}catch(e){}
-      try{const r=await window.storage.get("lpg-broadcasts",true);if(r){const msgs=JSON.parse(r.value);setBroadcasts(msgs)}}catch(e){}
+      try{const r=await window.storage.get("lpg-broadcasts",true);if(r){const SIX_HRS=6*60*60*1000;const msgs=JSON.parse(r.value).filter(m=>Date.now()-m.id<SIX_HRS);setBroadcasts(msgs)}}catch(e){}
       try{const r=await window.storage.get("lpg-lastseen");if(r)setLastSeenBroadcast(parseInt(r.value)||0)}catch(e){}
     })();
   },[]);
 
   useEffect(()=>{
-    if(broadcasts.length>0&&lastSeenBroadcast<broadcasts[0].id){
-      setShowBroadcast(broadcasts[0]);
+    const SIX_HRS=6*60*60*1000;
+    const recent=broadcasts.find(b=>Date.now()-b.id<SIX_HRS);
+    if(recent&&lastSeenBroadcast<recent.id){
+      setShowBroadcast(recent);
     }
   },[broadcasts,lastSeenBroadcast]);
 
@@ -642,10 +644,10 @@ const AppComponent = function App(){
               </div>
               <ChevronRight size={16}/>
             </div>
-            {broadcasts.length>0&&(
+            {broadcasts.filter(b=>Date.now()-b.id<6*60*60*1000).length>0&&(
               <div style={{marginTop:8}}>
                 <div style={{fontSize:11,fontWeight:700,color:BLUE,padding:"4px 0"}}>Recent Announcements</div>
-                {broadcasts.slice(0,3).map(b=>(
+                {broadcasts.filter(b=>Date.now()-b.id<6*60*60*1000).slice(0,3).map(b=>(
                   <div key={b.id} style={{...S.card,margin:"4px 0",padding:"10px 12px"}}>
                     <div style={{fontSize:12,color:"#333"}}>{b.text.length>80?b.text.slice(0,80)+"...":b.text}</div>
                     <div style={{fontSize:9,color:"#999",marginTop:4}}>{b.at}</div>
