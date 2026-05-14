@@ -187,7 +187,7 @@ const LOGOS={"ADD Systems":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2
 const MTIMES=["8:15 AM","8:37 AM","8:59 AM","9:21 AM","9:43 AM","10:05 AM","10:27 AM","10:49 AM","11:11 AM","11:33 AM","11:55 AM","12:17 PM"];
 
 const BLUE="#0077D0";const LBLUE="#D6EEFF";const DBLUE="#0077D0";
-const APP_VERSION="2026.05.14.3";
+const APP_VERSION="2026.05.14.4";
 const HEADSHOTS={"Anthony Buck":"anthony-buck.jpg","Brandon Hewett":"brandon-hewett.jpg","Carl Fox":"carl-fox.jpg","Casey Dell":"casey-dell.jpg","Chad Gregg":"chad-gregg.jpg","Chris Caywood":"chris-caywood.jpg","Chris Kutemeier":"chris-kutemeier.jpg","Dennis McCarthy":"dennis-mccarthy.jpg","Gordon Cunningham":"gordon-cunningham.jpg","Howard Reinhard":"howard-reinhard.jpg","Jason Scribner":"jason-scribner.jpg","Jason Wehunt":"jason-wehunt.jpg","Josh Schmoll":"josh-schmoll.jpg","Karen Wehunt":"karen-wehunt.jpg","Mary Sargeant-Buck":"mary-sargeant-buck.jpg","Mike Dodd":"mike-dodd.jpg","Paul Ostendorf":"paul-ostendorf.jpg","Randy Schott":"randy-schott.jpg","Ryan Brewer":"ryan-brewer.jpg","Sean Daugherty":"sean-daugherty.jpg","Seth Dimacchia":"seth-dimacchia.jpg","Stephan Chase":"stephan-chase.jpg","Stephen Miller":"stephen-miller.jpg","Tammy Scribner":"tammy-scribner.jpg"};
 
 
@@ -808,7 +808,7 @@ const AppComponent = function App(){
             {retailerUsers.filter(u=>u.n.toLowerCase().includes(search.toLowerCase())||u.c.toLowerCase().includes(search.toLowerCase())).map(u=>(
               <div key={u.n} style={{...S.card,cursor:PROFILES[u.n]?"pointer":"default"}} onClick={()=>PROFILES[u.n]&&setDetail({type:"profile",user:u,p:PROFILES[u.n]})}>
                 <div style={{display:"flex",alignItems:"center",gap:12}}>
-                  <div style={{width:44,height:44,borderRadius:"50%",overflow:"hidden",background:`linear-gradient(135deg,#546E7A,#37474F)`,color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:14,flexShrink:0}}>{HEADSHOTS[u.n]?<img src={"headshots/"+HEADSHOTS[u.n]} alt={u.n} style={{width:"100%",height:"100%",objectFit:"cover",objectPosition:"center top"}}/>:getInitials(u.n)}</div>
+                  <div style={{width:44,height:44,borderRadius:"50%",overflow:"hidden",background:`linear-gradient(135deg,#546E7A,#37474F)`,color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:14,flexShrink:0}}>{HEADSHOTS[u.n]?<img src={"headshots/"+HEADSHOTS[u.n]+"?v="+APP_VERSION} alt={u.n} style={{width:"100%",height:"100%",objectFit:"cover",objectPosition:"center top"}}/>:getInitials(u.n)}</div>
                   <div style={{flex:1}}>
                     <div style={{fontSize:15,fontWeight:700,color:"#1a1a2e"}}>{u.n}</div>
                     <div style={{fontSize:12,color:BLUE,fontWeight:600}}>{u.c}</div>
@@ -825,7 +825,7 @@ const AppComponent = function App(){
           <div style={{padding:12}}>
             <div onClick={()=>setDetail(null)} style={{fontSize:13,color:BLUE,fontWeight:600,cursor:"pointer",marginBottom:12,display:"flex",alignItems:"center",gap:4}}><ArrowLeft size={14}/> All Attendees</div>
             <div style={{background:`linear-gradient(135deg,${BLUE},${DBLUE})`,borderRadius:12,padding:24,color:"#fff",marginBottom:12,display:"flex",alignItems:"center",gap:16}}>
-              <div style={{width:88,height:88,borderRadius:"50%",overflow:"hidden",background:"rgba(255,255,255,0.18)",color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:28,flexShrink:0,border:"2px solid rgba(255,255,255,0.35)"}}>{HEADSHOTS[detail.user.n]?<img src={"headshots/"+HEADSHOTS[detail.user.n]} alt={detail.user.n} style={{width:"100%",height:"100%",objectFit:"cover",objectPosition:"center top"}}/>:getInitials(detail.user.n)}</div>
+              <div style={{width:88,height:88,borderRadius:"50%",overflow:"hidden",background:"rgba(255,255,255,0.18)",color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:28,flexShrink:0,border:"2px solid rgba(255,255,255,0.35)"}}>{HEADSHOTS[detail.user.n]?<img src={"headshots/"+HEADSHOTS[detail.user.n]+"?v="+APP_VERSION} alt={detail.user.n} style={{width:"100%",height:"100%",objectFit:"cover",objectPosition:"center top"}}/>:getInitials(detail.user.n)}</div>
               <div style={{flex:1,minWidth:0}}>
                 <div style={{fontSize:20,fontWeight:800}}>{detail.user.n}</div>
                 <div style={{fontSize:13,opacity:0.8,marginTop:4}}>{detail.p.title} | {detail.user.c}</div>
