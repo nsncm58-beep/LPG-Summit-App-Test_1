@@ -189,7 +189,7 @@ const LOGOS={"ADD Systems":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2
 const MTIMES=["8:15 AM","8:37 AM","8:59 AM","9:21 AM","9:43 AM","10:05 AM","10:27 AM","10:49 AM","11:11 AM","11:33 AM","11:55 AM","12:17 PM"];
 
 const BLUE="#0077D0";const LBLUE="#D6EEFF";const DBLUE="#0077D0";
-const APP_VERSION="2026.05.15.1";
+const APP_VERSION="2026.05.15.2";
 const HEADSHOTS={"Anthony Buck":"anthony-buck.jpg","Brandon Hewett":"brandon-hewett.jpg","Carl Fox":"carl-fox.jpg","Casey Dell":"casey-dell.jpg","Chad Gregg":"chad-gregg.jpg","Chris Caywood":"chris-caywood.jpg","Chris Kutemeier":"chris-kutemeier.jpg","David Dodd":"david-dodd.jpg","Dennis McCarthy":"dennis-mccarthy.jpg","Gordon Cunningham":"gordon-cunningham.jpg","Howard Reinhard":"howard-reinhard.jpg","Jason Scribner":"jason-scribner.jpg","Jason Wehunt":"jason-wehunt.jpg","Josh Schmoll":"josh-schmoll.jpg","Karen Wehunt":"karen-wehunt.jpg","Mary Sargeant-Buck":"mary-sargeant-buck.jpg","Mike Dodd":"mike-dodd.jpg","Paul Ostendorf":"paul-ostendorf.jpg","Randy Schott":"randy-schott.jpg","Ryan Brewer":"ryan-brewer.jpg","Sean Daugherty":"sean-daugherty.jpg","Seth Dimacchia":"seth-dimacchia.jpg","Stephan Chase":"stephan-chase.jpg","Stephen Miller":"stephen-miller.jpg","Tammy Scribner":"tammy-scribner.jpg"};
 
 
@@ -441,7 +441,7 @@ function AttendeeNotesCard({u,BLUE,S}){
 }
 
 const AppComponent = function App(){
-  const[user,setUser]=useState(null);
+  const[user,setUser]=useState(()=>{try{const s=localStorage.getItem("lpg-session");if(s){const u=JSON.parse(s);if(USERS.find(x=>x.n===u.n))return u;}return null;}catch(e){return null;}});
   const[tab,setTab]=useState(0);
   const[day,setDay]=useState("Thursday");
   const[search,setSearch]=useState("");
@@ -643,7 +643,7 @@ const AppComponent = function App(){
   const login=()=>{
     if(pw.toLowerCase()!=="lpg"){setPwErr(true);return}
     const found=USERS.find(u=>u.n===selName);
-    if(found)setUser(found);
+    if(found){setUser(found);try{localStorage.setItem("lpg-session",JSON.stringify(found));}catch(e){}}
   };
 
   if(!user){
@@ -687,7 +687,7 @@ const AppComponent = function App(){
           <div style={{fontSize:14,fontWeight:600}}>{user.n}</div>
           <div style={{fontSize:12,opacity:0.7}}>{user.c}</div>
           {user.r==="staff"&&<div style={{fontSize:8,fontWeight:700,background:"#F9A825",color:"#1a1a2e",padding:"2px 8px",borderRadius:8,display:"inline-block",marginTop:2,letterSpacing:1}}>STAFF</div>}
-          <div onClick={()=>{setUser(null);setTab(0);setSelName("");setPw("")}} style={{fontSize:12,cursor:"pointer",opacity:0.7,marginTop:3,display:"flex",alignItems:"center",gap:3,justifyContent:"flex-end"}}><LogOut size={10}/>Sign Out</div>
+          <div onClick={()=>{setUser(null);setTab(0);setSelName("");setPw("");try{localStorage.removeItem("lpg-session");}catch(e){}}} style={{fontSize:12,cursor:"pointer",opacity:0.7,marginTop:3,display:"flex",alignItems:"center",gap:3,justifyContent:"flex-end"}}><LogOut size={10}/>Sign Out</div>
         </div>
       </div>
 
@@ -1364,7 +1364,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(
 // release triggers a fresh install + old caches get cleared.
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    const v = "2026.05.15.1";
+    const v = "2026.05.15.2";
     navigator.serviceWorker.register('sw.js?v=' + v, { scope: './' }).catch(() => {});
   });
 }
