@@ -189,7 +189,7 @@ const LOGOS={"ADD Systems":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2
 const MTIMES=["8:15 AM","8:37 AM","8:59 AM","9:21 AM","9:43 AM","10:05 AM","10:27 AM","10:49 AM","11:11 AM","11:33 AM","11:55 AM","12:17 PM"];
 
 const BLUE="#0077D0";const LBLUE="#D6EEFF";const DBLUE="#0077D0";
-const APP_VERSION="2026.05.15.3";
+const APP_VERSION="2026.05.15.4";
 const HEADSHOTS={"Anthony Buck":"anthony-buck.jpg","Brandon Hewett":"brandon-hewett.jpg","Carl Fox":"carl-fox.jpg","Casey Dell":"casey-dell.jpg","Chad Gregg":"chad-gregg.jpg","Chris Caywood":"chris-caywood.jpg","Chris Kutemeier":"chris-kutemeier.jpg","David Dodd":"david-dodd.jpg","Dennis McCarthy":"dennis-mccarthy.jpg","Gordon Cunningham":"gordon-cunningham.jpg","Howard Reinhard":"howard-reinhard.jpg","Jason Scribner":"jason-scribner.jpg","Jason Wehunt":"jason-wehunt.jpg","Josh Schmoll":"josh-schmoll.jpg","Karen Wehunt":"karen-wehunt.jpg","Mary Sargeant-Buck":"mary-sargeant-buck.jpg","Mike Dodd":"mike-dodd.jpg","Paul Ostendorf":"paul-ostendorf.jpg","Randy Schott":"randy-schott.jpg","Ryan Brewer":"ryan-brewer.jpg","Sean Daugherty":"sean-daugherty.jpg","Seth Dimacchia":"seth-dimacchia.jpg","Stephan Chase":"stephan-chase.jpg","Stephen Miller":"stephen-miller.jpg","Tammy Scribner":"tammy-scribner.jpg"};
 
 
@@ -411,6 +411,35 @@ function formatCountdown(mins){
   if(h<24) return m===0?`in ${h}h`:`in ${h}h ${m}m`;
   const d=Math.floor(h/24), hr=h%24;
   return hr===0?`in ${d}d`:`in ${d}d ${hr}h`;
+}
+
+// Compress an image File down to ~150-300KB JPEG with proper EXIF orientation
+// before uploading. iPhone photos can be 3-5MB straight from the camera; without
+// this, the Firebase RTDB write either times out or bloats the gallery payload.
+async function compressImage(file, maxDim=1600, quality=0.75){
+  let bitmap;
+  try{
+    bitmap = await createImageBitmap(file, {imageOrientation:'from-image'});
+  }catch(e){
+    // Fallback for browsers without createImageBitmap support
+    bitmap = await new Promise((resolve, reject)=>{
+      const img = new Image();
+      img.onload = ()=>resolve(img);
+      img.onerror = reject;
+      img.src = URL.createObjectURL(file);
+    });
+  }
+  const w0 = bitmap.width||bitmap.naturalWidth;
+  const h0 = bitmap.height||bitmap.naturalHeight;
+  const scale = Math.min(1, maxDim/Math.max(w0,h0));
+  const w = Math.round(w0*scale);
+  const h = Math.round(h0*scale);
+  const canvas = document.createElement('canvas');
+  canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(bitmap, 0, 0, w, h);
+  if(bitmap.close) bitmap.close();
+  return canvas.toDataURL('image/jpeg', quality);
 }
 
 const S={root:{fontFamily:"'Gotham',sans-serif",maxWidth:480,margin:"0 auto",minHeight:"100vh",background:"#fff",position:"relative"},header:{background:`linear-gradient(135deg,${DBLUE},${BLUE})`,color:"#fff",padding:"16px 20px",display:"flex",alignItems:"center",justifyContent:"space-between"},logo:{fontSize:22,fontWeight:800,letterSpacing:"-0.5px"},logoSub:{fontSize:12,fontWeight:500,opacity:0.8,letterSpacing:1},tabs:{display:"flex",background:LBLUE,borderBottom:`2px solid ${BLUE}`},tab:(a)=>({flex:1,padding:"10px 4px",textAlign:"center",fontSize:13,fontWeight:a?700:500,color:a?BLUE:"#666",background:a?"#fff":"transparent",borderBottom:a?`3px solid ${BLUE}`:"3px solid transparent",cursor:"pointer",transition:"all 0.2s"}),card:{background:"#fff",borderRadius:10,margin:"8px 12px",padding:"14px 16px",boxShadow:"0 1px 4px rgba(0,0,0,0.08)",border:"1px solid #eee"},dayTab:(a)=>({padding:"8px 16px",borderRadius:20,fontSize:15,fontWeight:a?700:500,color:a?"#fff":BLUE,background:a?BLUE:"transparent",cursor:"pointer",border:`1px solid ${a?BLUE:"#ccc"}`,whiteSpace:"nowrap"}),badge:(type)=>{const colors={meeting:BLUE,social:"#2E7D32",meal:"#E65100",event:"#5C6BC0"};return{display:"inline-block",width:4,minHeight:"100%",borderRadius:2,background:colors[type]||BLUE,marginRight:12}},input:{width:"100%",padding:"12px 16px",border:`2px solid #ddd`,borderRadius:8,fontSize:17,outline:"none",boxSizing:"border-box"},btn:{width:"100%",padding:"14px",background:BLUE,color:"#fff",border:"none",borderRadius:8,fontSize:16,fontWeight:700,cursor:"pointer"},star:(filled)=>({cursor:"pointer",fontSize:22,color:filled?"#F9A825":"#ddd",transition:"color 0.15s"})};
@@ -647,15 +676,21 @@ const AppComponent = function App(){
     if(user?.n){try{await window.storage.set("lpg-notes-"+user.n,JSON.stringify(n),true)}catch(e){}}
   },[user]);
 
+  const[uploadingPhoto,setUploadingPhoto]=useState(false);
   const addPhoto=useCallback(async(file)=>{
-    const reader=new FileReader();
-    reader.onload=async(ev)=>{
-      const newPhoto={id:Date.now(),src:ev.target.result,by:user?.n||"Unknown",at:new Date().toLocaleString()};
+    if(!file) return;
+    setUploadingPhoto(true);
+    try{
+      const dataUrl=await compressImage(file,1600,0.75);
+      const newPhoto={id:Date.now(),src:dataUrl,by:user?.n||"Unknown",at:new Date().toLocaleString()};
       const updated=[newPhoto,...photos];
       setPhotos(updated);
-      try{await window.storage.set("lpg-photos",JSON.stringify(updated.slice(0,50)),true)}catch(e){}
-    };
-    reader.readAsDataURL(file);
+      try{await window.storage.set("lpg-photos",JSON.stringify(updated.slice(0,80)),true)}catch(e){}
+    }catch(err){
+      try{alert("Couldn't upload that photo — try a different one.")}catch(_){}
+    }finally{
+      setUploadingPhoto(false);
+    }
   },[photos,user]);
 
   const deletePhoto=useCallback(async(id)=>{
@@ -690,12 +725,12 @@ const AppComponent = function App(){
         if(ampm==="AM"&&hr===12) hr=0;
         const meetTime=new Date(d);
         meetTime.setHours(hr,mn,0,0);
-        const notifTime=meetTime.getTime()-5*60*1000;
+        const notifTime=meetTime.getTime()-2*60*1000;
         const delay=notifTime-Date.now();
         if(delay>0&&delay<3*24*60*60*1000){
           const tid=setTimeout(()=>{
             try{
-              new Notification("Meeting in 5 minutes",{
+              new Notification("Meeting in 2 minutes",{
                 body:`${m[0]} - ${m[1]} (${dayNames[di]})`,
                 icon:"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%230E5A8A' width='100' height='100' rx='20'/><text x='50' y='65' text-anchor='middle' fill='white' font-size='40' font-family='sans-serif' font-weight='bold'>LP</text></svg>",
                 tag:`meeting-${di}-${i}`
@@ -1236,9 +1271,9 @@ const AppComponent = function App(){
                     },i*400);
                   });
                 }} style={{...S.btn,width:"auto",padding:"8px 12px",fontSize:13,cursor:"pointer",background:"#2E7D32",display:"flex",alignItems:"center",gap:4}}>↓ All ({photos.length})</div>}
-                <label style={{...S.btn,width:"auto",padding:"8px 16px",fontSize:14,display:"flex",alignItems:"center",gap:6,cursor:"pointer"}}>
-                  <Camera size={14}/>Add Photo
-                  <input type="file" accept="image/*" capture="environment" style={{display:"none"}} onChange={e=>{if(e.target.files[0])addPhoto(e.target.files[0])}}/>
+                <label style={{...S.btn,width:"auto",padding:"8px 16px",fontSize:14,display:"flex",alignItems:"center",gap:6,cursor:uploadingPhoto?"wait":"pointer",opacity:uploadingPhoto?0.6:1,pointerEvents:uploadingPhoto?"none":"auto"}}>
+                  <Camera size={14}/>{uploadingPhoto?"Uploading…":"Add Photo"}
+                  <input type="file" accept="image/*" capture="environment" disabled={uploadingPhoto} style={{display:"none"}} onChange={e=>{if(e.target.files[0])addPhoto(e.target.files[0]);e.target.value=""}}/>
                 </label>
               </div>
             </div>
@@ -1306,13 +1341,13 @@ const AppComponent = function App(){
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                 <div>
                   <div style={{fontSize:16,fontWeight:700,color:"#1a1a2e"}}>Meeting Reminders</div>
-                  <div style={{fontSize:13,color:"#888",marginTop:2}}>Get notified 5 minutes before each meeting</div>
+                  <div style={{fontSize:13,color:"#888",marginTop:2}}>Get notified 2 minutes before each meeting</div>
                 </div>
                 <div onClick={()=>toggleNotif(!notifEnabled)} style={{width:48,height:26,borderRadius:13,background:notifEnabled?"#4CAF50":"#ddd",cursor:"pointer",position:"relative",transition:"background 0.2s"}}>
                   <div style={{width:22,height:22,borderRadius:11,background:"#fff",position:"absolute",top:2,left:notifEnabled?24:2,transition:"left 0.2s",boxShadow:"0 1px 3px rgba(0,0,0,0.2)"}}/>
                 </div>
               </div>
-              {notifStatus==="granted"&&<div style={{fontSize:13,color:"#2E7D32",marginTop:8,display:"flex",alignItems:"center",gap:4}}><Bell size={12}/>Reminders active! You'll be notified 5 min before each meeting.</div>}
+              {notifStatus==="granted"&&<div style={{fontSize:13,color:"#2E7D32",marginTop:8,display:"flex",alignItems:"center",gap:4}}><Bell size={12}/>Reminders active! You'll be notified 2 min before each meeting.</div>}
               {notifStatus==="denied"&&<div style={{fontSize:13,color:"#c00",marginTop:8}}>Notifications were blocked. Please enable them in your browser/device settings and try again.</div>}
               {notifStatus==="dismissed"&&<div style={{fontSize:13,color:"#E65100",marginTop:8}}>Permission prompt was dismissed. Please try again.</div>}
               {notifStatus==="not-supported"&&<div style={{fontSize:13,color:"#c00",marginTop:8}}>Your browser does not support notifications. Try installing the app to your home screen.</div>}
@@ -1450,7 +1485,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(
 // release triggers a fresh install + old caches get cleared.
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    const v = "2026.05.15.3";
+    const v = "2026.05.15.4";
     navigator.serviceWorker.register('sw.js?v=' + v, { scope: './' }).catch(() => {});
   });
 }
