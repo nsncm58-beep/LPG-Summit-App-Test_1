@@ -12,7 +12,34 @@
 <title>LPGas Growth Summit</title>
 <style>
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  body { margin: 0; padding: 0; background: #f5f5f5; overflow-x: hidden; }
+  /* Theme tokens — light is default. document.documentElement.dataset.theme="dark" flips them. */
+  :root {
+    --lpg-page: #f5f5f5;
+    --lpg-bg: #ffffff;
+    --lpg-card: #ffffff;
+    --lpg-text: #1a1a2e;
+    --lpg-text-muted: #666666;
+    --lpg-text-faint: #999999;
+    --lpg-border: #eeeeee;
+    --lpg-border-strong: #dddddd;
+    --lpg-tab-bg: #D6EEFF;
+    --lpg-input-bg: #ffffff;
+    --lpg-overlay: rgba(0,0,0,0.5);
+  }
+  :root[data-theme="dark"] {
+    --lpg-page: #050a0f;
+    --lpg-bg: #0d1117;
+    --lpg-card: #161b22;
+    --lpg-text: #e6edf3;
+    --lpg-text-muted: #9da7b1;
+    --lpg-text-faint: #6b7280;
+    --lpg-border: #30363d;
+    --lpg-border-strong: #444c56;
+    --lpg-tab-bg: #0d1117;
+    --lpg-input-bg: #0d1117;
+    --lpg-overlay: rgba(0,0,0,0.7);
+  }
+  body { margin: 0; padding: 0; background: var(--lpg-page); color: var(--lpg-text); overflow-x: hidden; transition: background 0.2s, color 0.2s; }
   input, select, textarea, button { font-family: inherit; }
   ::-webkit-scrollbar { display: none; }
 
@@ -81,7 +108,10 @@ window.iconComponents = {
   Palmtree: makeIcon(["M13 8c0-2.76-2.46-5-5.5-5-1.05 0-2.03.3-2.86.82","M13 8c0-2.76 2.46-5 5.5-5 1.05 0 2.03.3 2.86.82","M13 8v8","M13 16H7","M13 16h6","M7 21l6-5 6 5"]),
   RefreshCw: makeIcon(["M3 12a9 9 0 0 1 15-6.7L21 8","M21 3v5h-5","M21 12a9 9 0 0 1-15 6.7L3 16","M3 21v-5h5"]),
   Clock: makeIcon(["M12 22a10 10 0 100-20 10 10 0 000 20z","M12 6v6l4 2"]),
-  Linkedin: makeIcon(["M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-4 0v7h-4v-7a6 6 0 016-6z","M2 9h4v12H2z","M4 6a2 2 0 100-4 2 2 0 000 4z"])
+  Linkedin: makeIcon(["M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-4 0v7h-4v-7a6 6 0 016-6z","M2 9h4v12H2z","M4 6a2 2 0 100-4 2 2 0 000 4z"]),
+  Search: makeIcon(["M11 19a8 8 0 100-16 8 8 0 000 16z","M21 21l-4.35-4.35"]),
+  Moon: makeIcon("M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"),
+  Sun: makeIcon(["M12 18a6 6 0 100-12 6 6 0 000 12z","M12 1v2","M12 21v2","M4.22 4.22l1.42 1.42","M18.36 18.36l1.42 1.42","M1 12h2","M21 12h2","M4.22 19.78l1.42-1.42","M18.36 5.64l1.42-1.42"])
 };
 </script>
 
@@ -179,7 +209,7 @@ window.SUMMIT_LOGO_IMG = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABbwAAAHM
 </script>
 <script type="text/babel">
 const { useState, useEffect, useCallback, useRef } = React;
-const { ChevronRight, ArrowLeft, Calendar, Users, Building2, StickyNote, MapPin, LogOut, Flag, Star, Info, Phone, Mail, Shirt, UtensilsCrossed, Trophy, Palmtree, MessageCircle, Globe, Camera, Bell, AlertCircle, X, Image, Megaphone, Send, RefreshCw, Clock, Linkedin } = window.iconComponents;
+const { ChevronRight, ArrowLeft, Calendar, Users, Building2, StickyNote, MapPin, LogOut, Flag, Star, Info, Phone, Mail, Shirt, UtensilsCrossed, Trophy, Palmtree, MessageCircle, Globe, Camera, Bell, AlertCircle, X, Image, Megaphone, Send, RefreshCw, Clock, Linkedin, Search, Moon, Sun } = window.iconComponents;
 
 
 const USERS=[{"n":"Seth Dimacchia","c":"Acorn LPG","r":"retailer","w":[["Otodata","Suite 204"],["One-Tank","Suite 205"],["LPGas Magazine","Suite 206"],["Warm Thoughts Communications","Suite 207"],["Precise Alternative Fleet Solutions","Suite 208"],["Anova","Suite 211"],["Quality Steel / LP Cylinder","Suite 302"],["Worthington Enterprises","Suite 304"],["IPS","Suite 305"]],"t":[["Westmor","Suite 307"],["Cargas","Suite 311"],["Mopeka","Suite 404"],["Tiger Payment Solutions","Suite 405"],["PDI Technologies","Suite 408"],["Gray, Gray & Gray","Suite 411"],["Metsa","Suite 501"],["Legacy Energy Consulting","Suite 504"],["ADD Systems","Suite 506"],["Fisk Tank Carrier","Suite 507"],["Rural Computer Consultants","Suite 511"],["Nexio","Suite 605"]]},{"n":"Paul Ostendorf","c":"Allied Energy","r":"retailer","w":[["Nexio","Suite 605"],["Otodata","Suite 204"],["One-Tank","Suite 205"],["LPGas Magazine","Suite 206"],["Warm Thoughts Communications","Suite 207"],["Precise Alternative Fleet Solutions","Suite 208"],["Anova","Suite 211"],["Quality Steel / LP Cylinder","Suite 302"],["Worthington Enterprises","Suite 304"]],"t":[["IPS","Suite 305"],["Westmor","Suite 307"],["Cargas","Suite 311"],["Mopeka","Suite 404"],["Tiger Payment Solutions","Suite 405"],["PDI Technologies","Suite 408"],["Gray, Gray & Gray","Suite 411"],["Metsa","Suite 501"],["Legacy Energy Consulting","Suite 504"],["ADD Systems","Suite 506"],["Fisk Tank Carrier","Suite 507"],["Rural Computer Consultants","Suite 511"]]},{"n":"Casey Dell","c":"American Distributing Co.","r":"retailer","w":[["Rural Computer Consultants","Suite 511"],["Nexio","Suite 605"],["Otodata","Suite 204"],["One-Tank","Suite 205"],["LPGas Magazine","Suite 206"],["Warm Thoughts Communications","Suite 207"],["Precise Alternative Fleet Solutions","Suite 208"],["Anova","Suite 211"],["Quality Steel / LP Cylinder","Suite 302"]],"t":[["Worthington Enterprises","Suite 304"],["IPS","Suite 305"],["Westmor","Suite 307"],["Cargas","Suite 311"],["Mopeka","Suite 404"],["Tiger Payment Solutions","Suite 405"],["PDI Technologies","Suite 408"],["Gray, Gray & Gray","Suite 411"],["Metsa","Suite 501"],["Legacy Energy Consulting","Suite 504"],["ADD Systems","Suite 506"],["Fisk Tank Carrier","Suite 507"]]},{"n":"Stephen Miller","c":"American Distributing Co.","r":"retailer","w":[["Rural Computer Consultants","Suite 511"],["Nexio","Suite 605"],["Otodata","Suite 204"],["One-Tank","Suite 205"],["LPGas Magazine","Suite 206"],["Warm Thoughts Communications","Suite 207"],["Precise Alternative Fleet Solutions","Suite 208"],["Anova","Suite 211"],["Quality Steel / LP Cylinder","Suite 302"]],"t":[["Worthington Enterprises","Suite 304"],["IPS","Suite 305"],["Westmor","Suite 307"],["Cargas","Suite 311"],["Mopeka","Suite 404"],["Tiger Payment Solutions","Suite 405"],["PDI Technologies","Suite 408"],["Gray, Gray & Gray","Suite 411"],["Metsa","Suite 501"],["Legacy Energy Consulting","Suite 504"],["ADD Systems","Suite 506"],["Fisk Tank Carrier","Suite 507"]]},{"n":"Chris Caywood","c":"Caywood Propane Gas","r":"retailer","w":[["Fisk Tank Carrier","Suite 507"],["Rural Computer Consultants","Suite 511"],["Nexio","Suite 605"],["Otodata","Suite 204"],["One-Tank","Suite 205"],["LPGas Magazine","Suite 206"],["Warm Thoughts Communications","Suite 207"],["Precise Alternative Fleet Solutions","Suite 208"],["Anova","Suite 211"]],"t":[["Quality Steel / LP Cylinder","Suite 302"],["Worthington Enterprises","Suite 304"],["IPS","Suite 305"],["Westmor","Suite 307"],["Cargas","Suite 311"],["Mopeka","Suite 404"],["Tiger Payment Solutions","Suite 405"],["PDI Technologies","Suite 408"],["Gray, Gray & Gray","Suite 411"],["Metsa","Suite 501"],["Legacy Energy Consulting","Suite 504"],["ADD Systems","Suite 506"]]},{"n":"Howard Reinhard","c":"Centra Sota Cooperative","r":"retailer","w":[["ADD Systems","Suite 506"],["Fisk Tank Carrier","Suite 507"],["Rural Computer Consultants","Suite 511"],["Nexio","Suite 605"],["Otodata","Suite 204"],["One-Tank","Suite 205"],["LPGas Magazine","Suite 206"],["Warm Thoughts Communications","Suite 207"],["Precise Alternative Fleet Solutions","Suite 208"]],"t":[["Anova","Suite 211"],["Quality Steel / LP Cylinder","Suite 302"],["Worthington Enterprises","Suite 304"],["IPS","Suite 305"],["Westmor","Suite 307"],["Cargas","Suite 311"],["Mopeka","Suite 404"],["Tiger Payment Solutions","Suite 405"],["PDI Technologies","Suite 408"],["Gray, Gray & Gray","Suite 411"],["Metsa","Suite 501"],["Legacy Energy Consulting","Suite 504"]]},{"n":"Carl Fox","c":"Cross Country Propane","r":"retailer","w":[["Legacy Energy Consulting","Suite 504"],["ADD Systems","Suite 506"],["Fisk Tank Carrier","Suite 507"],["Rural Computer Consultants","Suite 511"],["Nexio","Suite 605"],["Otodata","Suite 204"],["One-Tank","Suite 205"],["LPGas Magazine","Suite 206"],["Warm Thoughts Communications","Suite 207"]],"t":[["Precise Alternative Fleet Solutions","Suite 208"],["Anova","Suite 211"],["Quality Steel / LP Cylinder","Suite 302"],["Worthington Enterprises","Suite 304"],["IPS","Suite 305"],["Westmor","Suite 307"],["Cargas","Suite 311"],["Mopeka","Suite 404"],["Tiger Payment Solutions","Suite 405"],["PDI Technologies","Suite 408"],["Gray, Gray & Gray","Suite 411"],["Metsa","Suite 501"]]},{"n":"Chris Kutemeier","c":"Crystal Flash","r":"retailer","w":[["Metsa","Suite 501"],["Legacy Energy Consulting","Suite 504"],["ADD Systems","Suite 506"],["Fisk Tank Carrier","Suite 507"],["Rural Computer Consultants","Suite 511"],["Nexio","Suite 605"],["Otodata","Suite 204"],["One-Tank","Suite 205"],["LPGas Magazine","Suite 206"]],"t":[["Warm Thoughts Communications","Suite 207"],["Precise Alternative Fleet Solutions","Suite 208"],["Anova","Suite 211"],["Quality Steel / LP Cylinder","Suite 302"],["Worthington Enterprises","Suite 304"],["IPS","Suite 305"],["Westmor","Suite 307"],["Cargas","Suite 311"],["Mopeka","Suite 404"],["Tiger Payment Solutions","Suite 405"],["PDI Technologies","Suite 408"],["Gray, Gray & Gray","Suite 411"]]},{"n":"Chad Gregg","c":"Enderby Gas","r":"retailer","w":[["Gray, Gray & Gray","Suite 411"],["Metsa","Suite 501"],["Legacy Energy Consulting","Suite 504"],["ADD Systems","Suite 506"],["Fisk Tank Carrier","Suite 507"],["Rural Computer Consultants","Suite 511"],["Nexio","Suite 605"],["Otodata","Suite 204"],["One-Tank","Suite 205"]],"t":[["LPGas Magazine","Suite 206"],["Warm Thoughts Communications","Suite 207"],["Precise Alternative Fleet Solutions","Suite 208"],["Anova","Suite 211"],["Quality Steel / LP Cylinder","Suite 302"],["Worthington Enterprises","Suite 304"],["IPS","Suite 305"],["Westmor","Suite 307"],["Cargas","Suite 311"],["Mopeka","Suite 404"],["Tiger Payment Solutions","Suite 405"],["PDI Technologies","Suite 408"]]},{"n":"Stephan Chase","c":"FSi Propane","r":"retailer","w":[["PDI Technologies","Suite 408"],["Gray, Gray & Gray","Suite 411"],["Metsa","Suite 501"],["Legacy Energy Consulting","Suite 504"],["ADD Systems","Suite 506"],["Fisk Tank Carrier","Suite 507"],["Rural Computer Consultants","Suite 511"],["Nexio","Suite 605"],["Otodata","Suite 204"]],"t":[["One-Tank","Suite 205"],["LPGas Magazine","Suite 206"],["Warm Thoughts Communications","Suite 207"],["Precise Alternative Fleet Solutions","Suite 208"],["Anova","Suite 211"],["Quality Steel / LP Cylinder","Suite 302"],["Worthington Enterprises","Suite 304"],["IPS","Suite 305"],["Westmor","Suite 307"],["Cargas","Suite 311"],["Mopeka","Suite 404"],["Tiger Payment Solutions","Suite 405"]]},{"n":"Dennis McCarthy","c":"Glades Gas & Electric Corp","r":"retailer","w":[["Tiger Payment Solutions","Suite 405"],["PDI Technologies","Suite 408"],["Gray, Gray & Gray","Suite 411"],["Metsa","Suite 501"],["Legacy Energy Consulting","Suite 504"],["ADD Systems","Suite 506"],["Fisk Tank Carrier","Suite 507"],["Rural Computer Consultants","Suite 511"],["Nexio","Suite 605"]],"t":[["Otodata","Suite 204"],["One-Tank","Suite 205"],["LPGas Magazine","Suite 206"],["Warm Thoughts Communications","Suite 207"],["Precise Alternative Fleet Solutions","Suite 208"],["Anova","Suite 211"],["Quality Steel / LP Cylinder","Suite 302"],["Worthington Enterprises","Suite 304"],["IPS","Suite 305"],["Westmor","Suite 307"],["Cargas","Suite 311"],["Mopeka","Suite 404"]]},{"n":"Brandon Hewett","c":"J&J Gas Service","r":"retailer","w":[["Mopeka","Suite 404"],["Tiger Payment Solutions","Suite 405"],["PDI Technologies","Suite 408"],["Gray, Gray & Gray","Suite 411"],["Metsa","Suite 501"],["Legacy Energy Consulting","Suite 504"],["ADD Systems","Suite 506"],["Fisk Tank Carrier","Suite 507"],["Rural Computer Consultants","Suite 511"]],"t":[["Nexio","Suite 605"],["Otodata","Suite 204"],["One-Tank","Suite 205"],["LPGas Magazine","Suite 206"],["Warm Thoughts Communications","Suite 207"],["Precise Alternative Fleet Solutions","Suite 208"],["Anova","Suite 211"],["Quality Steel / LP Cylinder","Suite 302"],["Worthington Enterprises","Suite 304"],["IPS","Suite 305"],["Westmor","Suite 307"],["Cargas","Suite 311"]]},{"n":"Brittany Hewett","c":"J&J Gas Service","r":"retailer","w":[["Mopeka","Suite 404"],["Tiger Payment Solutions","Suite 405"],["PDI Technologies","Suite 408"],["Gray, Gray & Gray","Suite 411"],["Metsa","Suite 501"],["Legacy Energy Consulting","Suite 504"],["ADD Systems","Suite 506"],["Fisk Tank Carrier","Suite 507"],["Rural Computer Consultants","Suite 511"]],"t":[["Nexio","Suite 605"],["Otodata","Suite 204"],["One-Tank","Suite 205"],["LPGas Magazine","Suite 206"],["Warm Thoughts Communications","Suite 207"],["Precise Alternative Fleet Solutions","Suite 208"],["Anova","Suite 211"],["Quality Steel / LP Cylinder","Suite 302"],["Worthington Enterprises","Suite 304"],["IPS","Suite 305"],["Westmor","Suite 307"],["Cargas","Suite 311"]]},{"n":"Anthony Buck","c":"Lakes Gas","r":"retailer","w":[["Cargas","Suite 311"],["Mopeka","Suite 404"],["Tiger Payment Solutions","Suite 405"],["PDI Technologies","Suite 408"],["Gray, Gray & Gray","Suite 411"],["Metsa","Suite 501"],["Legacy Energy Consulting","Suite 504"],["ADD Systems","Suite 506"],["Fisk Tank Carrier","Suite 507"]],"t":[["Rural Computer Consultants","Suite 511"],["Nexio","Suite 605"],["Otodata","Suite 204"],["One-Tank","Suite 205"],["LPGas Magazine","Suite 206"],["Warm Thoughts Communications","Suite 207"],["Precise Alternative Fleet Solutions","Suite 208"],["Anova","Suite 211"],["Quality Steel / LP Cylinder","Suite 302"],["Worthington Enterprises","Suite 304"],["IPS","Suite 305"],["Westmor","Suite 307"]]},{"n":"Mary Sargeant-Buck","c":"Lakes Gas","r":"retailer","w":[["Cargas","Suite 311"],["Mopeka","Suite 404"],["Tiger Payment Solutions","Suite 405"],["PDI Technologies","Suite 408"],["Gray, Gray & Gray","Suite 411"],["Metsa","Suite 501"],["Legacy Energy Consulting","Suite 504"],["ADD Systems","Suite 506"],["Fisk Tank Carrier","Suite 507"]],"t":[["Rural Computer Consultants","Suite 511"],["Nexio","Suite 605"],["Otodata","Suite 204"],["One-Tank","Suite 205"],["LPGas Magazine","Suite 206"],["Warm Thoughts Communications","Suite 207"],["Precise Alternative Fleet Solutions","Suite 208"],["Anova","Suite 211"],["Quality Steel / LP Cylinder","Suite 302"],["Worthington Enterprises","Suite 304"],["IPS","Suite 305"],["Westmor","Suite 307"]]},{"n":"Randy Schott","c":"Lettermen's Energy","r":"retailer","w":[["Westmor","Suite 307"],["Cargas","Suite 311"],["Mopeka","Suite 404"],["Tiger Payment Solutions","Suite 405"],["PDI Technologies","Suite 408"],["Gray, Gray & Gray","Suite 411"],["Metsa","Suite 501"],["Legacy Energy Consulting","Suite 504"],["ADD Systems","Suite 506"]],"t":[["Fisk Tank Carrier","Suite 507"],["Rural Computer Consultants","Suite 511"],["Nexio","Suite 605"],["Otodata","Suite 204"],["One-Tank","Suite 205"],["LPGas Magazine","Suite 206"],["Warm Thoughts Communications","Suite 207"],["Precise Alternative Fleet Solutions","Suite 208"],["Anova","Suite 211"],["Quality Steel / LP Cylinder","Suite 302"],["Worthington Enterprises","Suite 304"],["IPS","Suite 305"]]},{"n":"Josh Schmoll","c":"Mountain View Propane","r":"retailer","w":[["IPS","Suite 305"],["Westmor","Suite 307"],["Cargas","Suite 311"],["Mopeka","Suite 404"],["Tiger Payment Solutions","Suite 405"],["PDI Technologies","Suite 408"],["Gray, Gray & Gray","Suite 411"],["Metsa","Suite 501"],["Legacy Energy Consulting","Suite 504"]],"t":[["ADD Systems","Suite 506"],["Fisk Tank Carrier","Suite 507"],["Rural Computer Consultants","Suite 511"],["Nexio","Suite 605"],["Otodata","Suite 204"],["One-Tank","Suite 205"],["LPGas Magazine","Suite 206"],["Warm Thoughts Communications","Suite 207"],["Precise Alternative Fleet Solutions","Suite 208"],["Anova","Suite 211"],["Quality Steel / LP Cylinder","Suite 302"],["Worthington Enterprises","Suite 304"]]},{"n":"Tammy Scribner","c":"Premier Propane","r":"retailer","w":[["Worthington Enterprises","Suite 304"],["IPS","Suite 305"],["Westmor","Suite 307"],["Cargas","Suite 311"],["Mopeka","Suite 404"],["Tiger Payment Solutions","Suite 405"],["PDI Technologies","Suite 408"],["Gray, Gray & Gray","Suite 411"],["Metsa","Suite 501"]],"t":[["Legacy Energy Consulting","Suite 504"],["ADD Systems","Suite 506"],["Fisk Tank Carrier","Suite 507"],["Rural Computer Consultants","Suite 511"],["Nexio","Suite 605"],["Otodata","Suite 204"],["One-Tank","Suite 205"],["LPGas Magazine","Suite 206"],["Warm Thoughts Communications","Suite 207"],["Precise Alternative Fleet Solutions","Suite 208"],["Anova","Suite 211"],["Quality Steel / LP Cylinder","Suite 302"]]},{"n":"Jason Scribner","c":"Premier Propane","r":"retailer","w":[["Worthington Enterprises","Suite 304"],["IPS","Suite 305"],["Westmor","Suite 307"],["Cargas","Suite 311"],["Mopeka","Suite 404"],["Tiger Payment Solutions","Suite 405"],["PDI Technologies","Suite 408"],["Gray, Gray & Gray","Suite 411"],["Metsa","Suite 501"]],"t":[["Legacy Energy Consulting","Suite 504"],["ADD Systems","Suite 506"],["Fisk Tank Carrier","Suite 507"],["Rural Computer Consultants","Suite 511"],["Nexio","Suite 605"],["Otodata","Suite 204"],["One-Tank","Suite 205"],["LPGas Magazine","Suite 206"],["Warm Thoughts Communications","Suite 207"],["Precise Alternative Fleet Solutions","Suite 208"],["Anova","Suite 211"],["Quality Steel / LP Cylinder","Suite 302"]]},{"n":"Mike Dodd","c":"Propane Ninja","r":"retailer","w":[["Quality Steel / LP Cylinder","Suite 302"],["Worthington Enterprises","Suite 304"],["IPS","Suite 305"],["Westmor","Suite 307"],["Cargas","Suite 311"],["Mopeka","Suite 404"],["Tiger Payment Solutions","Suite 405"],["PDI Technologies","Suite 408"],["Gray, Gray & Gray","Suite 411"]],"t":[["Metsa","Suite 501"],["Legacy Energy Consulting","Suite 504"],["ADD Systems","Suite 506"],["Fisk Tank Carrier","Suite 507"],["Rural Computer Consultants","Suite 511"],["Nexio","Suite 605"],["Otodata","Suite 204"],["One-Tank","Suite 205"],["LPGas Magazine","Suite 206"],["Warm Thoughts Communications","Suite 207"],["Precise Alternative Fleet Solutions","Suite 208"],["Anova","Suite 211"]]},{"n":"David Dodd","c":"Propane Ninja","r":"retailer","w":[["Quality Steel / LP Cylinder","Suite 302"],["Worthington Enterprises","Suite 304"],["IPS","Suite 305"],["Westmor","Suite 307"],["Cargas","Suite 311"],["Mopeka","Suite 404"],["Tiger Payment Solutions","Suite 405"],["PDI Technologies","Suite 408"],["Gray, Gray & Gray","Suite 411"]],"t":[["Metsa","Suite 501"],["Legacy Energy Consulting","Suite 504"],["ADD Systems","Suite 506"],["Fisk Tank Carrier","Suite 507"],["Rural Computer Consultants","Suite 511"],["Nexio","Suite 605"],["Otodata","Suite 204"],["One-Tank","Suite 205"],["LPGas Magazine","Suite 206"],["Warm Thoughts Communications","Suite 207"],["Precise Alternative Fleet Solutions","Suite 208"],["Anova","Suite 211"]]},{"n":"Sean Daugherty","c":"Reliable Energy Partners","r":"retailer","w":[["Anova","Suite 211"],["Quality Steel / LP Cylinder","Suite 302"],["Worthington Enterprises","Suite 304"],["IPS","Suite 305"],["Westmor","Suite 307"],["Cargas","Suite 311"],["Mopeka","Suite 404"],["Tiger Payment Solutions","Suite 405"],["PDI Technologies","Suite 408"]],"t":[["Gray, Gray & Gray","Suite 411"],["Metsa","Suite 501"],["Legacy Energy Consulting","Suite 504"],["ADD Systems","Suite 506"],["Fisk Tank Carrier","Suite 507"],["Rural Computer Consultants","Suite 511"],["Nexio","Suite 605"],["Otodata","Suite 204"],["One-Tank","Suite 205"],["LPGas Magazine","Suite 206"],["Warm Thoughts Communications","Suite 207"],["Precise Alternative Fleet Solutions","Suite 208"]]},{"n":"Ryan Brewer","c":"Scott Petroleum","r":"retailer","w":[["Precise Alternative Fleet Solutions","Suite 208"],["Anova","Suite 211"],["Quality Steel / LP Cylinder","Suite 302"],["Worthington Enterprises","Suite 304"],["IPS","Suite 305"],["Westmor","Suite 307"],["Cargas","Suite 311"],["Mopeka","Suite 404"],["Tiger Payment Solutions","Suite 405"]],"t":[["PDI Technologies","Suite 408"],["Gray, Gray & Gray","Suite 411"],["Metsa","Suite 501"],["Legacy Energy Consulting","Suite 504"],["ADD Systems","Suite 506"],["Fisk Tank Carrier","Suite 507"],["Rural Computer Consultants","Suite 511"],["Nexio","Suite 605"],["Otodata","Suite 204"],["One-Tank","Suite 205"],["LPGas Magazine","Suite 206"],["Warm Thoughts Communications","Suite 207"]]},{"n":"Gordon Cunningham","c":"Seabreeze Propane","r":"retailer","w":[["Warm Thoughts Communications","Suite 207"],["Precise Alternative Fleet Solutions","Suite 208"],["Anova","Suite 211"],["Quality Steel / LP Cylinder","Suite 302"],["Worthington Enterprises","Suite 304"],["IPS","Suite 305"],["Westmor","Suite 307"],["Cargas","Suite 311"],["Mopeka","Suite 404"]],"t":[["Tiger Payment Solutions","Suite 405"],["PDI Technologies","Suite 408"],["Gray, Gray & Gray","Suite 411"],["Metsa","Suite 501"],["Legacy Energy Consulting","Suite 504"],["ADD Systems","Suite 506"],["Fisk Tank Carrier","Suite 507"],["Rural Computer Consultants","Suite 511"],["Nexio","Suite 605"],["Otodata","Suite 204"],["One-Tank","Suite 205"],["LPGas Magazine","Suite 206"]]},{"n":"Karen Wehunt","c":"Shasta Gas Propane","r":"retailer","w":[["LPGas Magazine","Suite 206"],["Warm Thoughts Communications","Suite 207"],["Precise Alternative Fleet Solutions","Suite 208"],["Anova","Suite 211"],["Quality Steel / LP Cylinder","Suite 302"],["Worthington Enterprises","Suite 304"],["IPS","Suite 305"],["Westmor","Suite 307"],["Cargas","Suite 311"]],"t":[["Mopeka","Suite 404"],["Tiger Payment Solutions","Suite 405"],["PDI Technologies","Suite 408"],["Gray, Gray & Gray","Suite 411"],["Metsa","Suite 501"],["Legacy Energy Consulting","Suite 504"],["ADD Systems","Suite 506"],["Fisk Tank Carrier","Suite 507"],["Rural Computer Consultants","Suite 511"],["Nexio","Suite 605"],["Otodata","Suite 204"],["One-Tank","Suite 205"]]},{"n":"Jason Wehunt","c":"Shasta Gas Propane","r":"retailer","w":[["LPGas Magazine","Suite 206"],["Warm Thoughts Communications","Suite 207"],["Precise Alternative Fleet Solutions","Suite 208"],["Anova","Suite 211"],["Quality Steel / LP Cylinder","Suite 302"],["Worthington Enterprises","Suite 304"],["IPS","Suite 305"],["Westmor","Suite 307"],["Cargas","Suite 311"]],"t":[["Mopeka","Suite 404"],["Tiger Payment Solutions","Suite 405"],["PDI Technologies","Suite 408"],["Gray, Gray & Gray","Suite 411"],["Metsa","Suite 501"],["Legacy Energy Consulting","Suite 504"],["ADD Systems","Suite 506"],["Fisk Tank Carrier","Suite 507"],["Rural Computer Consultants","Suite 511"],["Nexio","Suite 605"],["Otodata","Suite 204"],["One-Tank","Suite 205"]]},{"n":"Grant McAllister","c":"ADD Systems","r":"partner","w":[["Centra Sota Cooperative","Suite 506"],["Cross Country Propane","Suite 506"],["Crystal Flash","Suite 506"],["Enderby Gas","Suite 506"],["FSi Propane","Suite 506"],["Glades Gas & Electric Corp","Suite 506"],["J&J Gas Service","Suite 506"],["Lakes Gas","Suite 506"],["Lettermen's Energy","Suite 506"]],"t":[["Mountain View Propane","Suite 506"],["Premier Propane","Suite 506"],["Propane Ninja","Suite 506"],["Reliable Energy Partners","Suite 506"],["Scott Petroleum","Suite 506"],["Seabreeze Propane","Suite 506"],["Shasta Gas Propane","Suite 506"],["LPGas Magazine","Suite 206"],["Acorn LPG, LLC","Suite 506"],["Allied Energy","Suite 506"],["American Distributing Co.","Suite 506"],["Caywood Propane Gas","Suite 506"]]},{"n":"Sharon Scrinzi","c":"ADD Systems","r":"partner","w":[["Centra Sota Cooperative","Suite 506"],["Cross Country Propane","Suite 506"],["Crystal Flash","Suite 506"],["Enderby Gas","Suite 506"],["FSi Propane","Suite 506"],["Glades Gas & Electric Corp","Suite 506"],["J&J Gas Service","Suite 506"],["Lakes Gas","Suite 506"],["Lettermen's Energy","Suite 506"]],"t":[["Mountain View Propane","Suite 506"],["Premier Propane","Suite 506"],["Propane Ninja","Suite 506"],["Reliable Energy Partners","Suite 506"],["Scott Petroleum","Suite 506"],["Seabreeze Propane","Suite 506"],["Shasta Gas Propane","Suite 506"],["LPGas Magazine","Suite 206"],["Acorn LPG, LLC","Suite 506"],["Allied Energy","Suite 506"],["American Distributing Co.","Suite 506"],["Caywood Propane Gas","Suite 506"]]},{"n":"Eric Duckworth","c":"Anova","r":"partner","w":[["Reliable Energy Partners","Suite 211"],["Scott Petroleum","Suite 211"],["Seabreeze Propane","Suite 211"],["Shasta Gas Propane","Suite 211"],["LPGas Magazine","Suite 206"],["Acorn LPG, LLC","Suite 211"],["Allied Energy","Suite 211"],["American Distributing Co.","Suite 211"],["Caywood Propane Gas","Suite 211"]],"t":[["Centra Sota Cooperative","Suite 211"],["Cross Country Propane","Suite 211"],["Crystal Flash","Suite 211"],["Enderby Gas","Suite 211"],["FSi Propane","Suite 211"],["Glades Gas & Electric Corp","Suite 211"],["J&J Gas Service","Suite 211"],["Lakes Gas","Suite 211"],["Lettermen's Energy","Suite 211"],["Mountain View Propane","Suite 211"],["Premier Propane","Suite 211"],["Propane Ninja","Suite 211"]]},{"n":"Nick Virchow","c":"Anova","r":"partner","w":[["Reliable Energy Partners","Suite 211"],["Scott Petroleum","Suite 211"],["Seabreeze Propane","Suite 211"],["Shasta Gas Propane","Suite 211"],["LPGas Magazine","Suite 206"],["Acorn LPG, LLC","Suite 211"],["Allied Energy","Suite 211"],["American Distributing Co.","Suite 211"],["Caywood Propane Gas","Suite 211"]],"t":[["Centra Sota Cooperative","Suite 211"],["Cross Country Propane","Suite 211"],["Crystal Flash","Suite 211"],["Enderby Gas","Suite 211"],["FSi Propane","Suite 211"],["Glades Gas & Electric Corp","Suite 211"],["J&J Gas Service","Suite 211"],["Lakes Gas","Suite 211"],["Lettermen's Energy","Suite 211"],["Mountain View Propane","Suite 211"],["Premier Propane","Suite 211"],["Propane Ninja","Suite 211"]]},{"n":"Todd Grimm","c":"Cargas","r":"partner","w":[["Lakes Gas","Suite 311"],["Lettermen's Energy","Suite 311"],["Mountain View Propane","Suite 311"],["Premier Propane","Suite 311"],["Propane Ninja","Suite 311"],["Reliable Energy Partners","Suite 311"],["Scott Petroleum","Suite 311"],["Seabreeze Propane","Suite 311"],["Shasta Gas Propane","Suite 311"]],"t":[["LPGas Magazine","Suite 206"],["Acorn LPG, LLC","Suite 311"],["Allied Energy","Suite 311"],["American Distributing Co.","Suite 311"],["Caywood Propane Gas","Suite 311"],["Centra Sota Cooperative","Suite 311"],["Cross Country Propane","Suite 311"],["Crystal Flash","Suite 311"],["Enderby Gas","Suite 311"],["FSi Propane","Suite 311"],["Glades Gas & Electric Corp","Suite 311"],["J&J Gas Service","Suite 311"]]},{"n":"Billy Ward","c":"Cargas","r":"partner","w":[["Lakes Gas","Suite 311"],["Lettermen's Energy","Suite 311"],["Mountain View Propane","Suite 311"],["Premier Propane","Suite 311"],["Propane Ninja","Suite 311"],["Reliable Energy Partners","Suite 311"],["Scott Petroleum","Suite 311"],["Seabreeze Propane","Suite 311"],["Shasta Gas Propane","Suite 311"]],"t":[["LPGas Magazine","Suite 206"],["Acorn LPG, LLC","Suite 311"],["Allied Energy","Suite 311"],["American Distributing Co.","Suite 311"],["Caywood Propane Gas","Suite 311"],["Centra Sota Cooperative","Suite 311"],["Cross Country Propane","Suite 311"],["Crystal Flash","Suite 311"],["Enderby Gas","Suite 311"],["FSi Propane","Suite 311"],["Glades Gas & Electric Corp","Suite 311"],["J&J Gas Service","Suite 311"]]},{"n":"Eric Morgans","c":"Fisk Tank Carrier","r":"partner","w":[["Caywood Propane Gas","Suite 507"],["Centra Sota Cooperative","Suite 507"],["Cross Country Propane","Suite 507"],["Crystal Flash","Suite 507"],["Enderby Gas","Suite 507"],["FSi Propane","Suite 507"],["Glades Gas & Electric Corp","Suite 507"],["J&J Gas Service","Suite 507"],["Lakes Gas","Suite 507"]],"t":[["Lettermen's Energy","Suite 507"],["Mountain View Propane","Suite 507"],["Premier Propane","Suite 507"],["Propane Ninja","Suite 507"],["Reliable Energy Partners","Suite 507"],["Scott Petroleum","Suite 507"],["Seabreeze Propane","Suite 507"],["Shasta Gas Propane","Suite 507"],["LPGas Magazine","Suite 206"],["Acorn LPG, LLC","Suite 507"],["Allied Energy","Suite 507"],["American Distributing Co.","Suite 507"]]},{"n":"Nathan Roberts","c":"Fisk Tank Carrier","r":"partner","w":[["Caywood Propane Gas","Suite 507"],["Centra Sota Cooperative","Suite 507"],["Cross Country Propane","Suite 507"],["Crystal Flash","Suite 507"],["Enderby Gas","Suite 507"],["FSi Propane","Suite 507"],["Glades Gas & Electric Corp","Suite 507"],["J&J Gas Service","Suite 507"],["Lakes Gas","Suite 507"]],"t":[["Lettermen's Energy","Suite 507"],["Mountain View Propane","Suite 507"],["Premier Propane","Suite 507"],["Propane Ninja","Suite 507"],["Reliable Energy Partners","Suite 507"],["Scott Petroleum","Suite 507"],["Seabreeze Propane","Suite 507"],["Shasta Gas Propane","Suite 507"],["LPGas Magazine","Suite 206"],["Acorn LPG, LLC","Suite 507"],["Allied Energy","Suite 507"],["American Distributing Co.","Suite 507"]]},{"n":"Carl Kaplan","c":"Gray, Gray & Gray","r":"partner","w":[["Enderby Gas","Suite 411"],["FSi Propane","Suite 411"],["Glades Gas & Electric Corp","Suite 411"],["J&J Gas Service","Suite 411"],["Lakes Gas","Suite 411"],["Lettermen's Energy","Suite 411"],["Mountain View Propane","Suite 411"],["Premier Propane","Suite 411"],["Propane Ninja","Suite 411"]],"t":[["Reliable Energy Partners","Suite 411"],["Scott Petroleum","Suite 411"],["Seabreeze Propane","Suite 411"],["Shasta Gas Propane","Suite 411"],["LPGas Magazine","Suite 206"],["Acorn LPG, LLC","Suite 411"],["Allied Energy","Suite 411"],["American Distributing Co.","Suite 411"],["Caywood Propane Gas","Suite 411"],["Centra Sota Cooperative","Suite 411"],["Cross Country Propane","Suite 411"],["Crystal Flash","Suite 411"]]},{"n":"Marty Kirshner","c":"Gray, Gray & Gray","r":"partner","w":[["Enderby Gas","Suite 411"],["FSi Propane","Suite 411"],["Glades Gas & Electric Corp","Suite 411"],["J&J Gas Service","Suite 411"],["Lakes Gas","Suite 411"],["Lettermen's Energy","Suite 411"],["Mountain View Propane","Suite 411"],["Premier Propane","Suite 411"],["Propane Ninja","Suite 411"]],"t":[["Reliable Energy Partners","Suite 411"],["Scott Petroleum","Suite 411"],["Seabreeze Propane","Suite 411"],["Shasta Gas Propane","Suite 411"],["LPGas Magazine","Suite 206"],["Acorn LPG, LLC","Suite 411"],["Allied Energy","Suite 411"],["American Distributing Co.","Suite 411"],["Caywood Propane Gas","Suite 411"],["Centra Sota Cooperative","Suite 411"],["Cross Country Propane","Suite 411"],["Crystal Flash","Suite 411"]]},{"n":"Kim Godlewski","c":"IPS","r":"partner","w":[["Mountain View Propane","Suite 305"],["Premier Propane","Suite 305"],["Propane Ninja","Suite 305"],["Reliable Energy Partners","Suite 305"],["Scott Petroleum","Suite 305"],["Seabreeze Propane","Suite 305"],["Shasta Gas Propane","Suite 305"],["LPGas Magazine","Suite 206"],["Acorn LPG, LLC","Suite 305"]],"t":[["Allied Energy","Suite 305"],["American Distributing Co.","Suite 305"],["Caywood Propane Gas","Suite 305"],["Centra Sota Cooperative","Suite 305"],["Cross Country Propane","Suite 305"],["Crystal Flash","Suite 305"],["Enderby Gas","Suite 305"],["FSi Propane","Suite 305"],["Glades Gas & Electric Corp","Suite 305"],["J&J Gas Service","Suite 305"],["Lakes Gas","Suite 305"],["Lettermen's Energy","Suite 305"]]},{"n":"Jeff Vandemark","c":"IPS","r":"partner","w":[["Mountain View Propane","Suite 305"],["Premier Propane","Suite 305"],["Propane Ninja","Suite 305"],["Reliable Energy Partners","Suite 305"],["Scott Petroleum","Suite 305"],["Seabreeze Propane","Suite 305"],["Shasta Gas Propane","Suite 305"],["LPGas Magazine","Suite 305"],["Acorn LPG, LLC","Suite 305"]],"t":[["Allied Energy","Suite 305"],["American Distributing Co.","Suite 305"],["Caywood Propane Gas","Suite 305"],["Centra Sota Cooperative","Suite 305"],["Cross Country Propane","Suite 305"],["Crystal Flash","Suite 305"],["Enderby Gas","Suite 305"],["FSi Propane","Suite 305"],["Glades Gas & Electric Corp","Suite 305"],["J&J Gas Service","Suite 305"],["Lakes Gas","Suite 305"],["Lettermen's Energy","Suite 305"]]},{"n":"Chad Pendill","c":"Legacy Energy Consulting","r":"partner","w":[["Cross Country Propane","Suite 504"],["Crystal Flash","Suite 504"],["Enderby Gas","Suite 504"],["FSi Propane","Suite 504"],["Glades Gas & Electric Corp","Suite 504"],["J&J Gas Service","Suite 504"],["Lakes Gas","Suite 504"],["Lettermen's Energy","Suite 504"],["Mountain View Propane","Suite 504"]],"t":[["Premier Propane","Suite 504"],["Propane Ninja","Suite 504"],["Reliable Energy Partners","Suite 504"],["Scott Petroleum","Suite 504"],["Seabreeze Propane","Suite 504"],["Shasta Gas Propane","Suite 504"],["LPGas Magazine","Suite 206"],["Acorn LPG, LLC","Suite 504"],["Allied Energy","Suite 504"],["American Distributing Co.","Suite 504"],["Caywood Propane Gas","Suite 504"],["Centra Sota Cooperative","Suite 504"]]},{"n":"Tyler Pendill","c":"Legacy Energy Consulting","r":"partner","w":[["Cross Country Propane","Suite 504"],["Crystal Flash","Suite 504"],["Enderby Gas","Suite 504"],["FSi Propane","Suite 504"],["Glades Gas & Electric Corp","Suite 504"],["J&J Gas Service","Suite 504"],["Lakes Gas","Suite 504"],["Lettermen's Energy","Suite 504"],["Mountain View Propane","Suite 504"]],"t":[["Premier Propane","Suite 504"],["Propane Ninja","Suite 504"],["Reliable Energy Partners","Suite 504"],["Scott Petroleum","Suite 504"],["Seabreeze Propane","Suite 504"],["Shasta Gas Propane","Suite 504"],["LPGas Magazine","Suite 206"],["Acorn LPG, LLC","Suite 504"],["Allied Energy","Suite 504"],["American Distributing Co.","Suite 504"],["Caywood Propane Gas","Suite 504"],["Centra Sota Cooperative","Suite 504"]]},{"n":"Robert Kenney","c":"Metsa","r":"partner","w":[["Crystal Flash","Suite 501"],["Enderby Gas","Suite 501"],["FSi Propane","Suite 501"],["Glades Gas & Electric Corp","Suite 501"],["J&J Gas Service","Suite 501"],["Lakes Gas","Suite 501"],["Lettermen's Energy","Suite 501"],["Mountain View Propane","Suite 501"],["Premier Propane","Suite 501"]],"t":[["Propane Ninja","Suite 501"],["Reliable Energy Partners","Suite 501"],["Scott Petroleum","Suite 501"],["Seabreeze Propane","Suite 501"],["Shasta Gas Propane","Suite 501"],["LPGas Magazine","Suite 206"],["Acorn LPG, LLC","Suite 501"],["Allied Energy","Suite 501"],["American Distributing Co.","Suite 501"],["Caywood Propane Gas","Suite 501"],["Centra Sota Cooperative","Suite 501"],["Cross Country Propane","Suite 501"]]},{"n":"Daniel Richards de la Garza","c":"Metsa","r":"partner","w":[["Crystal Flash","Suite 501"],["Enderby Gas","Suite 501"],["FSi Propane","Suite 501"],["Glades Gas & Electric Corp","Suite 501"],["J&J Gas Service","Suite 501"],["Lakes Gas","Suite 501"],["Lettermen's Energy","Suite 501"],["Mountain View Propane","Suite 501"],["Premier Propane","Suite 501"]],"t":[["Propane Ninja","Suite 501"],["Reliable Energy Partners","Suite 501"],["Scott Petroleum","Suite 501"],["Seabreeze Propane","Suite 501"],["Shasta Gas Propane","Suite 501"],["LPGas Magazine","Suite 206"],["Acorn LPG, LLC","Suite 501"],["Allied Energy","Suite 501"],["American Distributing Co.","Suite 501"],["Caywood Propane Gas","Suite 501"],["Centra Sota Cooperative","Suite 501"],["Cross Country Propane","Suite 501"]]},{"n":"Patrick Halpin","c":"Mopeka","r":"partner","w":[["J&J Gas Service","Suite 404"],["Lakes Gas","Suite 404"],["Lettermen's Energy","Suite 404"],["Mountain View Propane","Suite 404"],["Premier Propane","Suite 404"],["Propane Ninja","Suite 404"],["Reliable Energy Partners","Suite 404"],["Scott Petroleum","Suite 404"],["Seabreeze Propane","Suite 404"]],"t":[["Shasta Gas Propane","Suite 404"],["LPGas Magazine","Suite 206"],["Acorn LPG, LLC","Suite 404"],["Allied Energy","Suite 404"],["American Distributing Co.","Suite 404"],["Caywood Propane Gas","Suite 404"],["Centra Sota Cooperative","Suite 404"],["Cross Country Propane","Suite 404"],["Crystal Flash","Suite 404"],["Enderby Gas","Suite 404"],["FSi Propane","Suite 404"],["Glades Gas & Electric Corp","Suite 404"]]},{"n":"Matt Tredennick","c":"Mopeka","r":"partner","w":[["J&J Gas Service","Suite 404"],["Lakes Gas","Suite 404"],["Lettermen's Energy","Suite 404"],["Mountain View Propane","Suite 404"],["Premier Propane","Suite 404"],["Propane Ninja","Suite 404"],["Reliable Energy Partners","Suite 404"],["Scott Petroleum","Suite 404"],["Seabreeze Propane","Suite 404"]],"t":[["Shasta Gas Propane","Suite 404"],["LPGas Magazine","Suite 206"],["Acorn LPG, LLC","Suite 404"],["Allied Energy","Suite 404"],["American Distributing Co.","Suite 404"],["Caywood Propane Gas","Suite 404"],["Centra Sota Cooperative","Suite 404"],["Cross Country Propane","Suite 404"],["Crystal Flash","Suite 404"],["Enderby Gas","Suite 404"],["FSi Propane","Suite 404"],["Glades Gas & Electric Corp","Suite 404"]]},{"n":"Horace Mast","c":"Nexio","r":"partner","w":[["Allied Energy","Suite 605"],["American Distributing Co.","Suite 605"],["Caywood Propane Gas","Suite 605"],["Centra Sota Cooperative","Suite 605"],["Cross Country Propane","Suite 605"],["Crystal Flash","Suite 605"],["Enderby Gas","Suite 605"],["FSi Propane","Suite 605"],["Glades Gas & Electric Corp","Suite 605"]],"t":[["J&J Gas Service","Suite 605"],["Lakes Gas","Suite 605"],["Lettermen's Energy","Suite 605"],["Mountain View Propane","Suite 605"],["Premier Propane","Suite 605"],["Propane Ninja","Suite 605"],["Reliable Energy Partners","Suite 605"],["Scott Petroleum","Suite 605"],["Seabreeze Propane","Suite 605"],["Shasta Gas Propane","Suite 605"],["LPGas Magazine","Suite 206"],["Acorn LPG, LLC","Suite 605"]]},{"n":"Gary Winemaster","c":"Nexio","r":"partner","w":[["Allied Energy","Suite 605"],["American Distributing Co.","Suite 605"],["Caywood Propane Gas","Suite 605"],["Centra Sota Cooperative","Suite 605"],["Cross Country Propane","Suite 605"],["Crystal Flash","Suite 605"],["Enderby Gas","Suite 605"],["FSi Propane","Suite 605"],["Glades Gas & Electric Corp","Suite 605"]],"t":[["J&J Gas Service","Suite 605"],["Lakes Gas","Suite 605"],["Lettermen's Energy","Suite 605"],["Mountain View Propane","Suite 605"],["Premier Propane","Suite 605"],["Propane Ninja","Suite 605"],["Reliable Energy Partners","Suite 605"],["Scott Petroleum","Suite 605"],["Seabreeze Propane","Suite 605"],["Shasta Gas Propane","Suite 605"],["LPGas Magazine","Suite 206"],["Acorn LPG, LLC","Suite 605"]]},{"n":"Mike DeMarco","c":"One-Tank","r":"partner","w":[["LPGas Magazine","Suite 206"],["Acorn LPG, LLC","Suite 205"],["Allied Energy","Suite 205"],["American Distributing Co.","Suite 205"],["Caywood Propane Gas","Suite 205"],["Centra Sota Cooperative","Suite 205"],["Cross Country Propane","Suite 205"],["Crystal Flash","Suite 205"],["Enderby Gas","Suite 205"]],"t":[["FSi Propane","Suite 205"],["Glades Gas & Electric Corp","Suite 205"],["J&J Gas Service","Suite 205"],["Lakes Gas","Suite 205"],["Lettermen's Energy","Suite 205"],["Mountain View Propane","Suite 205"],["Premier Propane","Suite 205"],["Propane Ninja","Suite 205"],["Reliable Energy Partners","Suite 205"],["Scott Petroleum","Suite 205"],["Seabreeze Propane","Suite 205"],["Shasta Gas Propane","Suite 205"]]},{"n":"Cheryl Heppard","c":"One-Tank","r":"partner","w":[["LPGas Magazine","Suite 206"],["Acorn LPG, LLC","Suite 205"],["Allied Energy","Suite 205"],["American Distributing Co.","Suite 205"],["Caywood Propane Gas","Suite 205"],["Centra Sota Cooperative","Suite 205"],["Cross Country Propane","Suite 205"],["Crystal Flash","Suite 205"],["Enderby Gas","Suite 205"]],"t":[["FSi Propane","Suite 205"],["Glades Gas & Electric Corp","Suite 205"],["J&J Gas Service","Suite 205"],["Lakes Gas","Suite 205"],["Lettermen's Energy","Suite 205"],["Mountain View Propane","Suite 205"],["Premier Propane","Suite 205"],["Propane Ninja","Suite 205"],["Reliable Energy Partners","Suite 205"],["Scott Petroleum","Suite 205"],["Seabreeze Propane","Suite 205"],["Shasta Gas Propane","Suite 205"]]},{"n":"Danny Leverette","c":"One-Tank","r":"partner","w":[["LPGas Magazine","Suite 206"],["Acorn LPG, LLC","Suite 205"],["Allied Energy","Suite 205"],["American Distributing Co.","Suite 205"],["Caywood Propane Gas","Suite 205"],["Centra Sota Cooperative","Suite 205"],["Cross Country Propane","Suite 205"],["Crystal Flash","Suite 205"],["Enderby Gas","Suite 205"]],"t":[["FSi Propane","Suite 205"],["Glades Gas & Electric Corp","Suite 205"],["J&J Gas Service","Suite 205"],["Lakes Gas","Suite 205"],["Lettermen's Energy","Suite 205"],["Mountain View Propane","Suite 205"],["Premier Propane","Suite 205"],["Propane Ninja","Suite 205"],["Reliable Energy Partners","Suite 205"],["Scott Petroleum","Suite 205"],["Seabreeze Propane","Suite 205"],["Shasta Gas Propane","Suite 205"]]},{"n":"Brian Humphrey","c":"One-Tank","r":"partner","w":[["LPGas Magazine","Suite 206"],["Acorn LPG, LLC","Suite 205"],["Allied Energy","Suite 205"],["American Distributing Co.","Suite 205"],["Caywood Propane Gas","Suite 205"],["Centra Sota Cooperative","Suite 205"],["Cross Country Propane","Suite 205"],["Crystal Flash","Suite 205"],["Enderby Gas","Suite 205"]],"t":[["FSi Propane","Suite 205"],["Glades Gas & Electric Corp","Suite 205"],["J&J Gas Service","Suite 205"],["Lakes Gas","Suite 205"],["Lettermen's Energy","Suite 205"],["Mountain View Propane","Suite 205"],["Premier Propane","Suite 205"],["Propane Ninja","Suite 205"],["Reliable Energy Partners","Suite 205"],["Scott Petroleum","Suite 205"],["Seabreeze Propane","Suite 205"],["Shasta Gas Propane","Suite 205"]]},{"n":"Josh Alpuerto","c":"Otodata","r":"partner","w":[["Acorn LPG, LLC","Suite 204"],["Allied Energy","Suite 204"],["American Distributing Co.","Suite 204"],["Caywood Propane Gas","Suite 204"],["Centra Sota Cooperative","Suite 204"],["Cross Country Propane","Suite 204"],["Crystal Flash","Suite 204"],["Enderby Gas","Suite 204"],["FSi Propane","Suite 204"]],"t":[["Glades Gas & Electric Corp","Suite 204"],["J&J Gas Service","Suite 204"],["Lakes Gas","Suite 204"],["Lettermen's Energy","Suite 204"],["Mountain View Propane","Suite 204"],["Premier Propane","Suite 204"],["Propane Ninja","Suite 204"],["Reliable Energy Partners","Suite 204"],["Scott Petroleum","Suite 204"],["Seabreeze Propane","Suite 204"],["Shasta Gas Propane","Suite 204"],["LPGas Magazine","Suite 206"]]},{"n":"Jonathan Loeb","c":"Otodata","r":"partner","w":[["Acorn LPG, LLC","Suite 204"],["Allied Energy","Suite 204"],["American Distributing Co.","Suite 204"],["Caywood Propane Gas","Suite 204"],["Centra Sota Cooperative","Suite 204"],["Cross Country Propane","Suite 204"],["Crystal Flash","Suite 204"],["Enderby Gas","Suite 204"],["FSi Propane","Suite 204"]],"t":[["Glades Gas & Electric Corp","Suite 204"],["J&J Gas Service","Suite 204"],["Lakes Gas","Suite 204"],["Lettermen's Energy","Suite 204"],["Mountain View Propane","Suite 204"],["Premier Propane","Suite 204"],["Propane Ninja","Suite 204"],["Reliable Energy Partners","Suite 204"],["Scott Petroleum","Suite 204"],["Seabreeze Propane","Suite 204"],["Shasta Gas Propane","Suite 204"],["LPGas Magazine","Suite 206"]]},{"n":"Rita Pecilunas","c":"Otodata","r":"partner","w":[["Acorn LPG, LLC","Suite 204"],["Allied Energy","Suite 204"],["American Distributing Co.","Suite 204"],["Caywood Propane Gas","Suite 204"],["Centra Sota Cooperative","Suite 204"],["Cross Country Propane","Suite 204"],["Crystal Flash","Suite 204"],["Enderby Gas","Suite 204"],["FSi Propane","Suite 204"]],"t":[["Glades Gas & Electric Corp","Suite 204"],["J&J Gas Service","Suite 204"],["Lakes Gas","Suite 204"],["Lettermen's Energy","Suite 204"],["Mountain View Propane","Suite 204"],["Premier Propane","Suite 204"],["Propane Ninja","Suite 204"],["Reliable Energy Partners","Suite 204"],["Scott Petroleum","Suite 204"],["Seabreeze Propane","Suite 204"],["Shasta Gas Propane","Suite 204"],["LPGas Magazine","Suite 206"]]},{"n":"Mike Procopio","c":"PDI Technologies","r":"partner","w":[["FSi Propane","Suite 408"],["Glades Gas & Electric Corp","Suite 408"],["J&J Gas Service","Suite 408"],["Lakes Gas","Suite 408"],["Lettermen's Energy","Suite 408"],["Mountain View Propane","Suite 408"],["Premier Propane","Suite 408"],["Propane Ninja","Suite 408"],["Reliable Energy Partners","Suite 408"]],"t":[["Scott Petroleum","Suite 408"],["Seabreeze Propane","Suite 408"],["Shasta Gas Propane","Suite 408"],["LPGas Magazine","Suite 206"],["Acorn LPG, LLC","Suite 408"],["Allied Energy","Suite 408"],["American Distributing Co.","Suite 408"],["Caywood Propane Gas","Suite 408"],["Centra Sota Cooperative","Suite 408"],["Cross Country Propane","Suite 408"],["Crystal Flash","Suite 408"],["Enderby Gas","Suite 408"]]},{"n":"Nick Quaratiello","c":"PDI Technologies","r":"partner","w":[["FSi Propane","Suite 408"],["Glades Gas & Electric Corp","Suite 408"],["J&J Gas Service","Suite 408"],["Lakes Gas","Suite 408"],["Lettermen's Energy","Suite 408"],["Mountain View Propane","Suite 408"],["Premier Propane","Suite 408"],["Propane Ninja","Suite 408"],["Reliable Energy Partners","Suite 408"]],"t":[["Scott Petroleum","Suite 408"],["Seabreeze Propane","Suite 408"],["Shasta Gas Propane","Suite 408"],["LPGas Magazine","Suite 206"],["Acorn LPG, LLC","Suite 408"],["Allied Energy","Suite 408"],["American Distributing Co.","Suite 408"],["Caywood Propane Gas","Suite 408"],["Centra Sota Cooperative","Suite 408"],["Cross Country Propane","Suite 408"],["Crystal Flash","Suite 408"],["Enderby Gas","Suite 408"]]},{"n":"John Delcorpo","c":"Precise Alternative Fleet Solutions","r":"partner","w":[["Scott Petroleum","Suite 208"],["Seabreeze Propane","Suite 208"],["Shasta Gas Propane","Suite 208"],["LPGas Magazine","Suite 206"],["Acorn LPG, LLC","Suite 208"],["Allied Energy","Suite 208"],["American Distributing Co.","Suite 208"],["Caywood Propane Gas","Suite 208"],["Centra Sota Cooperative","Suite 208"]],"t":[["Cross Country Propane","Suite 208"],["Crystal Flash","Suite 208"],["Enderby Gas","Suite 208"],["FSi Propane","Suite 208"],["Glades Gas & Electric Corp","Suite 208"],["J&J Gas Service","Suite 208"],["Lakes Gas","Suite 208"],["Lettermen's Energy","Suite 208"],["Mountain View Propane","Suite 208"],["Premier Propane","Suite 208"],["Propane Ninja","Suite 208"],["Reliable Energy Partners","Suite 208"]]},{"n":"Ronny Martinez","c":"Precise Alternative Fleet Solutions","r":"partner","w":[["Scott Petroleum","Suite 208"],["Seabreeze Propane","Suite 208"],["Shasta Gas Propane","Suite 208"],["LPGas Magazine","Suite 206"],["Acorn LPG, LLC","Suite 208"],["Allied Energy","Suite 208"],["American Distributing Co.","Suite 208"],["Caywood Propane Gas","Suite 208"],["Centra Sota Cooperative","Suite 208"]],"t":[["Cross Country Propane","Suite 208"],["Crystal Flash","Suite 208"],["Enderby Gas","Suite 208"],["FSi Propane","Suite 208"],["Glades Gas & Electric Corp","Suite 208"],["J&J Gas Service","Suite 208"],["Lakes Gas","Suite 208"],["Lettermen's Energy","Suite 208"],["Mountain View Propane","Suite 208"],["Premier Propane","Suite 208"],["Propane Ninja","Suite 208"],["Reliable Energy Partners","Suite 208"]]},{"n":"Scott Eggers","c":"Quality Steel / LP Cylinder","r":"partner","w":[["Propane Ninja","Suite 302"],["Reliable Energy Partners","Suite 302"],["Scott Petroleum","Suite 302"],["Seabreeze Propane","Suite 302"],["Shasta Gas Propane","Suite 302"],["LPGas Magazine","Suite 206"],["Acorn LPG, LLC","Suite 302"],["Allied Energy","Suite 302"],["American Distributing Co.","Suite 302"]],"t":[["Caywood Propane Gas","Suite 302"],["Centra Sota Cooperative","Suite 302"],["Cross Country Propane","Suite 302"],["Crystal Flash","Suite 302"],["Enderby Gas","Suite 302"],["FSi Propane","Suite 302"],["Glades Gas & Electric Corp","Suite 302"],["J&J Gas Service","Suite 302"],["Lakes Gas","Suite 302"],["Lettermen's Energy","Suite 302"],["Mountain View Propane","Suite 302"],["Premier Propane","Suite 302"]]},{"n":"Ken Horton","c":"Quality Steel / LP Cylinder","r":"partner","w":[["Propane Ninja","Suite 302"],["Reliable Energy Partners","Suite 302"],["Scott Petroleum","Suite 302"],["Seabreeze Propane","Suite 302"],["Shasta Gas Propane","Suite 302"],["LPGas Magazine","Suite 206"],["Acorn LPG, LLC","Suite 302"],["Allied Energy","Suite 302"],["American Distributing Co.","Suite 302"]],"t":[["Caywood Propane Gas","Suite 302"],["Centra Sota Cooperative","Suite 302"],["Cross Country Propane","Suite 302"],["Crystal Flash","Suite 302"],["Enderby Gas","Suite 302"],["FSi Propane","Suite 302"],["Glades Gas & Electric Corp","Suite 302"],["J&J Gas Service","Suite 302"],["Lakes Gas","Suite 302"],["Lettermen's Energy","Suite 302"],["Mountain View Propane","Suite 302"],["Premier Propane","Suite 302"]]},{"n":"Shirnae Richardson","c":"Quality Steel / LP Cylinder","r":"partner","w":[["Propane Ninja","Suite 302"],["Reliable Energy Partners","Suite 302"],["Scott Petroleum","Suite 302"],["Seabreeze Propane","Suite 302"],["Shasta Gas Propane","Suite 302"],["LPGas Magazine","Suite 206"],["Acorn LPG, LLC","Suite 302"],["Allied Energy","Suite 302"],["American Distributing Co.","Suite 302"]],"t":[["Caywood Propane Gas","Suite 302"],["Centra Sota Cooperative","Suite 302"],["Cross Country Propane","Suite 302"],["Crystal Flash","Suite 302"],["Enderby Gas","Suite 302"],["FSi Propane","Suite 302"],["Glades Gas & Electric Corp","Suite 302"],["J&J Gas Service","Suite 302"],["Lakes Gas","Suite 302"],["Lettermen's Energy","Suite 302"],["Mountain View Propane","Suite 302"],["Premier Propane","Suite 302"]]},{"n":"Tom Neubauer","c":"Rural Computer Consultants","r":"partner","w":[["American Distributing Co.","Suite 511"],["Caywood Propane Gas","Suite 511"],["Centra Sota Cooperative","Suite 511"],["Cross Country Propane","Suite 511"],["Crystal Flash","Suite 511"],["Enderby Gas","Suite 511"],["FSi Propane","Suite 511"],["Glades Gas & Electric Corp","Suite 511"],["J&J Gas Service","Suite 511"]],"t":[["Lakes Gas","Suite 511"],["Lettermen's Energy","Suite 511"],["Mountain View Propane","Suite 511"],["Premier Propane","Suite 511"],["Propane Ninja","Suite 511"],["Reliable Energy Partners","Suite 511"],["Scott Petroleum","Suite 511"],["Seabreeze Propane","Suite 511"],["Shasta Gas Propane","Suite 511"],["LPGas Magazine","Suite 206"],["Acorn LPG, LLC","Suite 511"],["Allied Energy","Suite 511"]]},{"n":"Kyle Sheehan","c":"Rural Computer Consultants","r":"partner","w":[["American Distributing Co.","Suite 511"],["Caywood Propane Gas","Suite 511"],["Centra Sota Cooperative","Suite 511"],["Cross Country Propane","Suite 511"],["Crystal Flash","Suite 511"],["Enderby Gas","Suite 511"],["FSi Propane","Suite 511"],["Glades Gas & Electric Corp","Suite 511"],["J&J Gas Service","Suite 511"]],"t":[["Lakes Gas","Suite 511"],["Lettermen's Energy","Suite 511"],["Mountain View Propane","Suite 511"],["Premier Propane","Suite 511"],["Propane Ninja","Suite 511"],["Reliable Energy Partners","Suite 511"],["Scott Petroleum","Suite 511"],["Seabreeze Propane","Suite 511"],["Shasta Gas Propane","Suite 511"],["LPGas Magazine","Suite 206"],["Acorn LPG, LLC","Suite 511"],["Allied Energy","Suite 511"]]},{"n":"Jane Hanlon","c":"Tiger Payment Solutions","r":"partner","w":[["Glades Gas & Electric Corp","Suite 405"],["J&J Gas Service","Suite 405"],["Lakes Gas","Suite 405"],["Lettermen's Energy","Suite 405"],["Mountain View Propane","Suite 405"],["Premier Propane","Suite 405"],["Propane Ninja","Suite 405"],["Reliable Energy Partners","Suite 405"],["Scott Petroleum","Suite 405"]],"t":[["Seabreeze Propane","Suite 405"],["Shasta Gas Propane","Suite 405"],["LPGas Magazine","Suite 206"],["Acorn LPG, LLC","Suite 405"],["Allied Energy","Suite 405"],["American Distributing Co.","Suite 405"],["Caywood Propane Gas","Suite 405"],["Centra Sota Cooperative","Suite 405"],["Cross Country Propane","Suite 405"],["Crystal Flash","Suite 405"],["Enderby Gas","Suite 405"],["FSi Propane","Suite 405"]]},{"n":"Zach Turner","c":"Tiger Payment Solutions","r":"partner","w":[["Glades Gas & Electric Corp","Suite 405"],["J&J Gas Service","Suite 405"],["Lakes Gas","Suite 405"],["Lettermen's Energy","Suite 405"],["Mountain View Propane","Suite 405"],["Premier Propane","Suite 405"],["Propane Ninja","Suite 405"],["Reliable Energy Partners","Suite 405"],["Scott Petroleum","Suite 405"]],"t":[["Seabreeze Propane","Suite 405"],["Shasta Gas Propane","Suite 405"],["LPGas Magazine","Suite 206"],["Acorn LPG, LLC","Suite 405"],["Allied Energy","Suite 405"],["American Distributing Co.","Suite 405"],["Caywood Propane Gas","Suite 405"],["Centra Sota Cooperative","Suite 405"],["Cross Country Propane","Suite 405"],["Crystal Flash","Suite 405"],["Enderby Gas","Suite 405"],["FSi Propane","Suite 405"]]},{"n":"Ashley Campbell","c":"Warm Thoughts Communications","r":"partner","w":[["Seabreeze Propane","Suite 207"],["Shasta Gas Propane","Suite 207"],["LPGas Magazine","Suite 206"],["Acorn LPG, LLC","Suite 207"],["Allied Energy","Suite 207"],["American Distributing Co.","Suite 207"],["Caywood Propane Gas","Suite 207"],["Centra Sota Cooperative","Suite 207"],["Cross Country Propane","Suite 207"]],"t":[["Crystal Flash","Suite 207"],["Enderby Gas","Suite 207"],["FSi Propane","Suite 207"],["Glades Gas & Electric Corp","Suite 207"],["J&J Gas Service","Suite 207"],["Lakes Gas","Suite 207"],["Lettermen's Energy","Suite 207"],["Mountain View Propane","Suite 207"],["Premier Propane","Suite 207"],["Propane Ninja","Suite 207"],["Reliable Energy Partners","Suite 207"],["Scott Petroleum","Suite 207"]]},{"n":"Jason Erwin","c":"Warm Thoughts Communications","r":"partner","w":[["Seabreeze Propane","Suite 207"],["Shasta Gas Propane","Suite 207"],["LPGas Magazine","Suite 206"],["Acorn LPG, LLC","Suite 207"],["Allied Energy","Suite 207"],["American Distributing Co.","Suite 207"],["Caywood Propane Gas","Suite 207"],["Centra Sota Cooperative","Suite 207"],["Cross Country Propane","Suite 207"]],"t":[["Crystal Flash","Suite 207"],["Enderby Gas","Suite 207"],["FSi Propane","Suite 207"],["Glades Gas & Electric Corp","Suite 207"],["J&J Gas Service","Suite 207"],["Lakes Gas","Suite 207"],["Lettermen's Energy","Suite 207"],["Mountain View Propane","Suite 207"],["Premier Propane","Suite 207"],["Propane Ninja","Suite 207"],["Reliable Energy Partners","Suite 207"],["Scott Petroleum","Suite 207"]]},{"n":"Emily Bader","c":"Worthington Enterprises","r":"partner","w":[["Premier Propane","Suite 304"],["Propane Ninja","Suite 304"],["Reliable Energy Partners","Suite 304"],["Scott Petroleum","Suite 304"],["Seabreeze Propane","Suite 304"],["Shasta Gas Propane","Suite 304"],["LPGas Magazine","Suite 206"],["Acorn LPG, LLC","Suite 304"],["Allied Energy","Suite 304"]],"t":[["American Distributing Co.","Suite 304"],["Caywood Propane Gas","Suite 304"],["Centra Sota Cooperative","Suite 304"],["Cross Country Propane","Suite 304"],["Crystal Flash","Suite 304"],["Enderby Gas","Suite 304"],["FSi Propane","Suite 304"],["Glades Gas & Electric Corp","Suite 304"],["J&J Gas Service","Suite 304"],["Lakes Gas","Suite 304"],["Lettermen's Energy","Suite 304"],["Mountain View Propane","Suite 304"]]},{"n":"Micah Snyder","c":"Worthington Enterprises","r":"partner","w":[["Premier Propane","Suite 304"],["Propane Ninja","Suite 304"],["Reliable Energy Partners","Suite 304"],["Scott Petroleum","Suite 304"],["Seabreeze Propane","Suite 304"],["Shasta Gas Propane","Suite 304"],["LPGas Magazine","Suite 206"],["Acorn LPG, LLC","Suite 304"],["Allied Energy","Suite 304"]],"t":[["American Distributing Co.","Suite 304"],["Caywood Propane Gas","Suite 304"],["Centra Sota Cooperative","Suite 304"],["Cross Country Propane","Suite 304"],["Crystal Flash","Suite 304"],["Enderby Gas","Suite 304"],["FSi Propane","Suite 304"],["Glades Gas & Electric Corp","Suite 304"],["J&J Gas Service","Suite 304"],["Lakes Gas","Suite 304"],["Lettermen's Energy","Suite 304"],["Mountain View Propane","Suite 304"]]},{"n":"LP Gas Staff","c":"LP Gas Magazine","r":"staff","w":[],"t":[]}];
@@ -190,7 +220,7 @@ const LOGOS={"ADD Systems":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2
 const MTIMES=["8:15 AM","8:37 AM","8:59 AM","9:21 AM","9:43 AM","10:05 AM","10:27 AM","10:49 AM","11:11 AM","11:33 AM","11:55 AM","12:17 PM"];
 
 const BLUE="#0077D0";const LBLUE="#D6EEFF";const DBLUE="#0077D0";
-const APP_VERSION="2026.05.15.5";
+const APP_VERSION="2026.05.15.6";
 const HEADSHOTS={"Anthony Buck":"anthony-buck.jpg","Brandon Hewett":"brandon-hewett.jpg","Carl Fox":"carl-fox.jpg","Casey Dell":"casey-dell.jpg","Chad Gregg":"chad-gregg.jpg","Chris Caywood":"chris-caywood.jpg","Chris Kutemeier":"chris-kutemeier.jpg","David Dodd":"david-dodd.jpg","Dennis McCarthy":"dennis-mccarthy.jpg","Gordon Cunningham":"gordon-cunningham.jpg","Howard Reinhard":"howard-reinhard.jpg","Jason Scribner":"jason-scribner.jpg","Jason Wehunt":"jason-wehunt.jpg","Josh Schmoll":"josh-schmoll.jpg","Karen Wehunt":"karen-wehunt.jpg","Mary Sargeant-Buck":"mary-sargeant-buck.jpg","Mike Dodd":"mike-dodd.jpg","Paul Ostendorf":"paul-ostendorf.jpg","Randy Schott":"randy-schott.jpg","Ryan Brewer":"ryan-brewer.jpg","Sean Daugherty":"sean-daugherty.jpg","Seth Dimacchia":"seth-dimacchia.jpg","Stephan Chase":"stephan-chase.jpg","Stephen Miller":"stephen-miller.jpg","Tammy Scribner":"tammy-scribner.jpg"};
 
 
@@ -443,7 +473,42 @@ async function compressImage(file, maxDim=1600, quality=0.75){
   return canvas.toDataURL('image/jpeg', quality);
 }
 
-const S={root:{fontFamily:"'Gotham',sans-serif",maxWidth:480,margin:"0 auto",minHeight:"100vh",background:"#fff",position:"relative"},header:{background:`linear-gradient(135deg,${DBLUE},${BLUE})`,color:"#fff",padding:"16px 20px",display:"flex",alignItems:"center",justifyContent:"space-between"},logo:{fontSize:22,fontWeight:800,letterSpacing:"-0.5px"},logoSub:{fontSize:12,fontWeight:500,opacity:0.8,letterSpacing:1},tabs:{display:"flex",background:LBLUE,borderBottom:`2px solid ${BLUE}`},tab:(a)=>({flex:1,padding:"10px 4px",textAlign:"center",fontSize:13,fontWeight:a?700:500,color:a?BLUE:"#666",background:a?"#fff":"transparent",borderBottom:a?`3px solid ${BLUE}`:"3px solid transparent",cursor:"pointer",transition:"all 0.2s"}),card:{background:"#fff",borderRadius:10,margin:"8px 12px",padding:"14px 16px",boxShadow:"0 1px 4px rgba(0,0,0,0.08)",border:"1px solid #eee"},dayTab:(a)=>({padding:"8px 16px",borderRadius:20,fontSize:15,fontWeight:a?700:500,color:a?"#fff":BLUE,background:a?BLUE:"transparent",cursor:"pointer",border:`1px solid ${a?BLUE:"#ccc"}`,whiteSpace:"nowrap"}),badge:(type)=>{const colors={meeting:BLUE,social:"#2E7D32",meal:"#E65100",event:"#5C6BC0"};return{display:"inline-block",width:4,minHeight:"100%",borderRadius:2,background:colors[type]||BLUE,marginRight:12}},input:{width:"100%",padding:"12px 16px",border:`2px solid #ddd`,borderRadius:8,fontSize:17,outline:"none",boxSizing:"border-box"},btn:{width:"100%",padding:"14px",background:BLUE,color:"#fff",border:"none",borderRadius:8,fontSize:16,fontWeight:700,cursor:"pointer"},star:(filled)=>({cursor:"pointer",fontSize:22,color:filled?"#F9A825":"#ddd",transition:"color 0.15s"})};
+// Style tokens use CSS variables defined in <head>, so dark mode just flips `data-theme`
+// on <html>. Color names live in --lpg-* vars; only structural values (sizes, radii, layout) stay literal.
+const S={
+  root:{fontFamily:"'Gotham',sans-serif",maxWidth:480,margin:"0 auto",minHeight:"100vh",background:"var(--lpg-bg)",color:"var(--lpg-text)",position:"relative"},
+  header:{background:`linear-gradient(135deg,${DBLUE},${BLUE})`,color:"#fff",padding:"16px 20px",display:"flex",alignItems:"center",justifyContent:"space-between"},
+  logo:{fontSize:22,fontWeight:800,letterSpacing:"-0.5px"},
+  logoSub:{fontSize:12,fontWeight:500,opacity:0.8,letterSpacing:1},
+  tabs:{display:"flex",background:"var(--lpg-tab-bg)",borderBottom:`2px solid ${BLUE}`},
+  tab:(a)=>({flex:1,padding:"10px 4px",textAlign:"center",fontSize:13,fontWeight:a?700:500,color:a?BLUE:"var(--lpg-text-muted)",background:a?"var(--lpg-bg)":"transparent",borderBottom:a?`3px solid ${BLUE}`:"3px solid transparent",cursor:"pointer",transition:"all 0.2s"}),
+  card:{background:"var(--lpg-card)",borderRadius:10,margin:"8px 12px",padding:"14px 16px",boxShadow:"0 1px 4px rgba(0,0,0,0.08)",border:"1px solid var(--lpg-border)",color:"var(--lpg-text)"},
+  dayTab:(a)=>({padding:"8px 16px",borderRadius:20,fontSize:15,fontWeight:a?700:500,color:a?"#fff":BLUE,background:a?BLUE:"transparent",cursor:"pointer",border:`1px solid ${a?BLUE:"var(--lpg-border-strong)"}`,whiteSpace:"nowrap"}),
+  badge:(type)=>{const colors={meeting:BLUE,social:"#2E7D32",meal:"#E65100",event:"#5C6BC0"};return{display:"inline-block",width:4,minHeight:"100%",borderRadius:2,background:colors[type]||BLUE,marginRight:12}},
+  input:{width:"100%",padding:"12px 16px",border:`2px solid var(--lpg-border-strong)`,borderRadius:8,fontSize:17,outline:"none",boxSizing:"border-box",background:"var(--lpg-input-bg)",color:"var(--lpg-text)"},
+  btn:{width:"100%",padding:"14px",background:BLUE,color:"#fff",border:"none",borderRadius:8,fontSize:16,fontWeight:700,cursor:"pointer"},
+  star:(filled)=>({cursor:"pointer",fontSize:22,color:filled?"#F9A825":"var(--lpg-border-strong)",transition:"color 0.15s"})
+};
+
+// React class component error boundary. If anything throws while rendering a wrapped
+// subtree, we show a recovery card instead of a blank screen. Reset is per-instance.
+class ErrorBoundary extends React.Component {
+  constructor(props){ super(props); this.state={hasError:false}; }
+  static getDerivedStateFromError(){ return {hasError:true}; }
+  componentDidCatch(err,info){ try{console.error("[lpg] section crash:",err,info)}catch(_){} }
+  render(){
+    if(this.state.hasError){
+      return (
+        <div style={{margin:"12px",padding:"16px",background:"#FFF3E0",border:"1px solid #FFB74D",borderRadius:10,color:"#5D4037"}}>
+          <div style={{fontWeight:700,marginBottom:6,fontSize:15}}>Couldn't load this section</div>
+          <div style={{fontSize:13,opacity:0.85,marginBottom:10}}>{this.props.label?`(${this.props.label}) `:""}Try switching tabs and back, or tap below.</div>
+          <button onClick={()=>this.setState({hasError:false})} style={{background:BLUE,color:"#fff",border:"none",padding:"8px 14px",borderRadius:8,fontWeight:600,cursor:"pointer"}}>Try Again</button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 // Pinch-zoom + pan modal for the venue map. Custom touch handlers because
 // CSS `touch-action: pinch-zoom` inside a fixed-position element is unreliable
@@ -554,10 +619,10 @@ function AttendeeNotesCard({u,BLUE,S}){
   if(!hasnotes)return null;
   return(
     <div style={{...S.card,marginBottom:6}}>
-      <div style={{fontSize:14,fontWeight:700,color:BLUE}}>{u.n} <span style={{color:"#888",fontWeight:400}}>({u.c})</span></div>
+      <div style={{fontSize:14,fontWeight:700,color:BLUE}}>{u.n} <span style={{color:"var(--lpg-text-muted)",fontWeight:400}}>({u.c})</span></div>
       {Object.entries(uNotes).filter(([k,v])=>v.text||v.rating||v.flag).map(([k,v])=>(
         <div key={k} style={{fontSize:13,color:"#444",padding:"4px 0",borderTop:"1px solid #eee",marginTop:4}}>
-          <div style={{fontWeight:600,color:"#666"}}>{k}</div>
+          <div style={{fontWeight:600,color:"var(--lpg-text-muted)"}}>{k}</div>
           {v.text&&<div>{v.text}</div>}
           {v.rating>0&&<div>{"★".repeat(v.rating)}{"☆".repeat(5-v.rating)}</div>}
           {v.flag&&<div style={{color:"#c00"}}>⚑ Flagged</div>}
@@ -591,6 +656,12 @@ const AppComponent = function App(){
   const[photos,setPhotos]=useState([]);
   const[notifEnabled,setNotifEnabled]=useState(false);
   const[mapZoom,setMapZoom]=useState(false);
+  // Dark mode — persisted, applied via [data-theme] attribute on <html> so CSS vars flip.
+  const[dark,setDark]=useState(()=>{try{return localStorage.getItem("lpg-dark")==="1"}catch(e){return false}});
+  useEffect(()=>{try{document.documentElement.dataset.theme=dark?"dark":"light"}catch(e){}},[dark]);
+  const toggleDark=useCallback(()=>{setDark(d=>{const nd=!d;try{localStorage.setItem("lpg-dark",nd?"1":"0")}catch(e){}return nd})},[]);
+  // Cross-tab global search (overrides per-tab content when non-empty).
+  const[globalSearch,setGlobalSearch]=useState("");
   // iOS Safari "Add to Home Screen" prompt: only when running in browser
   // (not yet installed), only on iPhone/iPad, only if not previously dismissed.
   const[showIosA2HS,setShowIosA2HS]=useState(()=>{
@@ -827,16 +898,37 @@ const AppComponent = function App(){
     <div style={S.root}>
       <div style={S.header}>
         <SummitLogo size="small" light={true}/>
-        <div style={{textAlign:"right"}}>
-          <div style={{fontSize:14,fontWeight:600}}>{user.n}</div>
-          <div style={{fontSize:12,opacity:0.7}}>{user.c}</div>
-          {user.r==="staff"&&<div style={{fontSize:8,fontWeight:700,background:"#F9A825",color:"#1a1a2e",padding:"2px 8px",borderRadius:8,display:"inline-block",marginTop:2,letterSpacing:1}}>STAFF</div>}
-          <div onClick={()=>{setUser(null);setTab(0);setSelName("");setPw("");try{localStorage.removeItem("lpg-session");}catch(e){}}} style={{fontSize:12,cursor:"pointer",opacity:0.7,marginTop:3,display:"flex",alignItems:"center",gap:3,justifyContent:"flex-end"}}><LogOut size={10}/>Sign Out</div>
+        <div style={{display:"flex",alignItems:"flex-start",gap:10}}>
+          <div onClick={toggleDark} title={dark?"Switch to light mode":"Switch to dark mode"} style={{width:34,height:34,borderRadius:17,background:"rgba(255,255,255,0.18)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0,marginTop:4}}>
+            {dark?<Sun size={16} color="#fff"/>:<Moon size={16} color="#fff"/>}
+          </div>
+          <div style={{textAlign:"right"}}>
+            <div style={{fontSize:14,fontWeight:600}}>{user.n}</div>
+            <div style={{fontSize:12,opacity:0.7}}>{user.c}</div>
+            {user.r==="staff"&&<div style={{fontSize:8,fontWeight:700,background:"#F9A825",color:"var(--lpg-text)",padding:"2px 8px",borderRadius:8,display:"inline-block",marginTop:2,letterSpacing:1}}>STAFF</div>}
+            <div onClick={()=>{setUser(null);setTab(0);setSelName("");setPw("");try{localStorage.removeItem("lpg-session");}catch(e){}}} style={{fontSize:12,cursor:"pointer",opacity:0.7,marginTop:3,display:"flex",alignItems:"center",gap:3,justifyContent:"flex-end"}}><LogOut size={10}/>Sign Out</div>
+          </div>
         </div>
       </div>
 
       <div style={S.tabs}>
-        {[["Schedule",Calendar],["Partners",Building2],["Attendees",Users],["Info",Info],["Notes",StickyNote]].map(([t,Icon],i)=><div key={t} style={{...S.tab(tab===i),display:"flex",flexDirection:"column",alignItems:"center",gap:2}} onClick={()=>{setTab(i);setDetail(null);setSearch("");setInfoSection(null)}}><Icon size={14}/><span style={{fontSize:11}}>{t}</span></div>)}
+        {[["Schedule",Calendar],["Partners",Building2],["Attendees",Users],["Info",Info],["Notes",StickyNote]].map(([t,Icon],i)=><div key={t} style={{...S.tab(tab===i),display:"flex",flexDirection:"column",alignItems:"center",gap:2}} onClick={()=>{setTab(i);setDetail(null);setSearch("");setInfoSection(null);setGlobalSearch("")}}><Icon size={14}/><span style={{fontSize:11}}>{t}</span></div>)}
+      </div>
+
+      {/* Global search bar — when filled, overrides tab content with mixed results across schedule + partners + attendees */}
+      <div style={{padding:"8px 12px",background:"var(--lpg-bg)",borderBottom:"1px solid var(--lpg-border)",position:"relative"}}>
+        <div style={{position:"absolute",left:24,top:"50%",transform:"translateY(-50%)",pointerEvents:"none",display:"flex",alignItems:"center",color:"var(--lpg-text-faint)"}}><Search size={16}/></div>
+        <input
+          value={globalSearch}
+          onChange={e=>setGlobalSearch(e.target.value)}
+          placeholder="Search schedule, partners, attendees..."
+          style={{...S.input,padding:"9px 36px 9px 38px",fontSize:14,borderWidth:1}}
+        />
+        {globalSearch&&(
+          <div onClick={()=>setGlobalSearch("")} style={{position:"absolute",right:24,top:"50%",transform:"translateY(-50%)",cursor:"pointer",width:22,height:22,borderRadius:11,background:"var(--lpg-border)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+            <X size={12} color="var(--lpg-text-muted)"/>
+          </div>
+        )}
       </div>
 
       <div style={{padding:"0 0 80px 0",overflowY:"auto"}}>
@@ -862,11 +954,11 @@ const AppComponent = function App(){
               <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:16}}>
                 <div style={{width:36,height:36,borderRadius:18,background:LBLUE,display:"flex",alignItems:"center",justifyContent:"center"}}><Megaphone size={18} color={BLUE}/></div>
                 <div>
-                  <div style={{fontSize:16,fontWeight:700,color:"#1a1a2e"}}>Announcement</div>
-                  <div style={{fontSize:12,color:"#888"}}>{showBroadcast.by} | {showBroadcast.at}</div>
+                  <div style={{fontSize:16,fontWeight:700,color:"var(--lpg-text)"}}>Announcement</div>
+                  <div style={{fontSize:12,color:"var(--lpg-text-muted)"}}>{showBroadcast.by} | {showBroadcast.at}</div>
                 </div>
               </div>
-              <div style={{fontSize:16,color:"#333",lineHeight:1.6,marginBottom:20,whiteSpace:"pre-wrap"}}>{showBroadcast.text}</div>
+              <div style={{fontSize:16,color:"var(--lpg-text)",lineHeight:1.6,marginBottom:20,whiteSpace:"pre-wrap"}}>{showBroadcast.text}</div>
               <button onClick={dismissBroadcast} style={{...S.btn,fontSize:16}}>Got It</button>
             </div>
           </div>
@@ -876,20 +968,122 @@ const AppComponent = function App(){
           <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.5)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:24}}>
             <div style={{background:"#fff",borderRadius:16,padding:24,maxWidth:400,width:"100%",boxShadow:"0 20px 60px rgba(0,0,0,0.3)"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
-                <div style={{fontSize:16,fontWeight:700,color:"#1a1a2e"}}>Send Announcement</div>
+                <div style={{fontSize:16,fontWeight:700,color:"var(--lpg-text)"}}>Send Announcement</div>
                 <X size={20} color="#999" style={{cursor:"pointer"}} onClick={()=>{setComposing(false);setComposeText("")}}/>
               </div>
-              <div style={{fontSize:13,color:"#888",marginBottom:12}}>This message will appear as a popup for all attendees and partners when they open the app.</div>
+              <div style={{fontSize:13,color:"var(--lpg-text-muted)",marginBottom:12}}>This message will appear as a popup for all attendees and partners when they open the app.</div>
               <textarea value={composeText} onChange={e=>setComposeText(e.target.value)} placeholder="Type your announcement..." style={{...S.input,minHeight:100,resize:"vertical",fontSize:16,fontFamily:"inherit",marginBottom:12}}/>
               <div style={{display:"flex",gap:8}}>
-                <button onClick={()=>{setComposing(false);setComposeText("")}} style={{flex:1,padding:12,background:"#eee",color:"#666",border:"none",borderRadius:8,fontSize:16,fontWeight:600,cursor:"pointer"}}>Cancel</button>
+                <button onClick={()=>{setComposing(false);setComposeText("")}} style={{flex:1,padding:12,background:"#eee",color:"var(--lpg-text-muted)",border:"none",borderRadius:8,fontSize:16,fontWeight:600,cursor:"pointer"}}>Cancel</button>
                 <button onClick={()=>sendBroadcast(composeText)} disabled={!composeText.trim()} style={{...S.btn,flex:1,opacity:composeText.trim()?1:0.5,display:"flex",alignItems:"center",justifyContent:"center",gap:6}}><Send size={14}/>Send</button>
               </div>
             </div>
           </div>
         )}
 
-        {user.r==="staff"&&(
+        {/* All tab-specific content goes through ErrorBoundary so a bad data row in one tab */}
+        {/* shows a recovery card instead of a white screen. Keyed by tab+search so resets on nav. */}
+        <ErrorBoundary key={tab+"-"+(globalSearch.trim()?"s":"n")}>
+
+        {/* Persistent "Up Next" / "Happening Now" card — visible from non-Schedule tabs so attendees */}
+        {/* always see what's next. On the Schedule tab itself the inline card already provides this. */}
+        {!globalSearch.trim()&&user.r!=="staff"&&tab!==0&&(()=>{
+          const upNext=findUpNext(schedule,now);
+          if(!upNext) return null;
+          return (
+            <div onClick={()=>{
+              setTab(0);
+              if(day!==upNext.day) setDay(upNext.day);
+              setTimeout(()=>{
+                const el=document.querySelector(`[data-sched-idx="${upNext.idx}"]`);
+                if(el) el.scrollIntoView({behavior:"smooth",block:"center"});
+              },120);
+            }} style={{margin:"10px 12px 0",background:`linear-gradient(135deg,${BLUE},${DBLUE})`,color:"#fff",borderRadius:12,padding:"12px 14px",display:"flex",alignItems:"center",gap:12,boxShadow:"0 2px 10px rgba(14,90,138,0.25)",cursor:"pointer"}}>
+              <div style={{width:38,height:38,borderRadius:"50%",background:"rgba(255,255,255,0.18)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Clock size={18} color="#fff"/></div>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:12,fontWeight:700,letterSpacing:1,opacity:0.8}}>{upNext.minutesUntil<=0?"HAPPENING NOW":"UP NEXT"} · {upNext.day.toUpperCase()}{upNext.minutesUntil>0?` · ${formatCountdown(upNext.minutesUntil).toUpperCase()}`:""}</div>
+                <div style={{fontSize:16,fontWeight:700,marginTop:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{upNext.ev.e}</div>
+                <div style={{fontSize:13,opacity:0.85,marginTop:1}}>{upNext.ev.t}{upNext.ev.l?` · ${upNext.ev.l}`:""}</div>
+              </div>
+              <ChevronRight size={16} color="#fff"/>
+            </div>
+          );
+        })()}
+
+        {/* Global search results — replaces tab content when search is non-empty. */}
+        {globalSearch.trim()&&(()=>{
+          const q=globalSearch.toLowerCase().trim();
+          const schedResults=[];
+          Object.entries(schedule||{}).forEach(([dayName,events])=>{
+            (events||[]).forEach((ev,i)=>{
+              const hay=`${ev.e||""} ${ev.l||""} ${ev.t||""}`.toLowerCase();
+              if(hay.includes(q)) schedResults.push({day:dayName,idx:i,ev});
+            });
+          });
+          const partnerResults=partnerList.filter(([name,info])=>{
+            const reps=(PARTNER_REPS&&PARTNER_REPS[name])?PARTNER_REPS[name].map(r=>r.n).join(" "):"";
+            const desc=(info&&info.d)?info.d:"";
+            return (name+" "+reps+" "+desc).toLowerCase().includes(q);
+          });
+          const attendeeResults=retailerUsers.filter(u=>(u.n+" "+u.c).toLowerCase().includes(q));
+          const total=schedResults.length+partnerResults.length+attendeeResults.length;
+          return (
+            <div style={{padding:"12px"}}>
+              <div style={{fontSize:13,color:"var(--lpg-text-muted)",marginBottom:8}}>{total} result{total===1?"":"s"} for &ldquo;{globalSearch}&rdquo;</div>
+              {schedResults.length>0&&(
+                <div style={{marginBottom:14}}>
+                  <div style={{fontSize:12,fontWeight:700,letterSpacing:1,color:BLUE,padding:"4px 4px 6px"}}>SCHEDULE · {schedResults.length}</div>
+                  {schedResults.slice(0,12).map((r,ri)=>(
+                    <div key={ri} onClick={()=>{setGlobalSearch("");setTab(0);if(day!==r.day)setDay(r.day);setTimeout(()=>{const el=document.querySelector(`[data-sched-idx="${r.idx}"]`);if(el)el.scrollIntoView({behavior:"smooth",block:"center"});},120);}} style={{...S.card,margin:"4px 0",cursor:"pointer",display:"flex",alignItems:"center",gap:10}}>
+                      <div style={S.badge(r.ev.type)}/>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontSize:12,color:BLUE,fontWeight:700}}>{r.day} · {r.ev.t}</div>
+                        <div style={{fontSize:15,fontWeight:600,color:"var(--lpg-text)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{r.ev.e}</div>
+                        {r.ev.l&&<div style={{fontSize:12,color:"var(--lpg-text-muted)"}}><MapPin size={10} style={{display:"inline",marginRight:3}}/>{r.ev.l}</div>}
+                      </div>
+                      <ChevronRight size={14} color="var(--lpg-text-faint)"/>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {partnerResults.length>0&&(
+                <div style={{marginBottom:14}}>
+                  <div style={{fontSize:12,fontWeight:700,letterSpacing:1,color:BLUE,padding:"4px 4px 6px"}}>PARTNERS · {partnerResults.length}</div>
+                  {partnerResults.slice(0,12).map(([name,info])=>(
+                    <div key={name} onClick={()=>{setGlobalSearch("");setTab(1);setDetail({type:"partner",name,info})}} style={{...S.card,margin:"4px 0",cursor:"pointer",display:"flex",alignItems:"center",gap:10}}>
+                      {LOGOS[name]?<img src={LOGOS[name]} alt={name} style={{height:32,width:32,objectFit:"contain",borderRadius:6,background:"#fff",border:"1px solid var(--lpg-border)",padding:2,flexShrink:0}}/>:<div style={{width:32,height:32,borderRadius:6,background:`linear-gradient(135deg,${BLUE},${DBLUE})`,color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:13,flexShrink:0}}>{getInitials(name)}</div>}
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontSize:15,fontWeight:600,color:"var(--lpg-text)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{name}</div>
+                        {PARTNER_REPS&&PARTNER_REPS[name]&&PARTNER_REPS[name].length>0&&<div style={{fontSize:12,color:"var(--lpg-text-muted)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{PARTNER_REPS[name].map(r=>r.n).join(", ")}</div>}
+                      </div>
+                      <ChevronRight size={14} color="var(--lpg-text-faint)"/>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {attendeeResults.length>0&&(
+                <div style={{marginBottom:14}}>
+                  <div style={{fontSize:12,fontWeight:700,letterSpacing:1,color:BLUE,padding:"4px 4px 6px"}}>ATTENDEES · {attendeeResults.length}</div>
+                  {attendeeResults.slice(0,12).map(u=>(
+                    <div key={u.n} onClick={()=>{setGlobalSearch("");setTab(2);if(PROFILES[u.n])setDetail({type:"profile",user:u,p:PROFILES[u.n]})}} style={{...S.card,margin:"4px 0",cursor:PROFILES[u.n]?"pointer":"default",display:"flex",alignItems:"center",gap:10}}>
+                      <div style={{width:36,height:36,borderRadius:"50%",overflow:"hidden",background:`linear-gradient(135deg,#546E7A,#37474F)`,color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:13,flexShrink:0}}>
+                        {HEADSHOTS[u.n]?<img src={"headshots/"+HEADSHOTS[u.n]+"?v="+APP_VERSION} alt={u.n} style={{width:"100%",height:"100%",objectFit:"cover",objectPosition:"center top"}}/>:getInitials(u.n)}
+                      </div>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontSize:15,fontWeight:600,color:"var(--lpg-text)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{u.n}</div>
+                        <div style={{fontSize:12,color:"var(--lpg-text-muted)"}}>{u.c}</div>
+                      </div>
+                      {PROFILES[u.n]&&<ChevronRight size={14} color="var(--lpg-text-faint)"/>}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {total===0&&<div style={{textAlign:"center",padding:"40px 20px",color:"var(--lpg-text-muted)"}}>No matches in schedule, partners, or attendees.</div>}
+            </div>
+          );
+        })()}
+
+        {!globalSearch.trim()&&user.r==="staff"&&(
           <div style={{padding:"8px 12px 0"}}>
             <div onClick={()=>setComposing(true)} style={{background:`linear-gradient(135deg,${BLUE},${DBLUE})`,color:"#fff",borderRadius:10,padding:"12px 16px",cursor:"pointer",display:"flex",alignItems:"center",gap:10,boxShadow:"0 2px 8px rgba(14,90,138,0.3)"}}>
               <Megaphone size={18}/>
@@ -904,8 +1098,8 @@ const AppComponent = function App(){
                 <div style={{fontSize:13,fontWeight:700,color:BLUE,padding:"4px 0"}}>Recent Announcements</div>
                 {broadcasts.filter(b=>Date.now()-b.id<6*60*60*1000).slice(0,3).map(b=>(
                   <div key={b.id} style={{...S.card,margin:"4px 0",padding:"10px 12px"}}>
-                    <div style={{fontSize:14,color:"#333"}}>{b.text.length>80?b.text.slice(0,80)+"...":b.text}</div>
-                    <div style={{fontSize:11,color:"#999",marginTop:4}}>{b.at}</div>
+                    <div style={{fontSize:14,color:"var(--lpg-text)"}}>{b.text.length>80?b.text.slice(0,80)+"...":b.text}</div>
+                    <div style={{fontSize:11,color:"var(--lpg-text-faint)",marginTop:4}}>{b.at}</div>
                   </div>
                 ))}
               </div>
@@ -913,7 +1107,7 @@ const AppComponent = function App(){
           </div>
         )}
 
-        {tab===0&&user.r!=="staff"&&(()=>{
+        {!globalSearch.trim()&&tab===0&&user.r!=="staff"&&(()=>{
           const upNext=findUpNext(schedule,now);
           return(
           <div ref={scheduleScrollRef}>
@@ -945,9 +1139,9 @@ const AppComponent = function App(){
                     </div>
                     <div style={{display:"flex",alignItems:"center",gap:8}}>
                       {ev.type==="meeting"&&LOGOS[ev.e]&&<img src={LOGOS[ev.e]} alt="" style={{height:24,objectFit:"contain",flexShrink:0,borderRadius:3}}/>}
-                      <div style={{fontSize:16,fontWeight:600,color:"#1a1a2e"}}>{ev.e}</div>
+                      <div style={{fontSize:16,fontWeight:600,color:"var(--lpg-text)"}}>{ev.e}</div>
                     </div>
-                    {ev.l&&<div style={{fontSize:13,color:"#888",marginTop:2}}><MapPin size={10} style={{display:"inline",marginRight:3}}/>{ev.l}</div>}
+                    {ev.l&&<div style={{fontSize:13,color:"var(--lpg-text-muted)",marginTop:2}}><MapPin size={10} style={{display:"inline",marginRight:3}}/>{ev.l}</div>}
                     {ev.type==="meeting"&&<div style={{fontSize:12,color:BLUE,fontWeight:600,marginTop:4,background:LBLUE,display:"inline-block",padding:"2px 8px",borderRadius:10}}>Individual Meeting</div>}
                   </div>
                 </div>
@@ -957,7 +1151,7 @@ const AppComponent = function App(){
           );
         })()}
 
-        {tab===0&&user.r==="staff"&&(()=>{
+        {!globalSearch.trim()&&tab===0&&user.r==="staff"&&(()=>{
           const allRetailers=USERS.filter(u=>u.r==="retailer");
           const dayKey=day==="Thursday"?"w":"t";
           const commonTue=[{t:"10:00 AM - 2:00 PM",e:"Arrival & Check-In",l:"Grande Lobby"},{t:"3:00 PM - 5:15 PM",e:"Meet the Partners Presentations",l:"Grande Ballroom D"},{t:"5:15 PM",e:"Group Photo",l:"Grande Lobby"},{t:"6:30 PM - 9:30 PM",e:"Welcome Reception",l:"Eleven Restaurant"}];
@@ -997,8 +1191,8 @@ const AppComponent = function App(){
                       <div style={S.badge(slot.type)}/>
                       <div>
                         <div style={{fontSize:13,color:BLUE,fontWeight:700}}>{slot.time}</div>
-                        <div style={{fontSize:15,fontWeight:600,color:"#1a1a2e"}}>{slot.label}</div>
-                        {slot.loc&&<div style={{fontSize:12,color:"#888"}}>{slot.loc}</div>}
+                        <div style={{fontSize:15,fontWeight:600,color:"var(--lpg-text)"}}>{slot.label}</div>
+                        {slot.loc&&<div style={{fontSize:12,color:"var(--lpg-text-muted)"}}>{slot.loc}</div>}
                       </div>
                     </div>
                     {slot.meetings.length>0&&(
@@ -1006,11 +1200,11 @@ const AppComponent = function App(){
                         {slot.meetings.map((m,mi)=>(
                           <div key={mi} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"4px 0",borderBottom:mi<slot.meetings.length-1?"1px solid #f5f5f5":"none",fontSize:13}}>
                             <div style={{flex:1}}>
-                              <span style={{fontWeight:600,color:"#1a1a2e"}}>{m.retailer}</span>
-                              <span style={{color:"#999"}}> ({m.retailerCo})</span>
+                              <span style={{fontWeight:600,color:"var(--lpg-text)"}}>{m.retailer}</span>
+                              <span style={{color:"var(--lpg-text-faint)"}}> ({m.retailerCo})</span>
                             </div>
                             <div style={{color:BLUE,fontWeight:600,textAlign:"right",flexShrink:0,marginLeft:8}}>
-                              {m.partner} <span style={{fontWeight:400,color:"#999"}}>{m.suite}</span>
+                              {m.partner} <span style={{fontWeight:400,color:"var(--lpg-text-faint)"}}>{m.suite}</span>
                             </div>
                           </div>
                         ))}
@@ -1023,7 +1217,7 @@ const AppComponent = function App(){
           );
         })()}
 
-        {tab===1&&!detail&&(
+        {!globalSearch.trim()&&tab===1&&!detail&&(
           <div>
             <div style={{padding:"12px"}}>
               <input placeholder="Search partners..." value={search} onChange={e=>setSearch(e.target.value)} style={{...S.input,fontSize:15,padding:"10px 14px"}}/>
@@ -1035,8 +1229,8 @@ const AppComponent = function App(){
                 <div style={{display:"flex",alignItems:"center",gap:12}}>
                   {LOGOS[name] ? <img src={LOGOS[name]} alt={name} style={{width:44,height:44,borderRadius:10,objectFit:"contain",background:"#fff",border:"1px solid #eee",padding:2,flexShrink:0}}/> : <div style={{width:44,height:44,borderRadius:10,background:`linear-gradient(135deg,${BLUE},${DBLUE})`,color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:16,flexShrink:0}}>{getInitials(name)}</div>}
                   <div style={{flex:1,minWidth:0}}>
-                    <div style={{fontSize:17,fontWeight:700,color:"#1a1a2e"}}>{name}</div>
-                    <div style={{fontSize:14,color:"#666",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",marginBottom:reps.length?4:0}}>{info.d.slice(0,60)}...</div>
+                    <div style={{fontSize:17,fontWeight:700,color:"var(--lpg-text)"}}>{name}</div>
+                    <div style={{fontSize:14,color:"var(--lpg-text-muted)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",marginBottom:reps.length?4:0}}>{info.d.slice(0,60)}...</div>
                     {reps.length>0&&(
                       <div style={{display:"flex",alignItems:"center",gap:6}}>
                         <div style={{display:"flex"}}>
@@ -1046,7 +1240,7 @@ const AppComponent = function App(){
                             </div>
                           ))}
                         </div>
-                        <div style={{fontSize:12,color:"#888"}}>{reps.length} rep{reps.length===1?"":"s"} at summit</div>
+                        <div style={{fontSize:12,color:"var(--lpg-text-muted)"}}>{reps.length} rep{reps.length===1?"":"s"} at summit</div>
                       </div>
                     )}
                   </div>
@@ -1058,7 +1252,7 @@ const AppComponent = function App(){
           </div>
         )}
 
-        {tab===1&&detail?.type==="partner"&&(
+        {!globalSearch.trim()&&tab===1&&detail?.type==="partner"&&(
           <div style={{padding:12}}>
             <div onClick={()=>setDetail(null)} style={{fontSize:15,color:BLUE,fontWeight:600,cursor:"pointer",marginBottom:12,display:"flex",alignItems:"center",gap:4}}><ArrowLeft size={14} /> All Partners</div>
             <div style={{background:`linear-gradient(135deg,${BLUE},${DBLUE})`,borderRadius:12,padding:24,color:"#fff",marginBottom:12}}>
@@ -1079,8 +1273,8 @@ const AppComponent = function App(){
                     {HEADSHOTS[rep.n]?<img src={"headshots/"+HEADSHOTS[rep.n]+"?v="+APP_VERSION} alt={rep.n} style={{width:"100%",height:"100%",objectFit:"cover",objectPosition:"center top"}}/>:getInitials(rep.n)}
                   </div>
                   <div style={{flex:1,minWidth:0}}>
-                    <div style={{fontSize:16,fontWeight:700,color:"#1a1a2e"}}>{rep.n}</div>
-                    <div style={{fontSize:13,color:"#666",marginBottom:6}}>{rep.t}</div>
+                    <div style={{fontSize:16,fontWeight:700,color:"var(--lpg-text)"}}>{rep.n}</div>
+                    <div style={{fontSize:13,color:"var(--lpg-text-muted)",marginBottom:6}}>{rep.t}</div>
                     <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
                       <a href={`tel:${rep.p}`} style={{fontSize:13,color:BLUE,textDecoration:"none",display:"flex",alignItems:"center",gap:4,background:LBLUE,padding:"4px 10px",borderRadius:20}}><Phone size={11}/>{rep.p}</a>
                       <a href={`mailto:${rep.e}`} style={{fontSize:13,color:BLUE,textDecoration:"none",display:"flex",alignItems:"center",gap:4,background:LBLUE,padding:"4px 10px",borderRadius:20}}><Mail size={11}/>{rep.e}</a>
@@ -1092,7 +1286,7 @@ const AppComponent = function App(){
           </div>
         )}
 
-        {tab===2&&!detail&&(
+        {!globalSearch.trim()&&tab===2&&!detail&&(
           <div>
             <div style={{padding:"12px"}}>
               <input placeholder="Search attendees..." value={search} onChange={e=>setSearch(e.target.value)} style={{...S.input,fontSize:15,padding:"10px 14px"}}/>
@@ -1102,9 +1296,9 @@ const AppComponent = function App(){
                 <div style={{display:"flex",alignItems:"center",gap:12}}>
                   <div style={{width:44,height:44,borderRadius:"50%",overflow:"hidden",background:`linear-gradient(135deg,#546E7A,#37474F)`,color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:16,flexShrink:0}}>{HEADSHOTS[u.n]?<img src={"headshots/"+HEADSHOTS[u.n]+"?v="+APP_VERSION} alt={u.n} style={{width:"100%",height:"100%",objectFit:"cover",objectPosition:"center top"}}/>:getInitials(u.n)}</div>
                   <div style={{flex:1}}>
-                    <div style={{fontSize:17,fontWeight:700,color:"#1a1a2e"}}>{u.n}</div>
+                    <div style={{fontSize:17,fontWeight:700,color:"var(--lpg-text)"}}>{u.n}</div>
                     <div style={{fontSize:14,color:BLUE,fontWeight:600}}>{u.c}</div>
-                    {PROFILES[u.n]&&<div style={{fontSize:12,color:"#999",marginTop:2}}>{PROFILES[u.n].title}</div>}
+                    {PROFILES[u.n]&&<div style={{fontSize:12,color:"var(--lpg-text-faint)",marginTop:2}}>{PROFILES[u.n].title}</div>}
                   </div>
                   {PROFILES[u.n]&&<ChevronRight size={16} color="#ccc"/>}
                 </div>
@@ -1113,7 +1307,7 @@ const AppComponent = function App(){
           </div>
         )}
 
-        {tab===2&&detail?.type==="profile"&&(
+        {!globalSearch.trim()&&tab===2&&detail?.type==="profile"&&(
           <div style={{padding:12}}>
             <div onClick={()=>setDetail(null)} style={{fontSize:15,color:BLUE,fontWeight:600,cursor:"pointer",marginBottom:12,display:"flex",alignItems:"center",gap:4}}><ArrowLeft size={14}/> All Attendees</div>
             <div style={{background:`linear-gradient(135deg,${BLUE},${DBLUE})`,borderRadius:12,padding:24,color:"#fff",marginBottom:12,display:"flex",alignItems:"center",gap:16}}>
@@ -1144,8 +1338,8 @@ const AppComponent = function App(){
               <div style={{...S.card,display:"flex",alignItems:"center",gap:12,cursor:"pointer"}}>
                 <div style={{width:36,height:36,borderRadius:8,background:"#0A66C2",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Linkedin size={18} color="#fff"/></div>
                 <div style={{flex:1}}>
-                  <div style={{fontSize:15,fontWeight:700,color:"#1a1a2e"}}>Find on LinkedIn</div>
-                  <div style={{fontSize:13,color:"#888"}}>Search "{detail.user.n}" at {detail.user.c}</div>
+                  <div style={{fontSize:15,fontWeight:700,color:"var(--lpg-text)"}}>Find on LinkedIn</div>
+                  <div style={{fontSize:13,color:"var(--lpg-text-muted)"}}>Search "{detail.user.n}" at {detail.user.c}</div>
                 </div>
                 <ChevronRight size={16} color="#ccc"/>
               </div>
@@ -1153,7 +1347,7 @@ const AppComponent = function App(){
           </div>
         )}
 
-        {tab===3&&!infoSection&&(
+        {!globalSearch.trim()&&tab===3&&!infoSection&&(
           <div style={{padding:"4px 0"}}>
             <div style={{padding:"16px 12px 8px"}}><SummitLogo size="large"/></div>
             {[
@@ -1171,8 +1365,8 @@ const AppComponent = function App(){
                 <div style={{display:"flex",alignItems:"center",gap:12}}>
                   <div style={{width:40,height:40,borderRadius:10,background:LBLUE,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><item.icon size={20} color={BLUE}/></div>
                   <div style={{flex:1}}>
-                    <div style={{fontSize:16,fontWeight:700,color:"#1a1a2e"}}>{item.label}</div>
-                    <div style={{fontSize:13,color:"#888"}}>{item.desc}</div>
+                    <div style={{fontSize:16,fontWeight:700,color:"var(--lpg-text)"}}>{item.label}</div>
+                    <div style={{fontSize:13,color:"var(--lpg-text-muted)"}}>{item.desc}</div>
                   </div>
                   <ChevronRight size={16} color="#ccc"/>
                 </div>
@@ -1181,23 +1375,23 @@ const AppComponent = function App(){
           </div>
         )}
 
-        {tab===3&&infoSection==="speakers"&&(
+        {!globalSearch.trim()&&tab===3&&infoSection==="speakers"&&(
           <div style={{padding:12}}>
             <div onClick={()=>setInfoSection(null)} style={{fontSize:15,color:BLUE,fontWeight:600,cursor:"pointer",marginBottom:12,display:"flex",alignItems:"center",gap:4}}><ArrowLeft size={14}/> Event Info</div>
             <div style={{...S.card,borderLeft:`4px solid ${BLUE}`}}>
               <div style={{fontSize:12,color:BLUE,fontWeight:700,marginBottom:4}}>KEYNOTE SPEAKER</div>
-              <div style={{fontSize:17,fontWeight:800,color:"#1a1a2e"}}>{SPEAKERS.keynote.name}</div>
-              <div style={{fontSize:14,color:"#666",fontStyle:"italic",margin:"4px 0"}}>{SPEAKERS.keynote.title}</div>
+              <div style={{fontSize:17,fontWeight:800,color:"var(--lpg-text)"}}>{SPEAKERS.keynote.name}</div>
+              <div style={{fontSize:14,color:"var(--lpg-text-muted)",fontStyle:"italic",margin:"4px 0"}}>{SPEAKERS.keynote.title}</div>
               <div style={{fontSize:14,color:BLUE,fontWeight:600}}>{SPEAKERS.keynote.org}</div>
-              <div style={{fontSize:13,color:"#888",marginTop:8,display:"flex",alignItems:"center",gap:4}}><Calendar size={12}/>{SPEAKERS.keynote.when}</div>
-              <div style={{fontSize:13,color:"#888",display:"flex",alignItems:"center",gap:4}}><MapPin size={12}/>{SPEAKERS.keynote.where}</div>
+              <div style={{fontSize:13,color:"var(--lpg-text-muted)",marginTop:8,display:"flex",alignItems:"center",gap:4}}><Calendar size={12}/>{SPEAKERS.keynote.when}</div>
+              <div style={{fontSize:13,color:"var(--lpg-text-muted)",display:"flex",alignItems:"center",gap:4}}><MapPin size={12}/>{SPEAKERS.keynote.where}</div>
               <div style={{fontSize:14,color:"#444",marginTop:10,lineHeight:1.5}}>{SPEAKERS.keynote.bio}</div>
             </div>
             <div style={{...S.card,borderLeft:`4px solid #2E7D32`,marginTop:8}}>
               <div style={{fontSize:12,color:"#2E7D32",fontWeight:700,marginBottom:4}}>PANEL DISCUSSION</div>
-              <div style={{fontSize:17,fontWeight:800,color:"#1a1a2e"}}>{SPEAKERS.panel.title}</div>
-              <div style={{fontSize:13,color:"#888",marginTop:6,display:"flex",alignItems:"center",gap:4}}><Calendar size={12}/>{SPEAKERS.panel.when}</div>
-              <div style={{fontSize:13,color:"#888",display:"flex",alignItems:"center",gap:4}}><MapPin size={12}/>{SPEAKERS.panel.where}</div>
+              <div style={{fontSize:17,fontWeight:800,color:"var(--lpg-text)"}}>{SPEAKERS.panel.title}</div>
+              <div style={{fontSize:13,color:"var(--lpg-text-muted)",marginTop:6,display:"flex",alignItems:"center",gap:4}}><Calendar size={12}/>{SPEAKERS.panel.when}</div>
+              <div style={{fontSize:13,color:"var(--lpg-text-muted)",display:"flex",alignItems:"center",gap:4}}><MapPin size={12}/>{SPEAKERS.panel.where}</div>
               <div style={{fontSize:14,color:"#444",marginTop:10}}>{SPEAKERS.panel.desc}</div>
               <div style={{fontSize:14,fontWeight:600,color:BLUE,marginTop:10}}>Moderator: {SPEAKERS.panel.moderator}</div>
               <div style={{marginTop:8}}>
@@ -1207,41 +1401,41 @@ const AppComponent = function App(){
           </div>
         )}
 
-        {tab===3&&infoSection==="sponsors"&&(
+        {!globalSearch.trim()&&tab===3&&infoSection==="sponsors"&&(
           <div style={{padding:12}}>
             <div onClick={()=>setInfoSection(null)} style={{fontSize:15,color:BLUE,fontWeight:600,cursor:"pointer",marginBottom:12,display:"flex",alignItems:"center",gap:4}}><ArrowLeft size={14}/> Event Info</div>
-            <div style={{fontSize:17,fontWeight:700,color:"#1a1a2e",padding:"0 4px 8px"}}>Thank You to Our Sponsors</div>
+            <div style={{fontSize:17,fontWeight:700,color:"var(--lpg-text)",padding:"0 4px 8px"}}>Thank You to Our Sponsors</div>
             {SPONSORS.map((s,i)=>(
               <div key={i} style={{...S.card,display:"flex",alignItems:"center",gap:12}}>
                 {LOGOS[s.sponsor]?<img src={LOGOS[s.sponsor]} alt={s.sponsor} style={{width:50,height:50,objectFit:"contain",borderRadius:6,border:"1px solid #eee",padding:2,flexShrink:0}}/>:<div style={{width:50,height:50,borderRadius:6,background:LBLUE,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:12,color:BLUE,flexShrink:0,textAlign:"center"}}>{s.sponsor}</div>}
                 <div>
-                  <div style={{fontSize:15,fontWeight:700,color:"#1a1a2e"}}>{s.event}</div>
+                  <div style={{fontSize:15,fontWeight:700,color:"var(--lpg-text)"}}>{s.event}</div>
                   <div style={{fontSize:14,color:BLUE,fontWeight:600}}>Courtesy of {s.sponsor}</div>
-                  <div style={{fontSize:13,color:"#888"}}>{s.detail}</div>
+                  <div style={{fontSize:13,color:"var(--lpg-text-muted)"}}>{s.detail}</div>
                 </div>
               </div>
             ))}
           </div>
         )}
 
-        {tab===3&&infoSection==="venue"&&(
+        {!globalSearch.trim()&&tab===3&&infoSection==="venue"&&(
           <div style={{padding:12}}>
             <div onClick={()=>setInfoSection(null)} style={{fontSize:15,color:BLUE,fontWeight:600,cursor:"pointer",marginBottom:12,display:"flex",alignItems:"center",gap:4}}><ArrowLeft size={14}/> Event Info</div>
-            <div style={{fontSize:17,fontWeight:700,color:"#1a1a2e",padding:"0 4px 8px"}}>Reunion Resort Venues</div>
+            <div style={{fontSize:17,fontWeight:700,color:"var(--lpg-text)",padding:"0 4px 8px"}}>Reunion Resort Venues</div>
             {VENUE.map((v,i)=>(
               <div key={i} style={S.card}>
                 <div style={{fontSize:16,fontWeight:700,color:BLUE}}><MapPin size={14} style={{display:"inline",marginRight:6}}/>{v.name}</div>
-                <div style={{fontSize:14,color:"#666",marginTop:4}}>{v.desc}</div>
+                <div style={{fontSize:14,color:"var(--lpg-text-muted)",marginTop:4}}>{v.desc}</div>
               </div>
             ))}
           </div>
         )}
 
-        {tab===3&&infoSection==="map"&&(
+        {!globalSearch.trim()&&tab===3&&infoSection==="map"&&(
           <div style={{padding:12}}>
             <div onClick={()=>setInfoSection(null)} style={{fontSize:15,color:BLUE,fontWeight:600,cursor:"pointer",marginBottom:12,display:"flex",alignItems:"center",gap:4}}><ArrowLeft size={14}/> Event Info</div>
-            <div style={{fontSize:17,fontWeight:700,color:"#1a1a2e",padding:"0 4px 8px"}}>Reunion Resort Map</div>
-            <div style={{fontSize:13,color:"#888",padding:"0 4px 8px"}}>Tap the map to zoom. Key event locations are marked in red.</div>
+            <div style={{fontSize:17,fontWeight:700,color:"var(--lpg-text)",padding:"0 4px 8px"}}>Reunion Resort Map</div>
+            <div style={{fontSize:13,color:"var(--lpg-text-muted)",padding:"0 4px 8px"}}>Tap the map to zoom. Key event locations are marked in red.</div>
             <div onClick={()=>setMapZoom(true)} style={{borderRadius:12,overflow:"hidden",border:"1px solid #eee",boxShadow:"0 2px 8px rgba(0,0,0,0.1)",position:"relative",cursor:"zoom-in"}}>
               <img src={VENUE_MAP} alt="Reunion Resort Venue Map" style={{width:"100%",display:"block"}}/>
               <div style={{position:"absolute",top:8,right:8,background:"rgba(0,0,0,0.55)",color:"#fff",fontSize:11,padding:"4px 10px",borderRadius:14,fontWeight:600,letterSpacing:0.5,display:"flex",alignItems:"center",gap:4}}>Tap to zoom</div>
@@ -1250,24 +1444,24 @@ const AppComponent = function App(){
               {[{label:"Welcome Reception",loc:"Eleven Restaurant (Roof Top)"},{label:"Meetings",loc:"Grande Tower Suites"},{label:"Golf Outing",loc:"Palmer Course"},{label:"BBQ Dinner",loc:"Seven Eagles Pool"}].map((item,i)=>(
                 <div key={i} style={{display:"flex",alignItems:"center",gap:8,padding:"6px 4px"}}>
                   <div style={{width:10,height:10,borderRadius:5,background:"#c33",flexShrink:0}}/>
-                  <div style={{fontSize:14}}><span style={{fontWeight:600,color:"#1a1a2e"}}>{item.label}</span> <span style={{color:"#888"}}>- {item.loc}</span></div>
+                  <div style={{fontSize:14}}><span style={{fontWeight:600,color:"var(--lpg-text)"}}>{item.label}</span> <span style={{color:"var(--lpg-text-muted)"}}>- {item.loc}</span></div>
                 </div>
               ))}
             </div>
           </div>
         )}
 
-        {tab===3&&infoSection==="attire"&&(
+        {!globalSearch.trim()&&tab===3&&infoSection==="attire"&&(
           <div style={{padding:12}}>
             <div onClick={()=>setInfoSection(null)} style={{fontSize:15,color:BLUE,fontWeight:600,cursor:"pointer",marginBottom:12,display:"flex",alignItems:"center",gap:4}}><ArrowLeft size={14}/> Event Info</div>
-            <div style={{fontSize:17,fontWeight:700,color:"#1a1a2e",padding:"0 4px 8px"}}>Attire Recommendations</div>
+            <div style={{fontSize:17,fontWeight:700,color:"var(--lpg-text)",padding:"0 4px 8px"}}>Attire Recommendations</div>
             {ATTIRE.map((a,i)=>(
               <div key={i} style={S.card}>
                 <div style={{fontSize:16,fontWeight:700,color:BLUE}}>{a.event}</div>
                 <div style={{fontSize:15,color:"#444",marginTop:4}}>{a.dress}</div>
               </div>
             ))}
-            <div style={{fontSize:17,fontWeight:700,color:"#1a1a2e",padding:"12px 4px 8px"}}>Important Reminders</div>
+            <div style={{fontSize:17,fontWeight:700,color:"var(--lpg-text)",padding:"12px 4px 8px"}}>Important Reminders</div>
             {REMINDERS.map((r,i)=>(
               <div key={i} style={{...S.card,display:"flex",gap:10,alignItems:"flex-start"}}>
                 <Info size={16} color={BLUE} style={{flexShrink:0,marginTop:2}}/>
@@ -1277,11 +1471,11 @@ const AppComponent = function App(){
           </div>
         )}
 
-        {tab===3&&infoSection==="photos"&&(
+        {!globalSearch.trim()&&tab===3&&infoSection==="photos"&&(
           <div style={{padding:12}}>
             <div onClick={()=>setInfoSection(null)} style={{fontSize:15,color:BLUE,fontWeight:600,cursor:"pointer",marginBottom:12,display:"flex",alignItems:"center",gap:4}}><ArrowLeft size={14}/> Event Info</div>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-              <div style={{fontSize:17,fontWeight:700,color:"#1a1a2e"}}>Photo Gallery</div>
+              <div style={{fontSize:17,fontWeight:700,color:"var(--lpg-text)"}}>Photo Gallery</div>
               <div style={{display:"flex",gap:8,alignItems:"center"}}>
                 {user?.r==="staff"&&photos.length>0&&<div onClick={()=>{
                   // Sequential downloads with delay so browsers don't block them as spam
@@ -1303,7 +1497,7 @@ const AppComponent = function App(){
               </div>
             </div>
             {photos.length===0&&(
-              <div style={{...S.card,textAlign:"center",padding:32,color:"#999"}}>
+              <div style={{...S.card,textAlign:"center",padding:32,color:"var(--lpg-text-faint)"}}>
                 <Camera size={32} color="#ccc" style={{marginBottom:8}}/>
                 <div style={{fontSize:15}}>No photos yet</div>
                 <div style={{fontSize:13,marginTop:4}}>Be the first to share a moment from the Summit!</div>
@@ -1313,7 +1507,7 @@ const AppComponent = function App(){
               {photos.map(p=>(
                 <div key={p.id} style={{borderRadius:10,overflow:"hidden",background:"#f0f0f0",position:"relative"}}>
                   <img src={p.src} alt="" style={{width:"100%",height:160,objectFit:"cover",display:"block"}}/>
-                  <div style={{padding:"6px 8px",fontSize:12,color:"#666",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                  <div style={{padding:"6px 8px",fontSize:12,color:"var(--lpg-text-muted)",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                     <div>
                       <div style={{fontWeight:600}}>{p.by}</div>
                       <div>{p.at}</div>
@@ -1329,10 +1523,10 @@ const AppComponent = function App(){
           </div>
         )}
 
-        {tab===3&&infoSection==="help"&&(
+        {!globalSearch.trim()&&tab===3&&infoSection==="help"&&(
           <div style={{padding:12}}>
             <div onClick={()=>setInfoSection(null)} style={{fontSize:15,color:BLUE,fontWeight:600,cursor:"pointer",marginBottom:12,display:"flex",alignItems:"center",gap:4}}><ArrowLeft size={14}/> Event Info</div>
-            <div style={{fontSize:17,fontWeight:700,color:"#1a1a2e",padding:"0 4px 8px"}}>Help & Emergency</div>
+            <div style={{fontSize:17,fontWeight:700,color:"var(--lpg-text)",padding:"0 4px 8px"}}>Help & Emergency</div>
             <div style={{...S.card,borderLeft:`4px solid #c00`}}>
               <div style={{fontSize:14,fontWeight:700,color:"#c00",marginBottom:6}}>EMERGENCY - DIAL 911</div>
               <div style={{fontSize:14,color:"#444"}}>For medical emergencies or safety concerns, call 911 immediately. The resort address is 7593 Gathering Drive, Kissimmee, FL 34747.</div>
@@ -1341,32 +1535,32 @@ const AppComponent = function App(){
               <div style={{fontSize:15,fontWeight:700,color:BLUE,marginBottom:8}}>LP Gas Event Team</div>
               <div style={{padding:"8px 0",borderBottom:"1px solid #f0f0f0"}}>
                 <div style={{fontSize:16,fontWeight:600}}>Brian Kanaba</div>
-                <div style={{fontSize:13,color:"#666",marginBottom:4}}>Brand Manager, LP Gas</div>
+                <div style={{fontSize:13,color:"var(--lpg-text-muted)",marginBottom:4}}>Brand Manager, LP Gas</div>
                 <a href="tel:8002255865" style={{fontSize:14,color:BLUE,textDecoration:"none",display:"flex",alignItems:"center",gap:4}}><Phone size={12}/>800-225-5865</a>
               </div>
               <div style={{padding:"8px 0"}}>
                 <div style={{fontSize:16,fontWeight:600}}>Brian Richesson</div>
-                <div style={{fontSize:13,color:"#666",marginBottom:4}}>Editor in Chief, LP Gas</div>
+                <div style={{fontSize:13,color:"var(--lpg-text-muted)",marginBottom:4}}>Editor in Chief, LP Gas</div>
                 <a href="tel:8002255865" style={{fontSize:14,color:BLUE,textDecoration:"none",display:"flex",alignItems:"center",gap:4}}><Phone size={12}/>800-225-5865</a>
               </div>
             </div>
             <div style={S.card}>
               <div style={{fontSize:15,fontWeight:700,color:BLUE,marginBottom:8}}>Reunion Resort Front Desk</div>
               <a href="tel:4073964000" style={{fontSize:15,color:BLUE,textDecoration:"none",display:"flex",alignItems:"center",gap:6}}><Phone size={14}/>407-396-4000</a>
-              <div style={{fontSize:14,color:"#666",marginTop:4}}>7593 Gathering Drive, Kissimmee, FL 34747</div>
+              <div style={{fontSize:14,color:"var(--lpg-text-muted)",marginTop:4}}>7593 Gathering Drive, Kissimmee, FL 34747</div>
             </div>
           </div>
         )}
 
-        {tab===3&&infoSection==="notifications"&&(
+        {!globalSearch.trim()&&tab===3&&infoSection==="notifications"&&(
           <div style={{padding:12}}>
             <div onClick={()=>setInfoSection(null)} style={{fontSize:15,color:BLUE,fontWeight:600,cursor:"pointer",marginBottom:12,display:"flex",alignItems:"center",gap:4}}><ArrowLeft size={14}/> Event Info</div>
-            <div style={{fontSize:17,fontWeight:700,color:"#1a1a2e",padding:"0 4px 8px"}}>Notification Preferences</div>
+            <div style={{fontSize:17,fontWeight:700,color:"var(--lpg-text)",padding:"0 4px 8px"}}>Notification Preferences</div>
             <div style={S.card}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                 <div>
-                  <div style={{fontSize:16,fontWeight:700,color:"#1a1a2e"}}>Meeting Reminders</div>
-                  <div style={{fontSize:13,color:"#888",marginTop:2}}>Get notified 2 minutes before each meeting</div>
+                  <div style={{fontSize:16,fontWeight:700,color:"var(--lpg-text)"}}>Meeting Reminders</div>
+                  <div style={{fontSize:13,color:"var(--lpg-text-muted)",marginTop:2}}>Get notified 2 minutes before each meeting</div>
                 </div>
                 <div onClick={()=>toggleNotif(!notifEnabled)} style={{width:48,height:26,borderRadius:13,background:notifEnabled?"#4CAF50":"#ddd",cursor:"pointer",position:"relative",transition:"background 0.2s"}}>
                   <div style={{width:22,height:22,borderRadius:11,background:"#fff",position:"absolute",top:2,left:notifEnabled?24:2,transition:"left 0.2s",boxShadow:"0 1px 3px rgba(0,0,0,0.2)"}}/>
@@ -1380,8 +1574,8 @@ const AppComponent = function App(){
             <div style={S.card}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                 <div>
-                  <div style={{fontSize:16,fontWeight:700,color:"#1a1a2e"}}>Schedule Changes</div>
-                  <div style={{fontSize:13,color:"#888",marginTop:2}}>Alert when rooms or times are updated</div>
+                  <div style={{fontSize:16,fontWeight:700,color:"var(--lpg-text)"}}>Schedule Changes</div>
+                  <div style={{fontSize:13,color:"var(--lpg-text-muted)",marginTop:2}}>Alert when rooms or times are updated</div>
                 </div>
                 <div style={{width:48,height:26,borderRadius:13,background:"#4CAF50",position:"relative"}}>
                   <div style={{width:22,height:22,borderRadius:11,background:"#fff",position:"absolute",top:2,left:24,boxShadow:"0 1px 3px rgba(0,0,0,0.2)"}}/>
@@ -1397,16 +1591,16 @@ const AppComponent = function App(){
           </div>
         )}
 
-        {tab===3&&infoSection==="updates"&&(
+        {!globalSearch.trim()&&tab===3&&infoSection==="updates"&&(
           <div style={{padding:12}}>
             <div onClick={()=>setInfoSection(null)} style={{fontSize:15,color:BLUE,fontWeight:600,cursor:"pointer",marginBottom:12,display:"flex",alignItems:"center",gap:4}}><ArrowLeft size={14}/> Event Info</div>
-            <div style={{fontSize:17,fontWeight:700,color:"#1a1a2e",padding:"0 4px 8px"}}>App Updates</div>
+            <div style={{fontSize:17,fontWeight:700,color:"var(--lpg-text)",padding:"0 4px 8px"}}>App Updates</div>
             <div style={S.card}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
-                <div style={{fontSize:15,fontWeight:700,color:"#1a1a2e"}}>Current Version</div>
-                <div style={{fontSize:15,color:"#555",fontFamily:"monospace"}}>{APP_VERSION}</div>
+                <div style={{fontSize:15,fontWeight:700,color:"var(--lpg-text)"}}>Current Version</div>
+                <div style={{fontSize:15,color:"var(--lpg-text-muted)",fontFamily:"monospace"}}>{APP_VERSION}</div>
               </div>
-              <div style={{fontSize:13,color:"#888",lineHeight:1.5}}>Tap below to fetch the latest version of the app. Your notes, ratings, follow-up flags, and photos will not be affected.</div>
+              <div style={{fontSize:13,color:"var(--lpg-text-muted)",lineHeight:1.5}}>Tap below to fetch the latest version of the app. Your notes, ratings, follow-up flags, and photos will not be affected.</div>
             </div>
             <button style={{...S.btn,display:"flex",alignItems:"center",justifyContent:"center",gap:8,marginTop:8}} onClick={()=>{
               const base=window.location.pathname.split("?")[0].split("#")[0];
@@ -1423,10 +1617,10 @@ const AppComponent = function App(){
           </div>
         )}
 
-        {tab===4&&!noteEdit&&(
+        {!globalSearch.trim()&&tab===4&&!noteEdit&&(
           <div>
             <div style={{padding:"12px 12px 4px",fontSize:15,fontWeight:700,color:BLUE}}>Your Meeting Notes & Ratings</div>
-            <div style={{padding:"0 12px 8px",fontSize:13,color:"#888"}}>Tap a meeting to add notes, rate, or flag for follow-up.</div>
+            <div style={{padding:"0 12px 8px",fontSize:13,color:"var(--lpg-text-muted)"}}>Tap a meeting to add notes, rate, or flag for follow-up.</div>
             {user?.r==="staff"&&<div style={{margin:"0 12px 12px",background:LBLUE,borderRadius:8,padding:12}}>
               <div style={{fontSize:14,fontWeight:700,color:BLUE,marginBottom:8}}>STAFF: All Attendee Notes</div>
               {USERS.filter(u=>u.r!=="staff").map(u=>(
@@ -1440,8 +1634,8 @@ const AppComponent = function App(){
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                     <div style={{flex:1}}>
                       <div style={{fontSize:12,color:BLUE,fontWeight:700}}>{m.day} | {m.loc}</div>
-                      <div style={{fontSize:16,fontWeight:600,color:"#1a1a2e"}}>{m.name}</div>
-                      {n.text&&<div style={{fontSize:14,color:"#666",marginTop:4,fontStyle:"italic"}}>{n.text.slice(0,50)}{n.text.length>50?"...":""}</div>}
+                      <div style={{fontSize:16,fontWeight:600,color:"var(--lpg-text)"}}>{m.name}</div>
+                      {n.text&&<div style={{fontSize:14,color:"var(--lpg-text-muted)",marginTop:4,fontStyle:"italic"}}>{n.text.slice(0,50)}{n.text.length>50?"...":""}</div>}
                     </div>
                     <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
                       {n.flag&&<Flag size={14} color="#c00" fill="#c00"/>}
@@ -1455,7 +1649,7 @@ const AppComponent = function App(){
           </div>
         )}
 
-        {tab===4&&noteEdit&&(
+        {!globalSearch.trim()&&tab===4&&noteEdit&&(
           <div style={{padding:12}}>
             <div onClick={()=>setNoteEdit(null)} style={{fontSize:15,color:BLUE,fontWeight:600,cursor:"pointer",marginBottom:12,display:"flex",alignItems:"center",gap:4}}><ArrowLeft size={14} /> All Notes</div>
             <div style={{background:`linear-gradient(135deg,${BLUE},${DBLUE})`,borderRadius:12,padding:20,color:"#fff",marginBottom:12}}>
@@ -1493,6 +1687,8 @@ const AppComponent = function App(){
             </div>
           </div>
         )}
+
+        </ErrorBoundary>
       </div>
 
       <div style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",maxWidth:480,width:"100%",background:`linear-gradient(135deg,${DBLUE},${BLUE})`,color:"#fff",textAlign:"center",padding:"8px",fontSize:12,opacity:0.9}}>
