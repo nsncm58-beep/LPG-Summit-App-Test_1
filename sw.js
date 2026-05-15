@@ -3,7 +3,9 @@
 // so a new app version triggers a fresh install + old caches get nuked.
 const VERSION = new URL(self.location.href).searchParams.get('v') || 'dev';
 const CACHE = 'lpg-summit-' + VERSION;
-const BASE = '/LPG-Summit-App-Test_1/';
+// Derive BASE from this worker's own pathname (e.g. "/LPG-Summit-App-Test_1/sw.js" → "/LPG-Summit-App-Test_1/")
+// so the worker works under any deployment path.
+const BASE = new URL('./', self.location.href).pathname;
 
 // Pre-cache the shell on install. Other assets are cached on first fetch.
 const SHELL = [

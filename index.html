@@ -365,8 +365,10 @@ function buildSchedule(user){
   return {Tuesday:tue,Wednesday:[...wedCommon,...wedMeetings,...wedAfter],Thursday:[...thuCommon,...thuMeetings,...thuAfter]};
 }
 
-// Sept 2026 Growth Summit dates — month is 0-indexed in JS Date
-const EVENT_DATES={Tuesday:[2026,8,8],Wednesday:[2026,8,9],Thursday:[2026,8,10]};
+// Sept 2026 Growth Summit dates — month is 0-indexed in JS Date.
+// Labels (Tue/Wed/Thu) come from the existing schedule; calendar dates
+// are anchored to the event itself (Sept 9-11) per the splash + panel info.
+const EVENT_DATES={Tuesday:[2026,8,9],Wednesday:[2026,8,10],Thursday:[2026,8,11]};
 function parseTime12(t){
   // accepts "7:00 AM" or "12:30 PM"; returns {h:0-23,m:0-59} or null
   if(!t) return null;
@@ -462,6 +464,9 @@ const AppComponent = function App(){
   const[photos,setPhotos]=useState([]);
   const[notifEnabled,setNotifEnabled]=useState(false);
 
+  // Reset the auto-scroll flag whenever the signed-in user changes (incl. sign out)
+  useEffect(()=>{autoScrolledRef.current=false},[user?.n]);
+
   // Auto-scroll Schedule tab to current/next event on first open
   useEffect(()=>{
     if(!user||user.r==="staff") return;
@@ -556,7 +561,8 @@ const AppComponent = function App(){
   const scheduleMeetingNotifs=useCallback((usr)=>{
     clearScheduled();
     if(!usr||!("Notification" in window)||Notification.permission!=="granted") return;
-    const eventYear=2025;
+    // Wednesday = Sept 10, 2026 (meetings: usr.w); Thursday = Sept 11, 2026 (meetings: usr.t)
+    const eventYear=2026;
     const days=[{d:new Date(eventYear,8,10),meetings:usr.w},{d:new Date(eventYear,8,11),meetings:usr.t}];
     const dayNames=["Wednesday","Thursday"];
     days.forEach(({d,meetings},di)=>{
@@ -739,7 +745,7 @@ const AppComponent = function App(){
               <div onClick={()=>{if(day!==upNext.day) setDay(upNext.day); setTimeout(()=>{const el=document.querySelector(`[data-sched-idx="${upNext.idx}"]`); if(el) el.scrollIntoView({behavior:"smooth",block:"center"});},80);}} style={{margin:"10px 12px 0",background:`linear-gradient(135deg,${BLUE},${DBLUE})`,color:"#fff",borderRadius:12,padding:"12px 14px",display:"flex",alignItems:"center",gap:12,boxShadow:"0 2px 10px rgba(14,90,138,0.25)",cursor:"pointer"}}>
                 <div style={{width:38,height:38,borderRadius:"50%",background:"rgba(255,255,255,0.18)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Clock size={18} color="#fff"/></div>
                 <div style={{flex:1,minWidth:0}}>
-                  <div style={{fontSize:10,fontWeight:700,letterSpacing:1,opacity:0.8}}>UP NEXT · {upNext.day.toUpperCase()} · {formatCountdown(upNext.minutesUntil).toUpperCase()}</div>
+                  <div style={{fontSize:10,fontWeight:700,letterSpacing:1,opacity:0.8}}>{upNext.minutesUntil<=0?"HAPPENING NOW":"UP NEXT"} · {upNext.day.toUpperCase()}{upNext.minutesUntil>0?` · ${formatCountdown(upNext.minutesUntil).toUpperCase()}`:""}</div>
                   <div style={{fontSize:14,fontWeight:700,marginTop:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{upNext.ev.e}</div>
                   <div style={{fontSize:11,opacity:0.85,marginTop:1}}>{upNext.ev.t}{upNext.ev.l?` · ${upNext.ev.l}`:""}</div>
                 </div>
@@ -759,7 +765,7 @@ const AppComponent = function App(){
                   <div style={{flex:1}}>
                     <div style={{fontSize:11,color:BLUE,fontWeight:700,marginBottom:2,display:"flex",alignItems:"center",gap:6}}>
                       <span>{ev.t}</span>
-                      {isCurrent&&<span style={{fontSize:9,background:BLUE,color:"#fff",padding:"1px 6px",borderRadius:8,letterSpacing:0.5}}>UP NEXT</span>}
+                      {isCurrent&&<span style={{fontSize:9,background:upNext.minutesUntil<=0?"#2E7D32":BLUE,color:"#fff",padding:"1px 6px",borderRadius:8,letterSpacing:0.5}}>{upNext.minutesUntil<=0?"NOW":"UP NEXT"}</span>}
                     </div>
                     <div style={{display:"flex",alignItems:"center",gap:8}}>
                       {ev.type==="meeting"&&LOGOS[ev.e]&&<img src={LOGOS[ev.e]} alt="" style={{height:24,objectFit:"contain",flexShrink:0,borderRadius:3}}/>}
