@@ -8,6 +8,7 @@
 <meta name="theme-color" content="#0077D0">
 <link rel="apple-touch-icon" href="icon.png">
 <link rel="icon" type="image/png" href="icon.png">
+<link rel="manifest" href="manifest.json">
 <title>LPGas Growth Summit</title>
 <style>
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -189,7 +190,7 @@ const LOGOS={"ADD Systems":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2
 const MTIMES=["8:15 AM","8:37 AM","8:59 AM","9:21 AM","9:43 AM","10:05 AM","10:27 AM","10:49 AM","11:11 AM","11:33 AM","11:55 AM","12:17 PM"];
 
 const BLUE="#0077D0";const LBLUE="#D6EEFF";const DBLUE="#0077D0";
-const APP_VERSION="2026.05.15.4";
+const APP_VERSION="2026.05.15.5";
 const HEADSHOTS={"Anthony Buck":"anthony-buck.jpg","Brandon Hewett":"brandon-hewett.jpg","Carl Fox":"carl-fox.jpg","Casey Dell":"casey-dell.jpg","Chad Gregg":"chad-gregg.jpg","Chris Caywood":"chris-caywood.jpg","Chris Kutemeier":"chris-kutemeier.jpg","David Dodd":"david-dodd.jpg","Dennis McCarthy":"dennis-mccarthy.jpg","Gordon Cunningham":"gordon-cunningham.jpg","Howard Reinhard":"howard-reinhard.jpg","Jason Scribner":"jason-scribner.jpg","Jason Wehunt":"jason-wehunt.jpg","Josh Schmoll":"josh-schmoll.jpg","Karen Wehunt":"karen-wehunt.jpg","Mary Sargeant-Buck":"mary-sargeant-buck.jpg","Mike Dodd":"mike-dodd.jpg","Paul Ostendorf":"paul-ostendorf.jpg","Randy Schott":"randy-schott.jpg","Ryan Brewer":"ryan-brewer.jpg","Sean Daugherty":"sean-daugherty.jpg","Seth Dimacchia":"seth-dimacchia.jpg","Stephan Chase":"stephan-chase.jpg","Stephen Miller":"stephen-miller.jpg","Tammy Scribner":"tammy-scribner.jpg"};
 
 
@@ -590,6 +591,17 @@ const AppComponent = function App(){
   const[photos,setPhotos]=useState([]);
   const[notifEnabled,setNotifEnabled]=useState(false);
   const[mapZoom,setMapZoom]=useState(false);
+  // iOS Safari "Add to Home Screen" prompt: only when running in browser
+  // (not yet installed), only on iPhone/iPad, only if not previously dismissed.
+  const[showIosA2HS,setShowIosA2HS]=useState(()=>{
+    try{
+      const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)&&!window.MSStream;
+      const isStandalone=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true;
+      const dismissed=localStorage.getItem("lpg-a2hs-dismissed")==="1";
+      return isIOS&&!isStandalone&&!dismissed;
+    }catch(e){return false;}
+  });
+  const dismissIosA2HS=()=>{try{localStorage.setItem("lpg-a2hs-dismissed","1");}catch(e){}setShowIosA2HS(false)};
 
   // Reset the auto-scroll flag whenever the signed-in user changes (incl. sign out)
   useEffect(()=>{autoScrolledRef.current=false},[user?.n]);
@@ -830,6 +842,19 @@ const AppComponent = function App(){
       <div style={{padding:"0 0 80px 0",overflowY:"auto"}}>
 
         {mapZoom&&<MapZoomModal src={VENUE_MAP} onClose={()=>setMapZoom(false)} X={X}/>}
+
+        {showIosA2HS&&(
+          <div style={{background:"linear-gradient(135deg,#0077D0,#005FA3)",color:"#fff",margin:"8px 12px 4px",padding:"12px 14px",borderRadius:12,boxShadow:"0 2px 8px rgba(0,0,0,0.15)",display:"flex",gap:10,alignItems:"flex-start"}}>
+            <div style={{flexShrink:0,width:32,height:32,borderRadius:8,background:"rgba(255,255,255,0.18)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>📲</div>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontSize:15,fontWeight:700,marginBottom:2}}>Install the app on your home screen</div>
+              <div style={{fontSize:13,opacity:0.95,lineHeight:1.4}}>
+                Tap <span style={{display:"inline-flex",alignItems:"center",gap:2,padding:"1px 5px",background:"rgba(255,255,255,0.18)",borderRadius:4,fontWeight:700}}>Share <span style={{fontSize:14}}>⎙</span></span> below, then choose <b>Add to Home Screen</b>. Get faster access and meeting reminders.
+              </div>
+            </div>
+            <div onClick={dismissIosA2HS} style={{flexShrink:0,width:24,height:24,borderRadius:12,background:"rgba(255,255,255,0.2)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",fontSize:14,fontWeight:700,marginTop:2}}>×</div>
+          </div>
+        )}
 
         {showBroadcast&&(
           <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.5)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:24}}>
@@ -1485,7 +1510,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(
 // release triggers a fresh install + old caches get cleared.
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    const v = "2026.05.15.4";
+    const v = "2026.05.15.5";
     navigator.serviceWorker.register('sw.js?v=' + v, { scope: './' }).catch(() => {});
   });
 }

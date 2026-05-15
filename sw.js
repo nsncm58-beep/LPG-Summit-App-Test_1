@@ -12,6 +12,8 @@ const SHELL = [
   BASE,
   BASE + 'index.html',
   BASE + 'icon.png',
+  BASE + 'icon-192.png',
+  BASE + 'manifest.json',
 ];
 
 self.addEventListener('install', (e) => {
