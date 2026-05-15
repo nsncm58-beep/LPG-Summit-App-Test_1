@@ -189,7 +189,7 @@ const LOGOS={"ADD Systems":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2
 const MTIMES=["8:15 AM","8:37 AM","8:59 AM","9:21 AM","9:43 AM","10:05 AM","10:27 AM","10:49 AM","11:11 AM","11:33 AM","11:55 AM","12:17 PM"];
 
 const BLUE="#0077D0";const LBLUE="#D6EEFF";const DBLUE="#0077D0";
-const APP_VERSION="2026.05.15.2";
+const APP_VERSION="2026.05.15.3";
 const HEADSHOTS={"Anthony Buck":"anthony-buck.jpg","Brandon Hewett":"brandon-hewett.jpg","Carl Fox":"carl-fox.jpg","Casey Dell":"casey-dell.jpg","Chad Gregg":"chad-gregg.jpg","Chris Caywood":"chris-caywood.jpg","Chris Kutemeier":"chris-kutemeier.jpg","David Dodd":"david-dodd.jpg","Dennis McCarthy":"dennis-mccarthy.jpg","Gordon Cunningham":"gordon-cunningham.jpg","Howard Reinhard":"howard-reinhard.jpg","Jason Scribner":"jason-scribner.jpg","Jason Wehunt":"jason-wehunt.jpg","Josh Schmoll":"josh-schmoll.jpg","Karen Wehunt":"karen-wehunt.jpg","Mary Sargeant-Buck":"mary-sargeant-buck.jpg","Mike Dodd":"mike-dodd.jpg","Paul Ostendorf":"paul-ostendorf.jpg","Randy Schott":"randy-schott.jpg","Ryan Brewer":"ryan-brewer.jpg","Sean Daugherty":"sean-daugherty.jpg","Seth Dimacchia":"seth-dimacchia.jpg","Stephan Chase":"stephan-chase.jpg","Stephen Miller":"stephen-miller.jpg","Tammy Scribner":"tammy-scribner.jpg"};
 
 
@@ -415,6 +415,103 @@ function formatCountdown(mins){
 
 const S={root:{fontFamily:"'Gotham',sans-serif",maxWidth:480,margin:"0 auto",minHeight:"100vh",background:"#fff",position:"relative"},header:{background:`linear-gradient(135deg,${DBLUE},${BLUE})`,color:"#fff",padding:"16px 20px",display:"flex",alignItems:"center",justifyContent:"space-between"},logo:{fontSize:22,fontWeight:800,letterSpacing:"-0.5px"},logoSub:{fontSize:12,fontWeight:500,opacity:0.8,letterSpacing:1},tabs:{display:"flex",background:LBLUE,borderBottom:`2px solid ${BLUE}`},tab:(a)=>({flex:1,padding:"10px 4px",textAlign:"center",fontSize:13,fontWeight:a?700:500,color:a?BLUE:"#666",background:a?"#fff":"transparent",borderBottom:a?`3px solid ${BLUE}`:"3px solid transparent",cursor:"pointer",transition:"all 0.2s"}),card:{background:"#fff",borderRadius:10,margin:"8px 12px",padding:"14px 16px",boxShadow:"0 1px 4px rgba(0,0,0,0.08)",border:"1px solid #eee"},dayTab:(a)=>({padding:"8px 16px",borderRadius:20,fontSize:15,fontWeight:a?700:500,color:a?"#fff":BLUE,background:a?BLUE:"transparent",cursor:"pointer",border:`1px solid ${a?BLUE:"#ccc"}`,whiteSpace:"nowrap"}),badge:(type)=>{const colors={meeting:BLUE,social:"#2E7D32",meal:"#E65100",event:"#5C6BC0"};return{display:"inline-block",width:4,minHeight:"100%",borderRadius:2,background:colors[type]||BLUE,marginRight:12}},input:{width:"100%",padding:"12px 16px",border:`2px solid #ddd`,borderRadius:8,fontSize:17,outline:"none",boxSizing:"border-box"},btn:{width:"100%",padding:"14px",background:BLUE,color:"#fff",border:"none",borderRadius:8,fontSize:16,fontWeight:700,cursor:"pointer"},star:(filled)=>({cursor:"pointer",fontSize:22,color:filled?"#F9A825":"#ddd",transition:"color 0.15s"})};
 
+// Pinch-zoom + pan modal for the venue map. Custom touch handlers because
+// CSS `touch-action: pinch-zoom` inside a fixed-position element is unreliable
+// on iOS — browsers block native page zoom there, so we drive scale/translate
+// ourselves via CSS transform.
+function MapZoomModal({src,onClose,X}){
+  const [scale,setScale]=React.useState(1);
+  const [tx,setTx]=React.useState(0);
+  const [ty,setTy]=React.useState(0);
+  const startRef=React.useRef({mode:null});
+  const lastTapRef=React.useRef(0);
+  const reset=()=>{setScale(1);setTx(0);setTy(0)};
+  const clampPan=(s,x,y,el)=>{
+    if(!el||s<=1) return {x:0,y:0};
+    const rect=el.getBoundingClientRect();
+    const maxX=Math.max(0,(rect.width*s-rect.width)/2);
+    const maxY=Math.max(0,(rect.height*s-rect.height)/2);
+    return {x:Math.max(-maxX,Math.min(maxX,x)),y:Math.max(-maxY,Math.min(maxY,y))};
+  };
+  const containerRef=React.useRef(null);
+  const onTouchStart=(e)=>{
+    if(e.touches.length===2){
+      const [a,b]=e.touches;
+      startRef.current={mode:"pinch",d:Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY),s:scale,tx,ty};
+    }else if(e.touches.length===1){
+      const t=e.touches[0];
+      const now=Date.now();
+      if(now-lastTapRef.current<300){
+        // Double-tap: toggle 1x ↔ 2.5x
+        if(scale>1){reset()}else{setScale(2.5)}
+        lastTapRef.current=0;
+        startRef.current={mode:null};
+        return;
+      }
+      lastTapRef.current=now;
+      startRef.current={mode:"pan",x:t.clientX,y:t.clientY,tx,ty};
+    }
+  };
+  const onTouchMove=(e)=>{
+    if(e.touches.length===2&&startRef.current.mode==="pinch"){
+      e.preventDefault();
+      const [a,b]=e.touches;
+      const d=Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);
+      const newScale=Math.max(1,Math.min(5,startRef.current.s*(d/startRef.current.d)));
+      setScale(newScale);
+      if(newScale<=1.02){setTx(0);setTy(0)}
+    }else if(e.touches.length===1&&startRef.current.mode==="pan"&&scale>1){
+      e.preventDefault();
+      const t=e.touches[0];
+      const nx=startRef.current.tx+(t.clientX-startRef.current.x);
+      const ny=startRef.current.ty+(t.clientY-startRef.current.y);
+      const c=clampPan(scale,nx,ny,containerRef.current);
+      setTx(c.x);setTy(c.y);
+    }
+  };
+  const onTouchEnd=()=>{startRef.current={mode:null}};
+  const btnStyle={width:34,height:34,borderRadius:17,background:"rgba(255,255,255,0.18)",color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",fontSize:22,fontWeight:700,userSelect:"none"};
+  return(
+    <div onClick={onClose} style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"#000",zIndex:2000,display:"flex",flexDirection:"column"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 14px",background:"rgba(0,0,0,0.9)",color:"#fff",flexShrink:0}}>
+        <div style={{fontSize:15,fontWeight:700}}>Reunion Resort Map</div>
+        <div style={{display:"flex",gap:6,alignItems:"center"}}>
+          <div onClick={(e)=>{e.stopPropagation();const ns=Math.max(1,+(scale-0.5).toFixed(2));setScale(ns);if(ns<=1.02){setTx(0);setTy(0)}}} style={btnStyle}>−</div>
+          <div onClick={(e)=>{e.stopPropagation();setScale(Math.min(5,+(scale+0.5).toFixed(2)))}} style={btnStyle}>+</div>
+          <div onClick={(e)=>{e.stopPropagation();reset()}} style={{...btnStyle,fontSize:12,width:"auto",padding:"0 10px",borderRadius:14}}>Reset</div>
+          <div onClick={(e)=>{e.stopPropagation();onClose()}} style={{...btnStyle,marginLeft:4}}><X size={18} color="#fff"/></div>
+        </div>
+      </div>
+      <div
+        ref={containerRef}
+        onClick={(e)=>e.stopPropagation()}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+        style={{flex:1,overflow:"hidden",display:"flex",alignItems:"center",justifyContent:"center",background:"#000",touchAction:"none"}}
+      >
+        <img
+          src={src}
+          alt="Reunion Resort Venue Map (zoomed)"
+          draggable={false}
+          style={{
+            maxWidth:"100%",
+            maxHeight:"100%",
+            display:"block",
+            transform:`translate3d(${tx}px, ${ty}px, 0) scale(${scale})`,
+            transformOrigin:"center center",
+            transition:startRef.current.mode?"none":"transform 0.2s ease",
+            userSelect:"none",
+            WebkitUserDrag:"none",
+            pointerEvents:"none"
+          }}
+        />
+      </div>
+      <div style={{padding:"8px 14px",fontSize:12,color:"rgba(255,255,255,0.7)",background:"rgba(0,0,0,0.9)",textAlign:"center",flexShrink:0}}>Pinch or +/− to zoom · Drag to pan · Double-tap to toggle · Tap outside to close</div>
+    </div>
+  );
+}
+
 // Standalone component so hooks aren't called inside a .map()
 function AttendeeNotesCard({u,BLUE,S}){
   const [uNotes,setUNotes]=React.useState(null);
@@ -441,7 +538,7 @@ function AttendeeNotesCard({u,BLUE,S}){
 }
 
 const AppComponent = function App(){
-  const[user,setUser]=useState(()=>{try{const s=localStorage.getItem("lpg-session");if(s){const u=JSON.parse(s);if(USERS.find(x=>x.n===u.n))return u;}return null;}catch(e){return null;}});
+  const[user,setUser]=useState(()=>{try{const s=localStorage.getItem("lpg-session");if(s){const saved=JSON.parse(s);const full=USERS.find(x=>x.n===saved.n);if(full)return full;}return null;}catch(e){return null;}});
   const[tab,setTab]=useState(0);
   const[day,setDay]=useState("Thursday");
   const[search,setSearch]=useState("");
@@ -697,18 +794,7 @@ const AppComponent = function App(){
 
       <div style={{padding:"0 0 80px 0",overflowY:"auto"}}>
 
-        {mapZoom&&(
-          <div onClick={()=>setMapZoom(false)} style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"#000",zIndex:2000,display:"flex",flexDirection:"column"}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"14px 16px",background:"rgba(0,0,0,0.9)",color:"#fff",flexShrink:0}}>
-              <div style={{fontSize:15,fontWeight:700}}>Reunion Resort Map</div>
-              <div onClick={(e)=>{e.stopPropagation();setMapZoom(false)}} style={{width:36,height:36,borderRadius:18,background:"rgba(255,255,255,0.15)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}><X size={20} color="#fff"/></div>
-            </div>
-            <div onClick={(e)=>e.stopPropagation()} style={{flex:1,overflow:"auto",WebkitOverflowScrolling:"touch",display:"flex",alignItems:"flex-start",justifyContent:"flex-start",background:"#000"}}>
-              <img src={VENUE_MAP} alt="Reunion Resort Venue Map (zoomed)" style={{minWidth:"100%",width:"180%",height:"auto",display:"block",touchAction:"pan-x pan-y pinch-zoom"}}/>
-            </div>
-            <div style={{padding:"10px 16px",fontSize:12,color:"rgba(255,255,255,0.7)",background:"rgba(0,0,0,0.9)",textAlign:"center",flexShrink:0}}>Pinch to zoom further. Tap outside or X to close.</div>
-          </div>
-        )}
+        {mapZoom&&<MapZoomModal src={VENUE_MAP} onClose={()=>setMapZoom(false)} X={X}/>}
 
         {showBroadcast&&(
           <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.5)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:24}}>
@@ -1364,7 +1450,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(
 // release triggers a fresh install + old caches get cleared.
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    const v = "2026.05.15.2";
+    const v = "2026.05.15.3";
     navigator.serviceWorker.register('sw.js?v=' + v, { scope: './' }).catch(() => {});
   });
 }
