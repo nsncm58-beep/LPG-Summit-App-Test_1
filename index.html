@@ -118,6 +118,7 @@ window.iconComponents = {
 <!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js"></script>
 
 <script>
 // Initialize Firebase
@@ -202,6 +203,113 @@ window.storage = {
     return function() { ref.off('value'); };
   }
 };
+
+// ============================================================
+// Web Push notifications via Firebase Cloud Messaging.
+// Paste your VAPID public key from Firebase Console > Project Settings >
+// Cloud Messaging > Web Push certificates > Generate key pair.
+// Until set, LPG_PUSH.status() returns {configured:false} and the toggle
+// stays disabled with a friendly explainer.
+// ============================================================
+window.LPG_VAPID_KEY = ""; // <-- paste VAPID public key here (starts with "B...")
+
+(function(){
+  function userKey(name){ return String(name||"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"")||"unknown"; }
+  function isIos(){ return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream; }
+  function isStandalone(){
+    try { return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true; } catch(_){ return false; }
+  }
+  function pushSupported(){
+    return ('serviceWorker' in navigator) && ('PushManager' in window) && ('Notification' in window) && !!(window.firebase && firebase.messaging && firebase.messaging.isSupported);
+  }
+
+  var messaging = null;
+  function getMessaging(){
+    if (messaging) return messaging;
+    if (!pushSupported() || !firebase.messaging.isSupported()) return null;
+    try { messaging = firebase.messaging(); } catch(_){ messaging = null; }
+    return messaging;
+  }
+
+  window.LPG_PUSH = {
+    // Returns a snapshot of the push environment so the UI can decide what to show.
+    status: function(){
+      return {
+        configured: !!window.LPG_VAPID_KEY,
+        supported: pushSupported(),
+        permission: ('Notification' in window) ? Notification.permission : 'unsupported',
+        ios: isIos(),
+        standalone: isStandalone(),
+        // iOS Safari only delivers web push to installed PWAs (iOS 16.4+).
+        iosNeedsInstall: isIos() && !isStandalone()
+      };
+    },
+
+    // Asks for permission, gets an FCM token, and stores it in /shared/pushTokens/{userKey}/{autoId}.
+    // Returns { ok: true, token } or { ok: false, reason: "..." }.
+    enable: async function(userName){
+      var s = this.status();
+      if (!s.configured) return { ok: false, reason: 'not-configured' };
+      if (!s.supported) return { ok: false, reason: 'unsupported' };
+      if (s.iosNeedsInstall) return { ok: false, reason: 'ios-needs-install' };
+
+      try {
+        var perm = await Notification.requestPermission();
+        if (perm !== 'granted') return { ok: false, reason: perm }; // 'denied' or 'default'
+
+        // Reuse the app's existing service worker registration (sw.js) instead of
+        // letting FCM register its own firebase-messaging-sw.js.
+        var reg = await navigator.serviceWorker.getRegistration() || await navigator.serviceWorker.ready;
+
+        var m = getMessaging();
+        if (!m) return { ok: false, reason: 'messaging-init-failed' };
+
+        var token = await m.getToken({ vapidKey: window.LPG_VAPID_KEY, serviceWorkerRegistration: reg });
+        if (!token) return { ok: false, reason: 'no-token' };
+
+        // Save token under /shared/pushTokens/{userKey}/{tokenId}.
+        var uk = userKey(userName);
+        var ref = db.ref('shared/pushTokens/' + uk).push();
+        await ref.set({
+          token: token,
+          user: userName,
+          ua: navigator.userAgent.slice(0, 200),
+          ts: Date.now()
+        });
+        try { localStorage.setItem('lpg-push-key', JSON.stringify({ userKey: uk, tokenId: ref.key, token: token })); } catch(_){}
+
+        // Foreground messages: show our own banner (browsers don't auto-show when the
+        // page is in focus). Wired below in window.LPG_PUSH.onForeground.
+        try { m.onMessage(function(payload){ if (typeof window.LPG_PUSH._onFg === 'function') window.LPG_PUSH._onFg(payload); }); } catch(_){}
+
+        return { ok: true, token: token };
+      } catch(err) {
+        try { console.error('[lpg-push] enable failed', err); } catch(_){}
+        return { ok: false, reason: 'error', error: String(err && err.message || err) };
+      }
+    },
+
+    // Removes the local token from /shared/pushTokens/ so the sender stops targeting this device.
+    disable: async function(){
+      try {
+        var raw = localStorage.getItem('lpg-push-key');
+        if (raw) {
+          var saved = JSON.parse(raw);
+          await db.ref('shared/pushTokens/' + saved.userKey + '/' + saved.tokenId).remove();
+        }
+      } catch(_){}
+      try { localStorage.removeItem('lpg-push-key'); } catch(_){}
+      try {
+        var m = getMessaging();
+        if (m && m.deleteToken) await m.deleteToken();
+      } catch(_){}
+      return { ok: true };
+    },
+
+    // Register a callback that fires for foreground push messages (page open + focused).
+    onForeground: function(cb){ this._onFg = cb; }
+  };
+})();
 </script>
 
 <script>
@@ -220,7 +328,7 @@ const LOGOS={"ADD Systems":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2
 const MTIMES=["8:15 AM","8:37 AM","8:59 AM","9:21 AM","9:43 AM","10:05 AM","10:27 AM","10:49 AM","11:11 AM","11:33 AM","11:55 AM","12:17 PM"];
 
 const BLUE="#005D8C";const LBLUE="#C1E0EC";const DBLUE="#004870";
-const APP_VERSION="2026.05.15.7";
+const APP_VERSION="2026.05.19.1";
 const HEADSHOTS={"Anthony Buck":"anthony-buck.jpg","Brandon Hewett":"brandon-hewett.jpg","Carl Fox":"carl-fox.jpg","Casey Dell":"casey-dell.jpg","Chad Gregg":"chad-gregg.jpg","Chris Caywood":"chris-caywood.jpg","Chris Kutemeier":"chris-kutemeier.jpg","David Dodd":"david-dodd.jpg","Dennis McCarthy":"dennis-mccarthy.jpg","Gordon Cunningham":"gordon-cunningham.jpg","Howard Reinhard":"howard-reinhard.jpg","Jason Scribner":"jason-scribner.jpg","Jason Wehunt":"jason-wehunt.jpg","Josh Schmoll":"josh-schmoll.jpg","Karen Wehunt":"karen-wehunt.jpg","Mary Sargeant-Buck":"mary-sargeant-buck.jpg","Mike Dodd":"mike-dodd.jpg","Paul Ostendorf":"paul-ostendorf.jpg","Randy Schott":"randy-schott.jpg","Ryan Brewer":"ryan-brewer.jpg","Sean Daugherty":"sean-daugherty.jpg","Seth Dimacchia":"seth-dimacchia.jpg","Stephan Chase":"stephan-chase.jpg","Stephen Miller":"stephen-miller.jpg","Tammy Scribner":"tammy-scribner.jpg"};
 
 
@@ -655,6 +763,10 @@ const AppComponent = function App(){
   const autoScrolledRef=useRef(false);
   const[photos,setPhotos]=useState([]);
   const[notifEnabled,setNotifEnabled]=useState(false);
+  // Push notification state — separate from local Notification API. Push works when app is closed.
+  const[pushEnabled,setPushEnabled]=useState(()=>{try{return !!localStorage.getItem("lpg-push-key")}catch(e){return false}});
+  const[pushStatus,setPushStatus]=useState("");      // "", "enabling", "granted", "denied", "ios-needs-install", "not-configured", "unsupported", "error"
+  const[pushError,setPushError]=useState("");
   const[mapZoom,setMapZoom]=useState(false);
   // Dark mode — persisted, applied via [data-theme] attribute on <html> so CSS vars flip.
   const[dark,setDark]=useState(()=>{try{return localStorage.getItem("lpg-dark")==="1"}catch(e){return false}});
@@ -750,6 +862,21 @@ const AppComponent = function App(){
     setComposing(false);
     setComposeText("");
     try{await window.storage.set("lpg-broadcasts",JSON.stringify(updated.slice(0,20)),true)}catch(e){}
+    // Also queue this message for push fan-out. A separate sender (Node script or Cloud Function)
+    // listens on /shared/pushQueue, sends FCM to every token in /shared/pushTokens, then removes
+    // the queue entry. We write the full message under its own id so the sender can dedupe.
+    try{
+      if(window.firebase&&window.firebase.database){
+        await window.firebase.database().ref('shared/pushQueue/'+msg.id).set({
+          id: msg.id,
+          title: "LPG Summit",
+          body: msg.text,
+          by: msg.by,
+          at: msg.at,
+          ts: Date.now()
+        });
+      }
+    }catch(e){}
   },[broadcasts,user]);
 
   const saveNotes=useCallback(async(n)=>{
@@ -849,6 +976,44 @@ const AppComponent = function App(){
       try{await window.storage.set("lpg-notif","false")}catch(e){}
     }
   },[user,scheduleMeetingNotifs]);
+
+  // Push notifications — separate flow from local Notification API.
+  // Subscribes via FCM + saves token under /shared/pushTokens so the sender can target this device
+  // even when the app tab is closed.
+  const togglePush=useCallback(async(val)=>{
+    if(!user||!window.LPG_PUSH){return}
+    if(val){
+      setPushStatus("enabling"); setPushError("");
+      const res=await window.LPG_PUSH.enable(user.n);
+      if(res.ok){
+        setPushEnabled(true); setPushStatus("granted");
+      } else {
+        setPushEnabled(false);
+        setPushStatus(res.reason||"error");
+        setPushError(res.error||"");
+      }
+    } else {
+      await window.LPG_PUSH.disable();
+      setPushEnabled(false); setPushStatus(""); setPushError("");
+    }
+  },[user]);
+
+  // Foreground push: if a push fires while the app is in focus, show our existing broadcast modal
+  // (consistent UX with in-app announcements). RTDB writes from sendBroadcast already trigger this
+  // path for other tabs/devices; push covers the closed-tab case.
+  useEffect(()=>{
+    if(!window.LPG_PUSH||typeof window.LPG_PUSH.onForeground!=="function") return;
+    window.LPG_PUSH.onForeground((payload)=>{
+      try{
+        const n=payload?.notification||{};
+        const d=payload?.data||{};
+        const text=n.body||d.body||"";
+        if(text){
+          setShowBroadcast({id:Date.now(),text:text,by:d.by||"LPG Summit",at:new Date().toLocaleString()});
+        }
+      }catch(_){}
+    });
+  },[]);
 
   useEffect(()=>{
     if(user&&notifEnabled){scheduleMeetingNotifs(user)}
@@ -1571,21 +1736,36 @@ const AppComponent = function App(){
               {notifStatus==="dismissed"&&<div style={{fontSize:13,color:"#E65100",marginTop:8}}>Permission prompt was dismissed. Please try again.</div>}
               {notifStatus==="not-supported"&&<div style={{fontSize:13,color:"#c00",marginTop:8}}>Your browser does not support notifications. Try installing the app to your home screen.</div>}
             </div>
-            <div style={S.card}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                <div>
-                  <div style={{fontSize:16,fontWeight:700,color:"var(--lpg-text)"}}>Schedule Changes</div>
-                  <div style={{fontSize:13,color:"var(--lpg-text-muted)",marginTop:2}}>Alert when rooms or times are updated</div>
+            {/* Push notifications — separate channel that works even when the app is closed. */}
+            {(()=>{
+              const ps=(window.LPG_PUSH&&window.LPG_PUSH.status)?window.LPG_PUSH.status():{configured:false,supported:false,ios:false,standalone:false,iosNeedsInstall:false,permission:"default"};
+              const disabled=!ps.configured||!ps.supported||ps.iosNeedsInstall||ps.permission==="denied";
+              return (
+                <div style={S.card}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                    <div style={{flex:1,minWidth:0,paddingRight:12}}>
+                      <div style={{fontSize:16,fontWeight:700,color:"var(--lpg-text)"}}>Push Notifications</div>
+                      <div style={{fontSize:13,color:"var(--lpg-text-muted)",marginTop:2}}>Get announcements and schedule changes — even when the app isn't open.</div>
+                    </div>
+                    <div onClick={()=>{if(!disabled||pushEnabled)togglePush(!pushEnabled)}} style={{width:48,height:26,borderRadius:13,background:pushEnabled?"#4CAF50":"#ddd",cursor:(!disabled||pushEnabled)?"pointer":"not-allowed",opacity:(!disabled||pushEnabled)?1:0.5,position:"relative",transition:"background 0.2s",flexShrink:0}}>
+                      <div style={{width:22,height:22,borderRadius:11,background:"#fff",position:"absolute",top:2,left:pushEnabled?24:2,transition:"left 0.2s",boxShadow:"0 1px 3px rgba(0,0,0,0.2)"}}/>
+                    </div>
+                  </div>
+                  {pushStatus==="enabling"&&<div style={{fontSize:13,color:"var(--lpg-text-muted)",marginTop:8}}>Requesting permission…</div>}
+                  {pushStatus==="granted"&&<div style={{fontSize:13,color:"#2E7D32",marginTop:8,display:"flex",alignItems:"center",gap:4}}><Bell size={12}/>Push enabled on this device.</div>}
+                  {pushStatus==="denied"&&<div style={{fontSize:13,color:"#c00",marginTop:8}}>Permission denied. Enable notifications for this site in your browser/device settings and try again.</div>}
+                  {pushStatus==="default"&&<div style={{fontSize:13,color:"#E65100",marginTop:8}}>Prompt dismissed. Tap the toggle again to try.</div>}
+                  {pushStatus==="error"&&<div style={{fontSize:13,color:"#c00",marginTop:8}}>Couldn't subscribe.{pushError?` (${pushError})`:""}</div>}
+                  {!ps.configured&&<div style={{fontSize:13,color:"#E65100",marginTop:8}}>Not configured yet — admin needs to paste the Firebase VAPID key into the app.</div>}
+                  {!ps.supported&&ps.configured&&<div style={{fontSize:13,color:"#c00",marginTop:8}}>This browser doesn't support push.</div>}
+                  {ps.iosNeedsInstall&&ps.configured&&<div style={{fontSize:13,color:"#E65100",marginTop:8}}>On iPhone/iPad, push only works after you install the app. Tap the Share button in Safari and choose "Add to Home Screen," then open the app from the icon and enable here.</div>}
                 </div>
-                <div style={{width:48,height:26,borderRadius:13,background:"#4CAF50",position:"relative"}}>
-                  <div style={{width:22,height:22,borderRadius:11,background:"#fff",position:"absolute",top:2,left:24,boxShadow:"0 1px 3px rgba(0,0,0,0.2)"}}/>
-                </div>
-              </div>
-            </div>
+              );
+            })()}
             <div style={{...S.card,background:LBLUE,border:`1px solid ${BLUE}20`}}>
               <div style={{display:"flex",gap:8,alignItems:"flex-start"}}>
                 <Bell size={16} color={BLUE} style={{flexShrink:0,marginTop:2}}/>
-                <div style={{fontSize:14,color:"#444",lineHeight:1.5}}>Push notifications will be active when this app is installed to your home screen. To install, tap the share icon in your browser and select "Add to Home Screen."</div>
+                <div style={{fontSize:14,color:"var(--lpg-text-muted)",lineHeight:1.5}}>Meeting Reminders run locally in your browser — best when the app stays open in a tab. Push Notifications work even when the app is closed, but require permission and (on iPhone/iPad) installing to the home screen first.</div>
               </div>
             </div>
           </div>

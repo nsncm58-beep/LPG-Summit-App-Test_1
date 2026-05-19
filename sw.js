@@ -1,4 +1,4 @@
-// LPG Summit App — service worker for offline support
+// LPG Summit App — service worker for offline support + push notifications.
 // Cache name is versioned via the URL query when registered (?v=APP_VERSION)
 // so a new app version triggers a fresh install + old caches get nuked.
 const VERSION = new URL(self.location.href).searchParams.get('v') || 'dev';
@@ -6,6 +6,58 @@ const CACHE = 'lpg-summit-' + VERSION;
 // Derive BASE from this worker's own pathname (e.g. "/LPG-Summit-App-Test_1/sw.js" → "/LPG-Summit-App-Test_1/")
 // so the worker works under any deployment path.
 const BASE = new URL('./', self.location.href).pathname;
+
+// ============================================================
+// Firebase Cloud Messaging — background push handler.
+// Initializes Firebase Messaging inside the worker so FCM can deliver
+// notifications even when the app tab is closed. The same firebaseConfig
+// from index.html is repeated here because the worker has no DOM access.
+// ============================================================
+try {
+  importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js');
+  importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js');
+  firebase.initializeApp({
+    apiKey: "AIzaSyBJqKXfi7Eko-hBZ3D15I8a1ZA8cirXRI8",
+    authDomain: "lpgsummittest-3ea64.firebaseapp.com",
+    databaseURL: "https://lpgsummittest-3ea64-default-rtdb.firebaseio.com",
+    projectId: "lpgsummittest-3ea64",
+    storageBucket: "lpgsummittest-3ea64.firebasestorage.app",
+    messagingSenderId: "352075229471",
+    appId: "1:352075229471:web:c633eae1a813b20fb7682a"
+  });
+  const messaging = firebase.messaging();
+  // Fires when the app is in the background / closed. Foreground messages
+  // are handled by onMessage() in the page itself.
+  messaging.onBackgroundMessage((payload) => {
+    const n = (payload && payload.notification) || {};
+    const data = (payload && payload.data) || {};
+    const title = n.title || data.title || 'LPG Summit';
+    const body  = n.body  || data.body  || '';
+    self.registration.showNotification(title, {
+      body: body,
+      icon: BASE + 'icon-192.png',
+      badge: BASE + 'icon-192.png',
+      tag: data.tag || ('lpg-' + Date.now()),
+      data: { url: BASE, ...data }
+    });
+  });
+} catch (e) {
+  // FCM SDK failed to load (e.g., offline first install). Service worker still
+  // works for offline caching; push will be inactive until the SDK loads.
+}
+
+// Clicking the notification focuses an existing tab or opens a new one.
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const targetUrl = (event.notification.data && event.notification.data.url) || BASE;
+  event.waitUntil((async () => {
+    const clientsArr = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    for (const client of clientsArr) {
+      if (client.url.includes(BASE) && 'focus' in client) return client.focus();
+    }
+    if (self.clients.openWindow) return self.clients.openWindow(targetUrl);
+  })());
+});
 
 // Pre-cache the shell on install. Other assets are cached on first fetch.
 const SHELL = [
