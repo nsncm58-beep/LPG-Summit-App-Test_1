@@ -328,7 +328,7 @@ const LOGOS={"ADD Systems":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2
 const MTIMES=["8:15 AM","8:37 AM","8:59 AM","9:21 AM","9:43 AM","10:05 AM","10:27 AM","10:49 AM","11:11 AM","11:33 AM","11:55 AM","12:17 PM"];
 
 const BLUE="#005D8C";const LBLUE="#C1E0EC";const DBLUE="#004870";
-const APP_VERSION="2026.05.19.1";
+const APP_VERSION="2026.05.19.2";
 const HEADSHOTS={"Anthony Buck":"anthony-buck.jpg","Brandon Hewett":"brandon-hewett.jpg","Carl Fox":"carl-fox.jpg","Casey Dell":"casey-dell.jpg","Chad Gregg":"chad-gregg.jpg","Chris Caywood":"chris-caywood.jpg","Chris Kutemeier":"chris-kutemeier.jpg","David Dodd":"david-dodd.jpg","Dennis McCarthy":"dennis-mccarthy.jpg","Gordon Cunningham":"gordon-cunningham.jpg","Howard Reinhard":"howard-reinhard.jpg","Jason Scribner":"jason-scribner.jpg","Jason Wehunt":"jason-wehunt.jpg","Josh Schmoll":"josh-schmoll.jpg","Karen Wehunt":"karen-wehunt.jpg","Mary Sargeant-Buck":"mary-sargeant-buck.jpg","Mike Dodd":"mike-dodd.jpg","Paul Ostendorf":"paul-ostendorf.jpg","Randy Schott":"randy-schott.jpg","Ryan Brewer":"ryan-brewer.jpg","Sean Daugherty":"sean-daugherty.jpg","Seth Dimacchia":"seth-dimacchia.jpg","Stephan Chase":"stephan-chase.jpg","Stephen Miller":"stephen-miller.jpg","Tammy Scribner":"tammy-scribner.jpg"};
 
 
@@ -551,6 +551,19 @@ function formatCountdown(mins){
   const d=Math.floor(h/24), hr=h%24;
   return hr===0?`in ${d}d`:`in ${d}d ${hr}h`;
 }
+
+// Announcements clear from the app this long after they were sent (epoch ms).
+// Stored broadcasts older than this get filtered on load, on subscribe, on send,
+// and on a 1-minute ticking interval so the UI auto-clears without a refresh.
+const ANNOUNCE_TTL=30*60*1000;
+
+// Photo gallery safety caps — keep RTDB storage well under the Spark 1 GB limit.
+// At ~250-500 KB per stored base64 photo, 50 photos × 500 KB ≈ 25 MB (2.5% of cap).
+const MAX_GALLERY_PHOTOS=50;
+const MAX_PHOTO_BYTES=600*1024; // hard reject anything still over 600 KB after retries
+
+// Approximate decoded size of a base64 dataURL (chars * 0.75 ≈ raw bytes).
+function approxBase64Bytes(dataUrl){ return Math.floor(String(dataUrl||"").length*0.75); }
 
 // Compress an image File down to ~150-300KB JPEG with proper EXIF orientation
 // before uploading. iPhone photos can be 3-5MB straight from the camera; without
@@ -817,7 +830,7 @@ const AppComponent = function App(){
       }catch(e){}
       try{const r=await window.storage.get("lpg-photos",true);if(r)setPhotos(JSON.parse(r.value))}catch(e){}
       try{const r=await window.storage.get("lpg-notif");if(r)setNotifEnabled(r.value==="true")}catch(e){}
-      try{const r=await window.storage.get("lpg-broadcasts",true);if(r){const SIX_HRS=6*60*60*1000;const msgs=JSON.parse(r.value).filter(m=>Date.now()-m.id<SIX_HRS);setBroadcasts(msgs)}}catch(e){}
+      try{const r=await window.storage.get("lpg-broadcasts",true);if(r){const msgs=JSON.parse(r.value).filter(m=>Date.now()-m.id<ANNOUNCE_TTL);setBroadcasts(msgs)}}catch(e){}
       try{const r=await window.storage.get("lpg-lastseen");if(r)setLastSeenBroadcast(parseInt(r.value)||0)}catch(e){}
     })();
   },[]);
@@ -829,8 +842,7 @@ const AppComponent = function App(){
     try{
       unsub=window.storage.subscribe("lpg-broadcasts",(r)=>{
         try{
-          const SIX_HRS=6*60*60*1000;
-          const msgs=JSON.parse(r.value).filter(m=>Date.now()-m.id<SIX_HRS);
+          const msgs=JSON.parse(r.value).filter(m=>Date.now()-m.id<ANNOUNCE_TTL);
           setBroadcasts(msgs);
         }catch(e){}
       });
@@ -839,12 +851,24 @@ const AppComponent = function App(){
   },[user]);
 
   useEffect(()=>{
-    const SIX_HRS=6*60*60*1000;
-    const recent=broadcasts.find(b=>Date.now()-b.id<SIX_HRS);
+    const recent=broadcasts.find(b=>Date.now()-b.id<ANNOUNCE_TTL);
     if(recent&&lastSeenBroadcast<recent.id){
       setShowBroadcast(recent);
     }
   },[broadcasts,lastSeenBroadcast]);
+
+  // Tick every minute so announcements visibly disappear once they cross the 30-min TTL,
+  // without needing a refresh or a new broadcast to retrigger the filter.
+  useEffect(()=>{
+    const tick=()=>{
+      setBroadcasts(prev=>{
+        const fresh=prev.filter(b=>Date.now()-b.id<ANNOUNCE_TTL);
+        return fresh.length===prev.length?prev:fresh;
+      });
+    };
+    const id=setInterval(tick,60*1000);
+    return ()=>clearInterval(id);
+  },[]);
 
   const dismissBroadcast=useCallback(async()=>{
     if(showBroadcast){
@@ -857,7 +881,10 @@ const AppComponent = function App(){
   const sendBroadcast=useCallback(async(text)=>{
     if(!text.trim())return;
     const msg={id:Date.now(),text:text.trim(),by:user?.n||"Staff",at:new Date().toLocaleString()};
-    const updated=[msg,...broadcasts];
+    // Drop anything older than the TTL while we're writing so the stored array doesn't
+    // accumulate stale entries that the load filter would just hide anyway.
+    const fresh=broadcasts.filter(b=>Date.now()-b.id<ANNOUNCE_TTL);
+    const updated=[msg,...fresh];
     setBroadcasts(updated);
     setComposing(false);
     setComposeText("");
@@ -891,11 +918,20 @@ const AppComponent = function App(){
     if(!file) return;
     setUploadingPhoto(true);
     try{
-      const dataUrl=await compressImage(file,1600,0.75);
+      // Compress with progressively smaller dimensions/quality until under the per-photo
+      // byte cap. Hard-reject if even the smallest pass is still too big, so a single
+      // huge photo can't blow past Spark storage limits.
+      let dataUrl=await compressImage(file,1280,0.7);
+      if(approxBase64Bytes(dataUrl)>MAX_PHOTO_BYTES) dataUrl=await compressImage(file,1024,0.65);
+      if(approxBase64Bytes(dataUrl)>MAX_PHOTO_BYTES) dataUrl=await compressImage(file,800,0.6);
+      if(approxBase64Bytes(dataUrl)>MAX_PHOTO_BYTES){
+        try{alert("That photo is too large to upload. Please try a different one.")}catch(_){}
+        return;
+      }
       const newPhoto={id:Date.now(),src:dataUrl,by:user?.n||"Unknown",at:new Date().toLocaleString()};
-      const updated=[newPhoto,...photos];
+      const updated=[newPhoto,...photos].slice(0,MAX_GALLERY_PHOTOS);
       setPhotos(updated);
-      try{await window.storage.set("lpg-photos",JSON.stringify(updated.slice(0,80)),true)}catch(e){}
+      try{await window.storage.set("lpg-photos",JSON.stringify(updated),true)}catch(e){}
     }catch(err){
       try{alert("Couldn't upload that photo — try a different one.")}catch(_){}
     }finally{
