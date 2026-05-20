@@ -1,0 +1,16 @@
+{
+  "name": "lpg-summit-push-sender",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Listens on /shared/pushQueue in Firebase RTDB and fans broadcasts out to every registered FCM token.",
+  "main": "push-sender.js",
+  "scripts": {
+    "start": "node push-sender.js"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.1.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
