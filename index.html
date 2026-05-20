@@ -328,7 +328,7 @@ const LOGOS={"ADD Systems":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2
 const MTIMES=["8:15 AM","8:37 AM","8:59 AM","9:21 AM","9:43 AM","10:05 AM","10:27 AM","10:49 AM","11:11 AM","11:33 AM","11:55 AM","12:17 PM"];
 
 const BLUE="#005D8C";const LBLUE="#C1E0EC";const DBLUE="#004870";
-const APP_VERSION="2026.05.19.3";
+const APP_VERSION="2026.05.19.4";
 const HEADSHOTS={"Anthony Buck":"anthony-buck.jpg","Brandon Hewett":"brandon-hewett.jpg","Carl Fox":"carl-fox.jpg","Casey Dell":"casey-dell.jpg","Chad Gregg":"chad-gregg.jpg","Chris Caywood":"chris-caywood.jpg","Chris Kutemeier":"chris-kutemeier.jpg","David Dodd":"david-dodd.jpg","Dennis McCarthy":"dennis-mccarthy.jpg","Gordon Cunningham":"gordon-cunningham.jpg","Howard Reinhard":"howard-reinhard.jpg","Jason Scribner":"jason-scribner.jpg","Jason Wehunt":"jason-wehunt.jpg","Josh Schmoll":"josh-schmoll.jpg","Karen Wehunt":"karen-wehunt.jpg","Mary Sargeant-Buck":"mary-sargeant-buck.jpg","Mike Dodd":"mike-dodd.jpg","Paul Ostendorf":"paul-ostendorf.jpg","Randy Schott":"randy-schott.jpg","Ryan Brewer":"ryan-brewer.jpg","Sean Daugherty":"sean-daugherty.jpg","Seth Dimacchia":"seth-dimacchia.jpg","Stephan Chase":"stephan-chase.jpg","Stephen Miller":"stephen-miller.jpg","Tammy Scribner":"tammy-scribner.jpg"};
 
 
@@ -1059,7 +1059,29 @@ const AppComponent = function App(){
   const login=()=>{
     if(pw.toLowerCase()!=="lpg"){setPwErr(true);return}
     const found=USERS.find(u=>u.n===selName);
-    if(found){setUser(found);try{localStorage.setItem("lpg-session",JSON.stringify(found));}catch(e){}}
+    if(found){
+      setUser(found);
+      try{localStorage.setItem("lpg-session",JSON.stringify(found));}catch(e){}
+      // Auto-enable push notifications on first sign-in so attendees don't have
+      // to find the toggle. Browser permission must be requested from a user
+      // gesture — calling it directly inside this click handler satisfies that
+      // on iOS-PWA, Android, and desktop. We only prompt once per device:
+      // returning users (with the session restored on reload) skip this and
+      // rely on the toggle in Info → Notifications if they want to change it.
+      try{
+        const alreadyPrompted=(()=>{try{return localStorage.getItem("lpg-push-prompted")==="1"}catch(e){return false}})();
+        const ps=window.LPG_PUSH&&window.LPG_PUSH.status&&window.LPG_PUSH.status();
+        if(!alreadyPrompted&&ps&&ps.configured&&ps.supported&&!ps.iosNeedsInstall&&ps.permission!=="denied"){
+          window.LPG_PUSH.enable(found.n).then(r=>{
+            try{localStorage.setItem("lpg-push-prompted","1");}catch(e){}
+            if(r&&r.ok){setPushEnabled(true);setPushStatus("granted");}
+            else{setPushStatus((r&&r.reason)||"error");setPushError((r&&r.error)||"");}
+          }).catch(e=>{
+            try{localStorage.setItem("lpg-push-prompted","1");}catch(_){}
+          });
+        }
+      }catch(e){}
+    }
   };
 
   if(!user){
