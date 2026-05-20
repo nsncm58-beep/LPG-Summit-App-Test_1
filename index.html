@@ -268,7 +268,24 @@ window.LPG_VAPID_KEY = "BNF5yMIsbXIx4cvIF9_2-8Jj2M71VQHYqz0_IJ-MODX6D5eZsBcRjJXP
         if (!token) return { ok: false, reason: 'no-token' };
 
         // Save token under /shared/pushTokens/{userKey}/{tokenId}.
+        // Dedupe so this device occupies exactly one slot:
+        //   1) If localStorage knows this device's previous tokenId, remove it.
+        //   2) Scan the user's existing tokens and remove any entry whose token
+        //      string matches the one we just got (covers cases where localStorage
+        //      was wiped but a stale entry still points at the same device).
         var uk = userKey(userName);
+        try {
+          var prev = JSON.parse(localStorage.getItem('lpg-push-key') || 'null');
+          if (prev && prev.userKey && prev.tokenId) {
+            await db.ref('shared/pushTokens/' + prev.userKey + '/' + prev.tokenId).remove();
+          }
+        } catch(_){}
+        try {
+          var snap = await db.ref('shared/pushTokens/' + uk).once('value');
+          var existing = snap.val() || {};
+          var dupes = Object.keys(existing).filter(function(k){ return existing[k] && existing[k].token === token; });
+          await Promise.all(dupes.map(function(k){ return db.ref('shared/pushTokens/' + uk + '/' + k).remove(); }));
+        } catch(_){}
         var ref = db.ref('shared/pushTokens/' + uk).push();
         await ref.set({
           token: token,
@@ -328,7 +345,7 @@ const LOGOS={"ADD Systems":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2
 const MTIMES=["8:15 AM","8:37 AM","8:59 AM","9:21 AM","9:43 AM","10:05 AM","10:27 AM","10:49 AM","11:11 AM","11:33 AM","11:55 AM","12:17 PM"];
 
 const BLUE="#005D8C";const LBLUE="#C1E0EC";const DBLUE="#004870";
-const APP_VERSION="2026.05.20.1";
+const APP_VERSION="2026.05.20.2";
 const HEADSHOTS={"Anthony Buck":"anthony-buck.jpg","Brandon Hewett":"brandon-hewett.jpg","Carl Fox":"carl-fox.jpg","Casey Dell":"casey-dell.jpg","Chad Gregg":"chad-gregg.jpg","Chris Caywood":"chris-caywood.jpg","Chris Kutemeier":"chris-kutemeier.jpg","David Dodd":"david-dodd.jpg","Dennis McCarthy":"dennis-mccarthy.jpg","Gordon Cunningham":"gordon-cunningham.jpg","Howard Reinhard":"howard-reinhard.jpg","Jason Scribner":"jason-scribner.jpg","Jason Wehunt":"jason-wehunt.jpg","Josh Schmoll":"josh-schmoll.jpg","Karen Wehunt":"karen-wehunt.jpg","Mary Sargeant-Buck":"mary-sargeant-buck.jpg","Mike Dodd":"mike-dodd.jpg","Paul Ostendorf":"paul-ostendorf.jpg","Randy Schott":"randy-schott.jpg","Ryan Brewer":"ryan-brewer.jpg","Sean Daugherty":"sean-daugherty.jpg","Seth Dimacchia":"seth-dimacchia.jpg","Stephan Chase":"stephan-chase.jpg","Stephen Miller":"stephen-miller.jpg","Tammy Scribner":"tammy-scribner.jpg"};
 
 
