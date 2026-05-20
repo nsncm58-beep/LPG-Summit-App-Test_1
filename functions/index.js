@@ -76,18 +76,18 @@ exports.onPushQueueWrite = onValueCreated(
       const slice = tokens.slice(i, i + CHUNK);
       const start = i;
       try {
+        // Data-only payload. With a `notification` field, FCM auto-displays
+        // the OS banner AND fires onBackgroundMessage in the service worker
+        // → user sees the message twice. Data-only routes everything through
+        // the SW's onBackgroundMessage, which shows exactly one notification.
         const resp = await messaging.sendEachForMulticast({
           tokens: slice,
-          notification: { title, body },
           data: {
             id: String(id),
+            title: String(title),
+            body: String(body),
             by: String(msg.by || ''),
-            at: String(msg.at || ''),
-            body: String(body)
-          },
-          webpush: {
-            fcmOptions: { link: '/' },
-            notification: { icon: 'icon-192.png', badge: 'icon-192.png' }
+            at: String(msg.at || '')
           }
         });
         success += resp.successCount;
