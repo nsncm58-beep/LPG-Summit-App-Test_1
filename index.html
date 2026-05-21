@@ -345,7 +345,7 @@ const LOGOS={"ADD Systems":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2
 const MTIMES=["8:15 AM","8:37 AM","8:59 AM","9:21 AM","9:43 AM","10:05 AM","10:27 AM","10:49 AM","11:11 AM","11:33 AM","11:55 AM","12:17 PM"];
 
 const BLUE="#005D8C";const LBLUE="#C1E0EC";const DBLUE="#004870";
-const APP_VERSION="2026.05.20.2";
+const APP_VERSION="2026.05.20.4";
 const HEADSHOTS={"Anthony Buck":"anthony-buck.jpg","Brandon Hewett":"brandon-hewett.jpg","Carl Fox":"carl-fox.jpg","Casey Dell":"casey-dell.jpg","Chad Gregg":"chad-gregg.jpg","Chris Caywood":"chris-caywood.jpg","Chris Kutemeier":"chris-kutemeier.jpg","David Dodd":"david-dodd.jpg","Dennis McCarthy":"dennis-mccarthy.jpg","Gordon Cunningham":"gordon-cunningham.jpg","Howard Reinhard":"howard-reinhard.jpg","Jason Scribner":"jason-scribner.jpg","Jason Wehunt":"jason-wehunt.jpg","Josh Schmoll":"josh-schmoll.jpg","Karen Wehunt":"karen-wehunt.jpg","Mary Sargeant-Buck":"mary-sargeant-buck.jpg","Mike Dodd":"mike-dodd.jpg","Paul Ostendorf":"paul-ostendorf.jpg","Randy Schott":"randy-schott.jpg","Ryan Brewer":"ryan-brewer.jpg","Sean Daugherty":"sean-daugherty.jpg","Seth Dimacchia":"seth-dimacchia.jpg","Stephan Chase":"stephan-chase.jpg","Stephen Miller":"stephen-miller.jpg","Tammy Scribner":"tammy-scribner.jpg"};
 
 
@@ -466,7 +466,7 @@ const VENUE=[
 const SPONSORS=[
   {event:"Welcome Reception (Wednesday)",sponsor:"Cargas",detail:"Eleven Restaurant, 6:30-9:30 PM"},
   {event:"Beverage Cart (Golf)",sponsor:"Metsa",detail:"Palmer Course, Thursday"},
-  {event:"Contest Holes (Golf)",sponsor:"LP Cylinder Service / Quality Steel",detail:"Palmer Course, Thursday"},
+  {event:"Contest Holes (Golf)",sponsor:"Quality Steel / LP Cylinder",detail:"Palmer Course, Thursday"},
   {event:"Casual BBQ Dinner (Thursday)",sponsor:"Otodata",detail:"Seven Eagles Pool, 7:00-10:00 PM"}
 ];
 
@@ -479,7 +479,6 @@ const ATTIRE=[
 const REMINDERS=[
   "Please refer to your personalized meeting schedule for details on your individual meetings.",
   "For those golfing, please wear your golf clothes to Thursday's breakfast and meetings - there is limited time before the golf outing.",
-  "If applicable, bring your golf clubs to the Summit registration desk.",
   "Schedule is subject to change."
 ];
 
@@ -1102,7 +1101,7 @@ const AppComponent = function App(){
   };
 
   if(!user){
-    const allNames=USERS.map(u=>u.n).sort();
+    const allNames=(()=>{const s=USERS.map(u=>u.n).sort();const i=s.findIndex(n=>n==="LP Gas Staff");if(i>0){s.splice(i,1);s.unshift("LP Gas Staff");}return s;})();
     return(
       <div style={{...S.root,display:"flex",flexDirection:"column",justifyContent:"center",padding:24}}>
         <div style={{textAlign:"center",marginBottom:40}}>
@@ -1593,7 +1592,6 @@ const AppComponent = function App(){
             {[
               {id:"speakers",label:"Speakers & Panel",icon:MessageCircle,desc:"Keynote and panel discussion details"},
               {id:"sponsors",label:"Event Sponsors",icon:Trophy,desc:"Partners sponsoring event activities"},
-              {id:"venue",label:"Venue Guide",icon:MapPin,desc:"Key locations at Reunion Resort"},
               {id:"map",label:"Venue Map",icon:Image,desc:"Interactive resort map with event locations"},
               {id:"attire",label:"Attire & Reminders",icon:Shirt,desc:"Dress code and important notes"},
               {id:"photos",label:"Photo Gallery",icon:Camera,desc:"Share and browse event photos"},
@@ -1653,19 +1651,6 @@ const AppComponent = function App(){
                   <div style={{fontSize:14,color:BLUE,fontWeight:600}}>Courtesy of {s.sponsor}</div>
                   <div style={{fontSize:13,color:"var(--lpg-text-muted)"}}>{s.detail}</div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {!globalSearch.trim()&&tab===3&&infoSection==="venue"&&(
-          <div style={{padding:12}}>
-            <div onClick={()=>setInfoSection(null)} style={{fontSize:15,color:BLUE,fontWeight:600,cursor:"pointer",marginBottom:12,display:"flex",alignItems:"center",gap:4}}><ArrowLeft size={14}/> Event Info</div>
-            <div style={{fontSize:17,fontWeight:700,color:"var(--lpg-text)",padding:"0 4px 8px"}}>Reunion Resort Venues</div>
-            {VENUE.map((v,i)=>(
-              <div key={i} style={S.card}>
-                <div style={{fontSize:16,fontWeight:700,color:BLUE}}><MapPin size={14} style={{display:"inline",marginRight:6}}/>{v.name}</div>
-                <div style={{fontSize:14,color:"var(--lpg-text-muted)",marginTop:4}}>{v.desc}</div>
               </div>
             ))}
           </div>
