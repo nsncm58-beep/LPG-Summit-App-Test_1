@@ -345,7 +345,7 @@ const LOGOS={"ADD Systems":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2
 const MTIMES=["8:15 AM","8:37 AM","8:59 AM","9:21 AM","9:43 AM","10:05 AM","10:27 AM","10:49 AM","11:11 AM","11:33 AM","11:55 AM","12:17 PM"];
 
 const BLUE="#005D8C";const LBLUE="#C1E0EC";const DBLUE="#004870";
-const APP_VERSION="2026.05.20.4";
+const APP_VERSION="2026.05.20.5";
 const HEADSHOTS={"Anthony Buck":"anthony-buck.jpg","Brandon Hewett":"brandon-hewett.jpg","Carl Fox":"carl-fox.jpg","Casey Dell":"casey-dell.jpg","Chad Gregg":"chad-gregg.jpg","Chris Caywood":"chris-caywood.jpg","Chris Kutemeier":"chris-kutemeier.jpg","David Dodd":"david-dodd.jpg","Dennis McCarthy":"dennis-mccarthy.jpg","Gordon Cunningham":"gordon-cunningham.jpg","Howard Reinhard":"howard-reinhard.jpg","Jason Scribner":"jason-scribner.jpg","Jason Wehunt":"jason-wehunt.jpg","Josh Schmoll":"josh-schmoll.jpg","Karen Wehunt":"karen-wehunt.jpg","Mary Sargeant-Buck":"mary-sargeant-buck.jpg","Mike Dodd":"mike-dodd.jpg","Paul Ostendorf":"paul-ostendorf.jpg","Randy Schott":"randy-schott.jpg","Ryan Brewer":"ryan-brewer.jpg","Sean Daugherty":"sean-daugherty.jpg","Seth Dimacchia":"seth-dimacchia.jpg","Stephan Chase":"stephan-chase.jpg","Stephen Miller":"stephen-miller.jpg","Tammy Scribner":"tammy-scribner.jpg"};
 
 
@@ -480,6 +480,25 @@ const REMINDERS=[
   "Please refer to your personalized meeting schedule for details on your individual meetings.",
   "For those golfing, please wear your golf clothes to Thursday's breakfast and meetings - there is limited time before the golf outing.",
   "Schedule is subject to change."
+];
+
+const TERMS=[
+  {h:"Acceptance of Terms",b:"By accessing, downloading, installing, or otherwise using the LPGas Growth Summit mobile application (the \"App\"), you acknowledge that you have read, understood, and agree to be bound by these Terms of Use and by the data and privacy practices described herein. These Terms constitute a binding agreement between you (the \"attendee\" or \"user\") and the organizers of the LPGas Growth Summit (collectively, the \"Organizer,\" \"we,\" \"us,\" or \"our\"). If you do not agree with any portion of these Terms, you should discontinue use of the App. Your continued use of the App constitutes your ongoing acceptance of these Terms as they may be amended from time to time."},
+  {h:"Description of the Service",b:"The App is a complimentary, on-site event companion provided solely for the convenience of registered attendees of the LPGas Growth Summit. It is intended to help you navigate the event by providing access to your personalized meeting schedule, general agenda information, venue details, sponsor recognition, attendee and exhibitor listings, real-time announcements, a personal note-taking feature, and a shared photo gallery. The App is provided exclusively in connection with this event and is not intended for any other purpose."},
+  {h:"Information We Collect",b:"In order to provide its features, the App makes available and processes the following categories of information: (a) your name, company affiliation, role, and pre-assigned meeting schedule, each of which is provided to us by you or by the event registration process; (b) any notes you choose to record using the note-taking feature; (c) any photographs you choose to upload to the shared photo gallery; (d) if you elect to enable push notifications, a unique device messaging token that allows us to deliver announcements to your device; and (e) limited technical information such as whether the App is running as an installed home-screen application. The App does not request or require access to your contacts, location, camera roll beyond images you expressly select, or other device data."},
+  {h:"How Your Information Is Used and Shared",b:"Information processed by the App is used to operate and improve the event experience, deliver announcements, and enable the collaborative features described in these Terms. IMPORTANT: Notes you record in the App are synchronized to the event's cloud database and are associated with your name. Authorized LPGas event organizers, staff, and administrators may be able to access, view, and retain the content of your notes. You should therefore not store any confidential, proprietary, sensitive, or personal information in your notes that you are unwilling to have viewed by event personnel. We do not sell your information to third parties."},
+  {h:"Notes",b:"The note-taking feature is provided for your convenience in capturing thoughts during the event. Notes are stored both on your device and in the event's cloud database under an identifier associated with your name, which enables your notes to persist across sessions and devices. Notes are not encrypted end-to-end and are not private to you; as described above, they may be accessible to authorized event personnel. We make no guarantee regarding the permanence, availability, or recoverability of any note, and you are responsible for independently retaining any information you consider important."},
+  {h:"Photo Gallery",b:"The App includes a shared photo gallery feature. Any photograph you upload to the gallery is shared with, and visible to, all other attendees who use the App, and is stored on the event's cloud servers. You should only upload images that are appropriate for a professional audience and that you have the right to share. Do not upload photographs containing confidential information, or images of individuals who have not consented to being photographed or to having their image shared. The Organizer reserves the right to remove any uploaded image at its sole discretion and without notice."},
+  {h:"Push Notifications",b:"If you enable push notifications, the App registers a unique messaging token for your device with our notification service. This token is used solely to deliver event-related announcements and reminders to your device, including when the App is closed or in the background. You may disable push notifications at any time through your device's system settings. Notification delivery depends on third-party services and network conditions and cannot be guaranteed."},
+  {h:"Data Storage and Security",b:"Information processed by the App is stored using Google Firebase services, with data maintained on servers located in the United States. We employ reasonable administrative and technical measures intended to protect the information handled by the App. However, no method of electronic transmission or storage is completely secure, and we cannot and do not guarantee the absolute security of any information. You use the App and submit information at your own risk."},
+  {h:"Data Retention",b:"Announcements displayed within the App automatically expire and clear from view a short time after they are issued. Notes, photographs, and other event-related data may be retained for the duration of the event and may be deleted, purged, or otherwise rendered inaccessible following the conclusion of the event, at the Organizer's discretion and without prior notice. You should not rely on the App as a long-term storage system for any information."},
+  {h:"Third-Party Services",b:"The App relies on third-party platforms, including Google Firebase and Firebase Cloud Messaging for data storage and notification delivery, and a static web-hosting provider for distribution. Your use of features dependent on these services may also be subject to the respective providers' terms and privacy policies. We are not responsible for the practices, availability, or content of any third-party service."},
+  {h:"No Payment or Sensitive Personal Data",b:"The App does not collect, request, or process payment card information, bank account details, government-issued identification numbers, health information, or other categories of sensitive personal data. You should never enter such information into any field of the App. If you believe you have inadvertently submitted sensitive information, please contact the event team so that it may be addressed."},
+  {h:"Acceptable Use",b:"You agree to use the App only for lawful purposes and only in connection with the LPGas Growth Summit. You agree not to use the App to upload, store, or transmit any content that is unlawful, harassing, defamatory, obscene, infringing, or otherwise objectionable; to interfere with or disrupt the App or its underlying services; to attempt to gain unauthorized access to any account, system, or data; or to impersonate any person or entity. The Organizer may suspend or revoke your access to the App at any time for any reason, including violation of these Terms."},
+  {h:"Disclaimers",b:"The App and all information provided through it are made available on an \"as is\" and \"as available\" basis, without warranties of any kind, whether express or implied. Schedule, agenda, venue, and other event information is subject to change and may contain inaccuracies or omissions. We do not warrant that the App will be uninterrupted, timely, secure, or error-free, or that any information provided through it is accurate, complete, or current. You should confirm important event details directly with event staff."},
+  {h:"Limitation of Liability",b:"To the fullest extent permitted by applicable law, in no event shall the Organizer, its affiliates, or its respective officers, employees, agents, or partners be liable for any indirect, incidental, special, consequential, or punitive damages, or for any loss of data, content, profits, or goodwill, arising out of or relating to your use of, or inability to use, the App, even if advised of the possibility of such damages. This includes, without limitation, any loss of notes, photographs, or other content."},
+  {h:"Changes to These Terms",b:"We may update or modify these Terms at any time, including to reflect changes to the App's features or applicable law. Any updated Terms will be made available within the App. Your continued use of the App following the posting of revised Terms constitutes your acceptance of those revised Terms. We encourage you to review these Terms periodically."},
+  {h:"Contact",b:"If you have any questions about these Terms or about the data practices described herein, please contact the LP Gas event team. Contact details for on-site personnel are available in the Help & Emergency section of this App."}
 ];
 
 function getInitials(name){return name.split(" ").map(w=>w[0]).join("").toUpperCase().slice(0,2)}
@@ -1598,6 +1617,7 @@ const AppComponent = function App(){
               {id:"help",label:"Help & Emergency",icon:AlertCircle,desc:"On-site contacts and support"},
               {id:"notifications",label:"Notifications",icon:Bell,desc:"Meeting reminder preferences"},
               {id:"updates",label:"App Updates",icon:RefreshCw,desc:"Check for the latest version"},
+              {id:"terms",label:"Terms of Use & Privacy",icon:Info,desc:"How your information is used and stored"},
             ].map(item=>(
               <div key={item.id} style={{...S.card,cursor:"pointer"}} onClick={()=>setInfoSection(item.id)}>
                 <div style={{display:"flex",alignItems:"center",gap:12}}>
@@ -1854,6 +1874,21 @@ const AppComponent = function App(){
                 <div style={{fontSize:14,color:"#444",lineHeight:1.5}}>This reloads the app from the server to pick up any new content or fixes published by staff. Your personal data (notes, ratings, follow-ups) lives on your device and in the shared event database — nothing is cleared.</div>
               </div>
             </div>
+          </div>
+        )}
+
+        {!globalSearch.trim()&&tab===3&&infoSection==="terms"&&(
+          <div style={{padding:12}}>
+            <div onClick={()=>setInfoSection(null)} style={{fontSize:15,color:BLUE,fontWeight:600,cursor:"pointer",marginBottom:12,display:"flex",alignItems:"center",gap:4}}><ArrowLeft size={14}/> Event Info</div>
+            <div style={{fontSize:17,fontWeight:700,color:"var(--lpg-text)",padding:"0 4px 4px"}}>Terms of Use & Privacy</div>
+            <div style={{fontSize:12,color:"var(--lpg-text-muted)",padding:"0 4px 10px"}}>Last updated: September 2026 &middot; Please read these Terms carefully.</div>
+            {TERMS.map((t,i)=>(
+              <div key={i} style={S.card}>
+                <div style={{fontSize:15,fontWeight:700,color:BLUE,marginBottom:6}}>{i+1}. {t.h}</div>
+                <div style={{fontSize:13,color:"#444",lineHeight:1.6}}>{t.b}</div>
+              </div>
+            ))}
+            <div style={{fontSize:12,color:"var(--lpg-text-muted)",textAlign:"center",padding:"8px 4px 4px"}}>By using this application you acknowledge these Terms of Use.</div>
           </div>
         )}
 
