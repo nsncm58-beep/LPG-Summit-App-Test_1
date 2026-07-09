@@ -345,7 +345,7 @@ const LOGOS={"ADD Systems":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2
 const MTIMES=["8:15 AM","8:37 AM","8:59 AM","9:21 AM","9:43 AM","10:05 AM","10:27 AM","10:49 AM","11:11 AM","11:33 AM","11:55 AM","12:17 PM"];
 
 const BLUE="#005D8C";const LBLUE="#C1E0EC";const DBLUE="#004870";
-const APP_VERSION="2026.05.20.5";
+const APP_VERSION="2026.07.09.1";
 const HEADSHOTS={"Anthony Buck":"anthony-buck.jpg","Brandon Hewett":"brandon-hewett.jpg","Carl Fox":"carl-fox.jpg","Casey Dell":"casey-dell.jpg","Chad Gregg":"chad-gregg.jpg","Chris Caywood":"chris-caywood.jpg","Chris Kutemeier":"chris-kutemeier.jpg","David Dodd":"david-dodd.jpg","Dennis McCarthy":"dennis-mccarthy.jpg","Gordon Cunningham":"gordon-cunningham.jpg","Howard Reinhard":"howard-reinhard.jpg","Jason Scribner":"jason-scribner.jpg","Jason Wehunt":"jason-wehunt.jpg","Josh Schmoll":"josh-schmoll.jpg","Karen Wehunt":"karen-wehunt.jpg","Mary Sargeant-Buck":"mary-sargeant-buck.jpg","Mike Dodd":"mike-dodd.jpg","Paul Ostendorf":"paul-ostendorf.jpg","Randy Schott":"randy-schott.jpg","Ryan Brewer":"ryan-brewer.jpg","Sean Daugherty":"sean-daugherty.jpg","Seth Dimacchia":"seth-dimacchia.jpg","Stephan Chase":"stephan-chase.jpg","Stephen Miller":"stephen-miller.jpg","Tammy Scribner":"tammy-scribner.jpg"};
 
 
@@ -1412,6 +1412,7 @@ const AppComponent = function App(){
         {!globalSearch.trim()&&tab===0&&user.r==="staff"&&(()=>{
           const allRetailers=USERS.filter(u=>u.r==="retailer");
           const dayKey=day==="Thursday"?"w":"t";
+          const q=search.trim().toLowerCase();
           const commonTue=[{t:"10:00 AM - 2:00 PM",e:"Arrival & Check-In",l:"Grande Lobby"},{t:"3:00 PM - 5:15 PM",e:"Meet the Partners Presentations",l:"Grande Ballroom D"},{t:"5:15 PM",e:"Group Photo",l:"Grande Lobby"},{t:"6:30 PM - 9:30 PM",e:"Welcome Reception",l:"Eleven Restaurant"}];
           const commonWedBefore=[{t:"7:00 AM",e:"Breakfast + Speaker: Bert Warner (PERC)",l:"Eleven Restaurant"}];
           const commonWedAfter=[{t:"12:00 PM",e:"Boxed Lunch (Golfers) / Non-Golfer Lunch",l:"Driving Range / Clubhouse"},{t:"12:30 PM - 6:00 PM",e:"Golf Outing",l:"Palmer Course"},{t:"7:00 PM - 10:00 PM",e:"Casual BBQ Dinner",l:"Seven Eagles Pool"}];
@@ -1419,10 +1420,10 @@ const AppComponent = function App(){
           const commonThuAfter=[{t:"12:40 PM",e:"Departures",l:"Grande Lobby"}];
           const masterSlots=[];
           if(day==="Wednesday"){
-            commonTue.forEach(e=>masterSlots.push({time:e.t,type:"event",label:e.e,loc:e.l,meetings:[]}));
+            if(!q) commonTue.forEach(e=>masterSlots.push({time:e.t,type:"event",label:e.e,loc:e.l,meetings:[]}));
           } else {
             const before=day==="Thursday"?commonWedBefore:commonThuBefore;
-            before.forEach(e=>masterSlots.push({time:e.t,type:"event",label:e.e,loc:e.l,meetings:[]}));
+            if(!q) before.forEach(e=>masterSlots.push({time:e.t,type:"event",label:e.e,loc:e.l,meetings:[]}));
             MTIMES.forEach((time,i)=>{
               const pairs=[];
               allRetailers.forEach(r=>{
@@ -1431,18 +1432,23 @@ const AppComponent = function App(){
                   pairs.push({retailer:r.n,retailerCo:r.c,partner:meetings[i][0],suite:meetings[i][1]});
                 }
               });
-              if(pairs.length>0) masterSlots.push({time,type:"meeting",label:`Meeting Slot ${i+1}`,meetings:pairs});
+              const shown=q?pairs.filter(p=>p.retailer.toLowerCase().includes(q)||p.retailerCo.toLowerCase().includes(q)||p.partner.toLowerCase().includes(q)):pairs;
+              if(shown.length>0) masterSlots.push({time,type:"meeting",label:`Meeting Slot ${i+1}`,meetings:shown});
             });
             const after=day==="Thursday"?commonWedAfter:commonThuAfter;
-            after.forEach(e=>masterSlots.push({time:e.t,type:"event",label:e.e,loc:e.l,meetings:[]}));
+            if(!q) after.forEach(e=>masterSlots.push({time:e.t,type:"event",label:e.e,loc:e.l,meetings:[]}));
           }
           return(
             <div>
               <div style={{display:"flex",gap:8,padding:"12px",overflowX:"auto"}}>
                 {["Wednesday","Thursday","Friday"].map(d=><div key={d} style={S.dayTab(day===d)} onClick={()=>setDay(d)}>{d}</div>)}
               </div>
-              <div style={{padding:"4px 12px 0",fontSize:12,fontWeight:700,color:BLUE,letterSpacing:1}}>STAFF MASTER VIEW</div>
+              <div style={{padding:"0 12px 8px"}}>
+                <input placeholder="Search a person, company or partner..." value={search} onChange={e=>setSearch(e.target.value)} style={{...S.input,fontSize:15,padding:"10px 14px"}}/>
+              </div>
+              <div style={{padding:"4px 12px 0",fontSize:12,fontWeight:700,color:BLUE,letterSpacing:1}}>STAFF MASTER VIEW{q&&`: "${search.trim().toUpperCase()}"`}</div>
               <div style={{padding:"0 4px"}}>
+                {q&&masterSlots.length===0&&<div style={{...S.card,textAlign:"center",color:"var(--lpg-text-muted)",fontSize:14}}>No meetings match "{search.trim()}"{day==="Wednesday"?" (no individual meetings on Wednesday)":""}</div>}
                 {masterSlots.map((slot,si)=>(
                   <div key={si} style={S.card}>
                     <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:slot.meetings.length?8:0}}>
