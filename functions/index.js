@@ -46,11 +46,16 @@ exports.onPushQueueWrite = onValueCreated(
       return;
     }
 
+    // When msg.to is set (slugified attendee name), this is a targeted send:
+    // only that user's tokens receive the push. Absent = broadcast to everyone.
+    const targetKey = msg.to ? String(msg.to) : null;
+
     const tokensSnap = await tokensRef.once('value');
     const tokens = [];
     const tokenIndex = [];
     tokensSnap.forEach((userSnap) => {
       const uk = userSnap.key;
+      if (targetKey && uk !== targetKey) return;
       userSnap.forEach((tSnap) => {
         const v = tSnap.val();
         if (v && v.token) {
@@ -59,6 +64,8 @@ exports.onPushQueueWrite = onValueCreated(
         }
       });
     });
+
+    if (targetKey) logger.info(id, `targeted send to ${targetKey}: ${tokens.length} token(s)`);
 
     if (tokens.length === 0) {
       logger.info(id, '→ no tokens, archiving');
