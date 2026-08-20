@@ -928,7 +928,7 @@ const MTIMES = ["8:15 AM", "8:37 AM", "8:59 AM", "9:21 AM", "9:43 AM", "10:05 AM
 const BLUE = "#005D8C";
 const LBLUE = "#C1E0EC";
 const DBLUE = "#004870";
-const APP_VERSION = "2026.07.29.4";
+const APP_VERSION = "2026.07.29.5";
 const HEADSHOTS = {
   "Anthony Buck": "anthony-buck.jpg",
   "Brandon Hewett": "brandon-hewett.jpg",
@@ -1415,13 +1415,13 @@ const SPEAKERS = {
     name: "Bert Warner",
     title: "Director of Commercial Business Development",
     org: "Propane Education & Research Council (PERC)",
-    when: "Thursday, Sept. 10 at 7:15 AM",
+    when: "Wednesday, Sept. 2 at 7:15 AM",
     where: "Eleven Restaurant",
     bio: "Warner leads efforts to maximize propane awareness and gallon sales across diverse commercial markets. He spearheads market strategies for propane-powered equipment in commercial construction, water heating, power generation, and HVAC systems. He joined PERC in 2024 with 20+ years of business development experience."
   },
   panel: {
     title: "Propane Retailer Panel Discussion",
-    when: "Friday, Sept. 11 at 7:15 AM",
+    when: "Thursday, Sept. 3 at 7:15 AM",
     where: "Eleven Restaurant",
     moderator: "Brian Richesson, LP Gas magazine Editor in Chief",
     panelists: ["Chris Caywood - Caywood Propane Gas", "Mike Dodd - Propane Ninja", "Stephen Miller - American Distributing Co."],
@@ -1660,19 +1660,18 @@ function buildSchedule(user) {
     type: "event"
   }];
   return {
-    Wednesday: tue,
-    Thursday: [...wedCommon, ...wedMeetings, ...wedAfter],
-    Friday: [...thuCommon, ...thuMeetings, ...thuAfter]
+    Tuesday: tue,
+    Wednesday: [...wedCommon, ...wedMeetings, ...wedAfter],
+    Thursday: [...thuCommon, ...thuMeetings, ...thuAfter]
   };
 }
 
 // Sept 2026 Growth Summit dates — month is 0-indexed in JS Date.
-// Labels (Tue/Wed/Thu) come from the existing schedule; calendar dates
-// are anchored to the event itself (Sept 9-11) per the splash + panel info.
+// Event runs Tuesday Sept 1 - Thursday Sept 3, 2026 at Reunion Resort.
 const EVENT_DATES = {
-  Wednesday: [2026, 8, 9],
-  Thursday: [2026, 8, 10],
-  Friday: [2026, 8, 11]
+  Tuesday: [2026, 8, 1],
+  Wednesday: [2026, 8, 2],
+  Thursday: [2026, 8, 3]
 };
 function parseTime12(t) {
   // accepts "7:00 AM" or "12:30 PM"; returns {h:0-23,m:0-59} or null
@@ -1700,7 +1699,7 @@ function eventStartDate(dayName, timeStr) {
 }
 function findUpNext(schedule, now) {
   // returns {ev,day,start,minutesUntil,idx} for the soonest upcoming event across all days, or null
-  const days = ["Wednesday", "Thursday", "Friday"];
+  const days = ["Tuesday", "Wednesday", "Thursday"];
   let best = null;
   for (const day of days) {
     const list = schedule[day] || [];
@@ -2315,7 +2314,7 @@ const AppComponent = function App() {
     }
   });
   const [tab, setTab] = useState(0);
-  const [day, setDay] = useState("Thursday");
+  const [day, setDay] = useState("Wednesday");
   const [search, setSearch] = useState("");
   const [notes, setNotes] = useState({});
   const [reg, setReg] = useState({}); // shared attendee check-in/golf registration (staff)
@@ -2674,16 +2673,16 @@ const AppComponent = function App() {
   const scheduleMeetingNotifs = useCallback(usr => {
     clearScheduled();
     if (!usr || !("Notification" in window) || Notification.permission !== "granted") return;
-    // Thursday = Sept 10, 2026 (meetings: usr.w); Friday = Sept 11, 2026 (meetings: usr.t)
+    // Wednesday = Sept 2, 2026 (meetings: usr.w); Thursday = Sept 3, 2026 (meetings: usr.t)
     const eventYear = 2026;
     const days = [{
-      d: new Date(eventYear, 8, 10),
+      d: new Date(eventYear, 8, 2),
       meetings: usr.w
     }, {
-      d: new Date(eventYear, 8, 11),
+      d: new Date(eventYear, 8, 3),
       meetings: usr.t
     }];
-    const dayNames = ["Thursday", "Friday"];
+    const dayNames = ["Wednesday", "Thursday"];
     days.forEach(({
       d,
       meetings
@@ -2891,7 +2890,7 @@ const AppComponent = function App() {
         animation: "fadeSlideUp 0.5s ease-out both",
         animationDelay: "0.6s"
       }
-    }, "September 9 - 11 | Reunion Resort, Orlando"))), /*#__PURE__*/React.createElement("label", {
+    }, "September 1 - 3 | Reunion Resort, Orlando"))), /*#__PURE__*/React.createElement("label", {
       style: {
         fontSize: 15,
         fontWeight: 600,
@@ -3867,7 +3866,7 @@ const AppComponent = function App() {
         padding: "12px",
         overflowX: "auto"
       }
-    }, ["Wednesday", "Thursday", "Friday"].map(d => /*#__PURE__*/React.createElement("div", {
+    }, ["Tuesday", "Wednesday", "Thursday"].map(d => /*#__PURE__*/React.createElement("div", {
       key: d,
       style: S.dayTab(day === d),
       onClick: () => setDay(d)
@@ -3961,7 +3960,7 @@ const AppComponent = function App() {
     })));
   })(), !globalSearch.trim() && tab === 0 && user.r === "staff" && (() => {
     const allRetailers = USERS.filter(u => u.r === "retailer");
-    const dayKey = day === "Thursday" ? "w" : "t";
+    const dayKey = day === "Wednesday" ? "w" : "t";
     const q = search.trim().toLowerCase();
     const commonTue = [{
       t: "10:00 AM - 2:00 PM",
@@ -4009,7 +4008,7 @@ const AppComponent = function App() {
       l: "Grande Lobby"
     }];
     const masterSlots = [];
-    if (day === "Wednesday") {
+    if (day === "Tuesday") {
       if (!q) commonTue.forEach(e => masterSlots.push({
         time: e.t,
         type: "event",
@@ -4018,7 +4017,7 @@ const AppComponent = function App() {
         meetings: []
       }));
     } else {
-      const before = day === "Thursday" ? commonWedBefore : commonThuBefore;
+      const before = day === "Wednesday" ? commonWedBefore : commonThuBefore;
       if (!q) before.forEach(e => masterSlots.push({
         time: e.t,
         type: "event",
@@ -4047,7 +4046,7 @@ const AppComponent = function App() {
           meetings: shown
         });
       });
-      const after = day === "Thursday" ? commonWedAfter : commonThuAfter;
+      const after = day === "Wednesday" ? commonWedAfter : commonThuAfter;
       if (!q) after.forEach(e => masterSlots.push({
         time: e.t,
         type: "event",
@@ -4063,7 +4062,7 @@ const AppComponent = function App() {
         padding: "12px",
         overflowX: "auto"
       }
-    }, ["Wednesday", "Thursday", "Friday"].map(d => /*#__PURE__*/React.createElement("div", {
+    }, ["Tuesday", "Wednesday", "Thursday"].map(d => /*#__PURE__*/React.createElement("div", {
       key: d,
       style: S.dayTab(day === d),
       onClick: () => setDay(d)
@@ -4099,7 +4098,7 @@ const AppComponent = function App() {
         color: "var(--lpg-text-muted)",
         fontSize: 14
       }
-    }, "No meetings match \"", search.trim(), "\"", day === "Wednesday" ? " (no individual meetings on Wednesday)" : ""), masterSlots.map((slot, si) => /*#__PURE__*/React.createElement("div", {
+    }, "No meetings match \"", search.trim(), "\"", day === "Tuesday" ? " (no individual meetings on Tuesday)" : ""), masterSlots.map((slot, si) => /*#__PURE__*/React.createElement("div", {
       key: si,
       style: S.card
     }, /*#__PURE__*/React.createElement("div", {
