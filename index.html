@@ -931,7 +931,7 @@ const MTIMES = ["8:15 AM", "8:37 AM", "8:59 AM", "9:21 AM", "9:43 AM", "10:05 AM
 const BLUE = "#005D8C";
 const LBLUE = "#C1E0EC";
 const DBLUE = "#004870";
-const APP_VERSION = "2026.08.21.5";
+const APP_VERSION = "2026.08.21.6";
 const HEADSHOTS = {
   "Anthony Buck": "anthony-buck.jpg",
   "Brandon Hewett": "brandon-hewett.jpg",
@@ -4134,7 +4134,9 @@ const AppComponent = function App() {
           }
         }, /*#__PURE__*/React.createElement("div", {
           style: {
-            flex: 1
+            flex: 1,
+            minWidth: 0,
+            paddingRight: 8
           }
         }, /*#__PURE__*/React.createElement("span", {
           style: {
@@ -4150,13 +4152,15 @@ const AppComponent = function App() {
             color: BLUE,
             fontWeight: 600,
             textAlign: "right",
-            flexShrink: 0,
-            marginLeft: 8
+            minWidth: 0,
+            maxWidth: "52%",
+            overflowWrap: "break-word"
           }
         }, m.partner, " ", /*#__PURE__*/React.createElement("span", {
           style: {
             fontWeight: 400,
-            color: "var(--lpg-text-faint)"
+            color: "var(--lpg-text-faint)",
+            whiteSpace: "nowrap"
           }
         }, m.suite))))));
       });
