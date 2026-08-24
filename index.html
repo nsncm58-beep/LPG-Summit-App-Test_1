@@ -928,7 +928,7 @@ const MTIMES = ["8:15 AM", "8:37 AM", "8:59 AM", "9:21 AM", "9:43 AM", "10:05 AM
 const BLUE = "#005D8C";
 const LBLUE = "#C1E0EC";
 const DBLUE = "#004870";
-const APP_VERSION = "2026.08.21.2";
+const APP_VERSION = "2026.08.21.3";
 const HEADSHOTS = {
   "Anthony Buck": "anthony-buck.jpg",
   "Brandon Hewett": "brandon-hewett.jpg",
@@ -2379,8 +2379,6 @@ const AppComponent = function App() {
       return nd;
     });
   }, []);
-  // Cross-tab global search (overrides per-tab content when non-empty).
-  const [globalSearch, setGlobalSearch] = useState("");
   // Full-screen install prompt: shown on every visit from a mobile browser until
   // the app is installed (standalone). "Continue in browser" hides it for the
   // current session only (sessionStorage), so it returns on the next visit.
@@ -3074,6 +3072,9 @@ const AppComponent = function App() {
     loc: m[1],
     day: "Thu"
   }))];
+
+  // The single top search pill filters whatever page is open.
+  const searchPlaceholder = tab === 0 ? user.r === "staff" ? "Search people, companies, partners..." : "Search your schedule..." : tab === 1 ? "Search partners..." : tab === 2 ? "Search attendees..." : tab === 3 ? "Search event info..." : tab === 4 ? "Search your meetings..." : "Search the check-in roster...";
   return /*#__PURE__*/React.createElement("div", {
     style: S.root
   }, /*#__PURE__*/React.createElement("div", {
@@ -3127,9 +3128,9 @@ const AppComponent = function App() {
   }, /*#__PURE__*/React.createElement(Search, {
     size: 15
   })), /*#__PURE__*/React.createElement("input", {
-    value: globalSearch,
-    onChange: e => setGlobalSearch(e.target.value),
-    placeholder: "Search schedule, partners, attendees...",
+    value: search,
+    onChange: e => setSearch(e.target.value),
+    placeholder: searchPlaceholder,
     style: {
       width: "100%",
       padding: "10px 32px 10px 34px",
@@ -3141,8 +3142,8 @@ const AppComponent = function App() {
       background: "rgba(255,255,255,0.15)",
       color: "#fff"
     }
-  }), globalSearch && /*#__PURE__*/React.createElement("div", {
-    onClick: () => setGlobalSearch(""),
+  }), search && /*#__PURE__*/React.createElement("div", {
+    onClick: () => setSearch(""),
     style: {
       position: "absolute",
       right: 8,
@@ -3567,10 +3568,10 @@ const AppComponent = function App() {
   }, /*#__PURE__*/React.createElement(Send, {
     size: 14
   }), composeTo ? "Send Private" : "Send")))), /*#__PURE__*/React.createElement(ErrorBoundary, {
-    key: tab + "-" + (globalSearch.trim() ? "s" : "n")
+    key: tab
   }, /*#__PURE__*/React.createElement("div", {
     className: "lpg-fade"
-  }, !globalSearch.trim() && user.r !== "staff" && tab !== 0 && (() => {
+  }, user.r !== "staff" && tab !== 0 && (() => {
     const upNext = findUpNext(schedule, now);
     if (!upNext) return null;
     return /*#__PURE__*/React.createElement("div", {
@@ -3642,274 +3643,7 @@ const AppComponent = function App() {
       size: 16,
       color: "#fff"
     }));
-  })(), globalSearch.trim() && (() => {
-    const q = globalSearch.toLowerCase().trim();
-    const schedResults = [];
-    Object.entries(schedule || {}).forEach(([dayName, events]) => {
-      (events || []).forEach((ev, i) => {
-        const hay = `${ev.e || ""} ${ev.l || ""} ${ev.t || ""}`.toLowerCase();
-        if (hay.includes(q)) schedResults.push({
-          day: dayName,
-          idx: i,
-          ev
-        });
-      });
-    });
-    const partnerResults = partnerList.filter(([name, info]) => {
-      const reps = PARTNER_REPS && PARTNER_REPS[name] ? PARTNER_REPS[name].map(r => r.n).join(" ") : "";
-      const desc = info && info.d ? info.d : "";
-      return (name + " " + reps + " " + desc).toLowerCase().includes(q);
-    });
-    const attendeeResults = retailerUsers.filter(u => (u.n + " " + u.c).toLowerCase().includes(q));
-    const total = schedResults.length + partnerResults.length + attendeeResults.length;
-    return /*#__PURE__*/React.createElement("div", {
-      style: {
-        padding: "12px"
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 13,
-        color: "var(--lpg-text-muted)",
-        marginBottom: 8
-      }
-    }, total, " result", total === 1 ? "" : "s", " for \u201C", globalSearch, "\u201D"), schedResults.length > 0 && /*#__PURE__*/React.createElement("div", {
-      style: {
-        marginBottom: 14
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 12,
-        fontWeight: 700,
-        letterSpacing: 1,
-        color: BLUE,
-        padding: "4px 4px 6px"
-      }
-    }, "SCHEDULE \xB7 ", schedResults.length), schedResults.slice(0, 12).map((r, ri) => /*#__PURE__*/React.createElement("div", {
-      key: ri,
-      onClick: () => {
-        setGlobalSearch("");
-        setTab(0);
-        if (day !== r.day) setDay(r.day);
-        setTimeout(() => {
-          const el = document.querySelector(`[data-sched-idx="${r.idx}"]`);
-          if (el) el.scrollIntoView({
-            behavior: "smooth",
-            block: "center"
-          });
-        }, 120);
-      },
-      style: {
-        ...S.card,
-        margin: "4px 0",
-        cursor: "pointer",
-        display: "flex",
-        alignItems: "center",
-        gap: 10
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: S.badge(r.ev.type)
-    }), /*#__PURE__*/React.createElement("div", {
-      style: {
-        flex: 1,
-        minWidth: 0
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 12,
-        color: BLUE,
-        fontWeight: 700
-      }
-    }, r.day, " \xB7 ", r.ev.t), /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 15,
-        fontWeight: 600,
-        color: "var(--lpg-text)",
-        overflow: "hidden",
-        textOverflow: "ellipsis",
-        whiteSpace: "nowrap"
-      }
-    }, r.ev.e), r.ev.l && /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 12,
-        color: "var(--lpg-text-muted)"
-      }
-    }, /*#__PURE__*/React.createElement(MapPin, {
-      size: 10,
-      style: {
-        display: "inline",
-        marginRight: 3
-      }
-    }), r.ev.l)), /*#__PURE__*/React.createElement(ChevronRight, {
-      size: 14,
-      color: "var(--lpg-text-faint)"
-    })))), partnerResults.length > 0 && /*#__PURE__*/React.createElement("div", {
-      style: {
-        marginBottom: 14
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 12,
-        fontWeight: 700,
-        letterSpacing: 1,
-        color: BLUE,
-        padding: "4px 4px 6px"
-      }
-    }, "PARTNERS \xB7 ", partnerResults.length), partnerResults.slice(0, 12).map(([name, info]) => /*#__PURE__*/React.createElement("div", {
-      key: name,
-      onClick: () => {
-        setGlobalSearch("");
-        setTab(1);
-        setDetail({
-          type: "partner",
-          name,
-          info
-        });
-      },
-      style: {
-        ...S.card,
-        margin: "4px 0",
-        cursor: "pointer",
-        display: "flex",
-        alignItems: "center",
-        gap: 10
-      }
-    }, LOGOS[name] ? /*#__PURE__*/React.createElement("img", {
-      src: LOGOS[name],
-      alt: name,
-      style: {
-        height: 32,
-        width: 32,
-        objectFit: "contain",
-        borderRadius: 6,
-        background: "#fff",
-        border: "1px solid var(--lpg-border)",
-        padding: 2,
-        flexShrink: 0
-      }
-    }) : /*#__PURE__*/React.createElement("div", {
-      style: {
-        width: 32,
-        height: 32,
-        borderRadius: 6,
-        background: `linear-gradient(135deg,${BLUE},${DBLUE})`,
-        color: "#fff",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontWeight: 700,
-        fontSize: 13,
-        flexShrink: 0
-      }
-    }, getInitials(name)), /*#__PURE__*/React.createElement("div", {
-      style: {
-        flex: 1,
-        minWidth: 0
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 15,
-        fontWeight: 600,
-        color: "var(--lpg-text)",
-        overflow: "hidden",
-        textOverflow: "ellipsis",
-        whiteSpace: "nowrap"
-      }
-    }, name), PARTNER_REPS && PARTNER_REPS[name] && PARTNER_REPS[name].length > 0 && /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 12,
-        color: "var(--lpg-text-muted)",
-        overflow: "hidden",
-        textOverflow: "ellipsis",
-        whiteSpace: "nowrap"
-      }
-    }, PARTNER_REPS[name].map(r => r.n).join(", "))), /*#__PURE__*/React.createElement(ChevronRight, {
-      size: 14,
-      color: "var(--lpg-text-faint)"
-    })))), attendeeResults.length > 0 && /*#__PURE__*/React.createElement("div", {
-      style: {
-        marginBottom: 14
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 12,
-        fontWeight: 700,
-        letterSpacing: 1,
-        color: BLUE,
-        padding: "4px 4px 6px"
-      }
-    }, "ATTENDEES \xB7 ", attendeeResults.length), attendeeResults.slice(0, 12).map(u => /*#__PURE__*/React.createElement("div", {
-      key: u.n,
-      onClick: () => {
-        setGlobalSearch("");
-        setTab(2);
-        if (PROFILES[u.n]) setDetail({
-          type: "profile",
-          user: u,
-          p: PROFILES[u.n]
-        });
-      },
-      style: {
-        ...S.card,
-        margin: "4px 0",
-        cursor: PROFILES[u.n] ? "pointer" : "default",
-        display: "flex",
-        alignItems: "center",
-        gap: 10
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        width: 36,
-        height: 36,
-        borderRadius: "50%",
-        overflow: "hidden",
-        background: `linear-gradient(135deg,#546E7A,#37474F)`,
-        color: "#fff",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontWeight: 700,
-        fontSize: 13,
-        flexShrink: 0
-      }
-    }, HEADSHOTS[u.n] ? /*#__PURE__*/React.createElement("img", {
-      src: "headshots/" + HEADSHOTS[u.n] + "?v=" + APP_VERSION,
-      alt: u.n,
-      style: {
-        width: "100%",
-        height: "100%",
-        objectFit: "cover",
-        objectPosition: "center top"
-      }
-    }) : getInitials(u.n)), /*#__PURE__*/React.createElement("div", {
-      style: {
-        flex: 1,
-        minWidth: 0
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 15,
-        fontWeight: 600,
-        color: "var(--lpg-text)",
-        overflow: "hidden",
-        textOverflow: "ellipsis",
-        whiteSpace: "nowrap"
-      }
-    }, u.n), /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 12,
-        color: "var(--lpg-text-muted)"
-      }
-    }, u.c)), PROFILES[u.n] && /*#__PURE__*/React.createElement(ChevronRight, {
-      size: 14,
-      color: "var(--lpg-text-faint)"
-    })))), total === 0 && /*#__PURE__*/React.createElement("div", {
-      style: {
-        textAlign: "center",
-        padding: "40px 20px",
-        color: "var(--lpg-text-muted)"
-      }
-    }, "No matches in schedule, partners, or attendees."));
-  })(), !globalSearch.trim() && user.r === "staff" && /*#__PURE__*/React.createElement("div", {
+  })(), user.r === "staff" && /*#__PURE__*/React.createElement("div", {
     style: {
       padding: "8px 12px 0"
     }
@@ -3973,7 +3707,7 @@ const AppComponent = function App() {
       color: "var(--lpg-text-faint)",
       marginTop: 4
     }
-  }, b.at))))), !globalSearch.trim() && tab === 0 && user.r !== "staff" && (() => {
+  }, b.at))))), tab === 0 && user.r !== "staff" && (() => {
     const upNext = findUpNext(schedule, now);
     return /*#__PURE__*/React.createElement("div", {
       ref: scheduleScrollRef
@@ -4059,7 +3793,10 @@ const AppComponent = function App() {
       style: {
         padding: "0 4px"
       }
-    }, (schedule[day] || []).map((ev, i) => {
+    }, (schedule[day] || []).filter(ev => {
+      const q = search.trim().toLowerCase();
+      return !q || `${ev.e || ""} ${ev.l || ""} ${ev.t || ""}`.toLowerCase().includes(q);
+    }).map((ev, i) => {
       const start = eventStartDate(day, ev.t);
       const isCurrent = upNext && upNext.day === day && upNext.idx === i;
       return /*#__PURE__*/React.createElement("div", {
@@ -4143,7 +3880,7 @@ const AppComponent = function App() {
         }
       }, "Individual Meeting")));
     })));
-  })(), !globalSearch.trim() && tab === 0 && user.r === "staff" && (() => {
+  })(), tab === 0 && user.r === "staff" && (() => {
     const allRetailers = USERS.filter(u => u.r === "retailer");
     const dayKey = day === "Wednesday" ? "w" : "t";
     const q = search.trim().toLowerCase();
@@ -4253,19 +3990,6 @@ const AppComponent = function App() {
       onClick: () => setDay(d)
     }, d))), /*#__PURE__*/React.createElement("div", {
       style: {
-        padding: "0 12px 8px"
-      }
-    }, /*#__PURE__*/React.createElement("input", {
-      placeholder: "Search a person, company or partner...",
-      value: search,
-      onChange: e => setSearch(e.target.value),
-      style: {
-        ...S.input,
-        fontSize: 15,
-        padding: "10px 14px"
-      }
-    })), /*#__PURE__*/React.createElement("div", {
-      style: {
         padding: "4px 12px 0",
         fontSize: 12,
         fontWeight: 700,
@@ -4354,20 +4078,7 @@ const AppComponent = function App() {
         color: "var(--lpg-text-faint)"
       }
     }, m.suite)))))))));
-  })(), !globalSearch.trim() && tab === 1 && !detail && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-    style: {
-      padding: "12px"
-    }
-  }, /*#__PURE__*/React.createElement("input", {
-    placeholder: "Search partners...",
-    value: search,
-    onChange: e => setSearch(e.target.value),
-    style: {
-      ...S.input,
-      fontSize: 15,
-      padding: "10px 14px"
-    }
-  })), partnerList.filter(([name]) => name.toLowerCase().includes(search.toLowerCase())).map(([name, info]) => {
+  })(), tab === 1 && !detail && /*#__PURE__*/React.createElement("div", null, partnerList.filter(([name]) => name.toLowerCase().includes(search.toLowerCase())).map(([name, info]) => {
     const reps = PARTNER_REPS[name] || [];
     return /*#__PURE__*/React.createElement("div", {
       key: name,
@@ -4480,7 +4191,7 @@ const AppComponent = function App() {
       size: 16,
       color: "#ccc"
     })));
-  })), !globalSearch.trim() && tab === 1 && detail?.type === "partner" && /*#__PURE__*/React.createElement("div", {
+  })), tab === 1 && detail?.type === "partner" && /*#__PURE__*/React.createElement("div", {
     style: {
       padding: 12
     }
@@ -4666,20 +4377,7 @@ const AppComponent = function App() {
     }
   }, /*#__PURE__*/React.createElement(Mail, {
     size: 11
-  }), rep.e))))))), !globalSearch.trim() && tab === 2 && !detail && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-    style: {
-      padding: "12px"
-    }
-  }, /*#__PURE__*/React.createElement("input", {
-    placeholder: "Search attendees...",
-    value: search,
-    onChange: e => setSearch(e.target.value),
-    style: {
-      ...S.input,
-      fontSize: 15,
-      padding: "10px 14px"
-    }
-  })), retailerUsers.filter(u => u.n.toLowerCase().includes(search.toLowerCase()) || u.c.toLowerCase().includes(search.toLowerCase())).map(u => /*#__PURE__*/React.createElement("div", {
+  }), rep.e))))))), tab === 2 && !detail && /*#__PURE__*/React.createElement("div", null, retailerUsers.filter(u => u.n.toLowerCase().includes(search.toLowerCase()) || u.c.toLowerCase().includes(search.toLowerCase())).map(u => /*#__PURE__*/React.createElement("div", {
     key: u.n,
     style: {
       ...S.card,
@@ -4745,7 +4443,7 @@ const AppComponent = function App() {
   }, PROFILES[u.n].title)), PROFILES[u.n] && /*#__PURE__*/React.createElement(ChevronRight, {
     size: 16,
     color: "#ccc"
-  }))))), !globalSearch.trim() && tab === 2 && detail?.type === "profile" && /*#__PURE__*/React.createElement("div", {
+  }))))), tab === 2 && detail?.type === "profile" && /*#__PURE__*/React.createElement("div", {
     style: {
       padding: 12
     }
@@ -4926,7 +4624,7 @@ const AppComponent = function App() {
   }, "Search \"", detail.user.n, "\" at ", detail.user.c)), /*#__PURE__*/React.createElement(ChevronRight, {
     size: 16,
     color: "#ccc"
-  })))), !globalSearch.trim() && tab === 3 && !infoSection && /*#__PURE__*/React.createElement("div", {
+  })))), tab === 3 && !infoSection && /*#__PURE__*/React.createElement("div", {
     style: {
       padding: "4px 0"
     }
@@ -4981,7 +4679,10 @@ const AppComponent = function App() {
     label: "Terms of Use & Privacy",
     icon: Info,
     desc: "How your information is used and stored"
-  }].map(item => /*#__PURE__*/React.createElement("div", {
+  }].filter(item => {
+    const q = search.trim().toLowerCase();
+    return !q || (item.label + " " + item.desc).toLowerCase().includes(q);
+  }).map(item => /*#__PURE__*/React.createElement("div", {
     key: item.id,
     style: {
       ...S.card,
@@ -5026,7 +4727,7 @@ const AppComponent = function App() {
   }, item.desc)), /*#__PURE__*/React.createElement(ChevronRight, {
     size: 16,
     color: "#ccc"
-  }))))), !globalSearch.trim() && tab === 3 && infoSection === "speakers" && /*#__PURE__*/React.createElement("div", {
+  }))))), tab === 3 && infoSection === "speakers" && /*#__PURE__*/React.createElement("div", {
     style: {
       padding: 12
     }
@@ -5167,7 +4868,7 @@ const AppComponent = function App() {
       color: "#444",
       padding: "3px 0"
     }
-  }, p))))), !globalSearch.trim() && tab === 3 && infoSection === "sponsors" && /*#__PURE__*/React.createElement("div", {
+  }, p))))), tab === 3 && infoSection === "sponsors" && /*#__PURE__*/React.createElement("div", {
     style: {
       padding: 12
     }
@@ -5244,7 +4945,7 @@ const AppComponent = function App() {
       fontSize: 13,
       color: "var(--lpg-text-muted)"
     }
-  }, s.detail))))), !globalSearch.trim() && tab === 3 && infoSection === "map" && /*#__PURE__*/React.createElement("div", {
+  }, s.detail))))), tab === 3 && infoSection === "map" && /*#__PURE__*/React.createElement("div", {
     style: {
       padding: 12
     }
@@ -5399,7 +5100,7 @@ const AppComponent = function App() {
       alignItems: "center",
       gap: 4
     }
-  }, "Tap to zoom"))), !globalSearch.trim() && tab === 3 && infoSection === "attire" && /*#__PURE__*/React.createElement("div", {
+  }, "Tap to zoom"))), tab === 3 && infoSection === "attire" && /*#__PURE__*/React.createElement("div", {
     style: {
       padding: 12
     }
@@ -5467,7 +5168,7 @@ const AppComponent = function App() {
       color: "#444",
       lineHeight: 1.5
     }
-  }, r)))), !globalSearch.trim() && tab === 3 && infoSection === "photos" && /*#__PURE__*/React.createElement("div", {
+  }, r)))), tab === 3 && infoSection === "photos" && /*#__PURE__*/React.createElement("div", {
     style: {
       padding: 12
     }
@@ -5652,7 +5353,7 @@ const AppComponent = function App() {
       borderRadius: 4,
       lineHeight: 1
     }
-  }, "\xD7"))))))), !globalSearch.trim() && tab === 3 && infoSection === "help" && /*#__PURE__*/React.createElement("div", {
+  }, "\xD7"))))))), tab === 3 && infoSection === "help" && /*#__PURE__*/React.createElement("div", {
     style: {
       padding: 12
     }
@@ -5785,7 +5486,7 @@ const AppComponent = function App() {
       color: "var(--lpg-text-muted)",
       marginTop: 4
     }
-  }, "7593 Gathering Drive, Kissimmee, FL 34747"))), !globalSearch.trim() && tab === 3 && infoSection === "notifications" && /*#__PURE__*/React.createElement("div", {
+  }, "7593 Gathering Drive, Kissimmee, FL 34747"))), tab === 3 && infoSection === "notifications" && /*#__PURE__*/React.createElement("div", {
     style: {
       padding: 12
     }
@@ -6024,7 +5725,7 @@ const AppComponent = function App() {
       color: "var(--lpg-text-muted)",
       lineHeight: 1.5
     }
-  }, "Meeting Reminders run locally in your browser \u2014 best when the app stays open in a tab. Push Notifications work even when the app is closed, but require permission and (on iPhone/iPad) installing to the home screen first.")))), !globalSearch.trim() && tab === 3 && infoSection === "updates" && /*#__PURE__*/React.createElement("div", {
+  }, "Meeting Reminders run locally in your browser \u2014 best when the app stays open in a tab. Push Notifications work even when the app is closed, but require permission and (on iPhone/iPad) installing to the home screen first.")))), tab === 3 && infoSection === "updates" && /*#__PURE__*/React.createElement("div", {
     style: {
       padding: 12
     }
@@ -6118,7 +5819,7 @@ const AppComponent = function App() {
       color: "#444",
       lineHeight: 1.5
     }
-  }, "This reloads the app from the server to pick up any new content or fixes published by staff. Your personal data (notes, ratings, follow-ups) lives on your device and in the shared event database \u2014 nothing is cleared.")))), !globalSearch.trim() && tab === 3 && infoSection === "terms" && /*#__PURE__*/React.createElement("div", {
+  }, "This reloads the app from the server to pick up any new content or fixes published by staff. Your personal data (notes, ratings, follow-ups) lives on your device and in the shared event database \u2014 nothing is cleared.")))), tab === 3 && infoSection === "terms" && /*#__PURE__*/React.createElement("div", {
     style: {
       padding: 12
     }
@@ -6172,7 +5873,7 @@ const AppComponent = function App() {
       textAlign: "center",
       padding: "8px 4px 4px"
     }
-  }, "By using this application you acknowledge these Terms of Use.")), !globalSearch.trim() && tab === 4 && !noteEdit && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+  }, "By using this application you acknowledge these Terms of Use.")), tab === 4 && !noteEdit && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     style: {
       padding: "12px 12px 4px",
       fontSize: 15,
@@ -6242,7 +5943,10 @@ const AppComponent = function App() {
     u: u,
     BLUE: BLUE,
     S: S
-  }))), allMeetings.map(m => {
+  }))), allMeetings.filter(m => {
+    const q = search.trim().toLowerCase();
+    return !q || (m.name + " " + m.loc).toLowerCase().includes(q);
+  }).map(m => {
     const n = notes[m.key] || {};
     return /*#__PURE__*/React.createElement("div", {
       key: m.key,
@@ -6309,7 +6013,7 @@ const AppComponent = function App() {
         color: "#ccc"
       }
     }, "Add note"))));
-  })), !globalSearch.trim() && tab === 4 && noteEdit && /*#__PURE__*/React.createElement("div", {
+  })), tab === 4 && noteEdit && /*#__PURE__*/React.createElement("div", {
     style: {
       padding: 12
     }
@@ -6454,7 +6158,7 @@ const AppComponent = function App() {
       fontSize: 15,
       fontFamily: "inherit"
     }
-  }))), !globalSearch.trim() && tab === 5 && user.r === "staff" && (() => {
+  }))), tab === 5 && user.r === "staff" && (() => {
     const roster = USERS.filter(u => u.r !== "staff").slice().sort((a, b) => a.n.localeCompare(b.n));
     const q = search.trim().toLowerCase();
     const shown = q ? roster.filter(u => u.n.toLowerCase().includes(q) || u.c.toLowerCase().includes(q)) : roster;
@@ -6516,19 +6220,6 @@ const AppComponent = function App() {
         padding: "8px 12px"
       }
     }, stat(`${cIn}/${roster.length}`, "Checked In", BLUE), stat(cGolf, "Golfing", "#29703A"), stat(cRent, "Renting", "#91003D")), /*#__PURE__*/React.createElement("div", {
-      style: {
-        padding: "0 12px 8px"
-      }
-    }, /*#__PURE__*/React.createElement("input", {
-      placeholder: "Search attendee or company...",
-      value: search,
-      onChange: e => setSearch(e.target.value),
-      style: {
-        ...S.input,
-        fontSize: 15,
-        padding: "10px 14px"
-      }
-    })), /*#__PURE__*/React.createElement("div", {
       style: {
         padding: "0 4px"
       }
@@ -6659,7 +6350,6 @@ const AppComponent = function App() {
       setDetail(null);
       setSearch("");
       setInfoSection(null);
-      setGlobalSearch("");
       setAvatarMenu(false);
       setBellOpen(false);
     },
