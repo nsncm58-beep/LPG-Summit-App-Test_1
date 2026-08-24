@@ -931,7 +931,7 @@ const MTIMES = ["8:15 AM", "8:37 AM", "8:59 AM", "9:21 AM", "9:43 AM", "10:05 AM
 const BLUE = "#005D8C";
 const LBLUE = "#C1E0EC";
 const DBLUE = "#004870";
-const APP_VERSION = "2026.08.21.7";
+const APP_VERSION = "2026.08.21.8";
 const HEADSHOTS = {
   "Anthony Buck": "anthony-buck.jpg",
   "Brandon Hewett": "brandon-hewett.jpg",
@@ -2355,7 +2355,7 @@ const AppComponent = function App() {
   const scheduleScrollRef = useRef(null);
   const autoScrolledRef = useRef(false);
   const [photos, setPhotos] = useState([]);
-  const [notifEnabled, setNotifEnabled] = useState(false);
+  const [notifEnabled, setNotifEnabled] = useState(true);
   // Push notification state — separate from local Notification API. Push works when app is closed.
   const [pushEnabled, setPushEnabled] = useState(() => {
     try {
@@ -3846,12 +3846,22 @@ const AppComponent = function App() {
       return /*#__PURE__*/React.createElement("div", {
         key: i,
         "data-sched-idx": i,
+        onClick: ev.type === "meeting" && PARTNERS[ev.e] ? () => {
+          setTab(1);
+          setSearch("");
+          setDetail({
+            type: "partner",
+            name: ev.e,
+            info: PARTNERS[ev.e]
+          });
+        } : undefined,
         style: {
           ...S.card,
           display: "flex",
           alignItems: "stretch",
           border: isCurrent ? `2px solid ${BLUE}` : S.card.border,
-          boxShadow: isCurrent ? "0 2px 12px rgba(14,90,138,0.2)" : S.card.boxShadow
+          boxShadow: isCurrent ? "0 2px 12px rgba(14,90,138,0.2)" : S.card.boxShadow,
+          cursor: ev.type === "meeting" && PARTNERS[ev.e] ? "pointer" : "default"
         }
       }, /*#__PURE__*/React.createElement("div", {
         style: S.badge(ev.type)
@@ -4466,11 +4476,20 @@ const AppComponent = function App() {
       gap: 4,
       background: LBLUE,
       padding: "4px 10px",
-      borderRadius: 20
+      borderRadius: 20,
+      maxWidth: "100%",
+      minWidth: 0
     }
   }, /*#__PURE__*/React.createElement(Mail, {
-    size: 11
-  }), rep.e))))))), tab === 2 && !detail && /*#__PURE__*/React.createElement("div", null, retailerUsers.filter(u => u.n.toLowerCase().includes(search.toLowerCase()) || u.c.toLowerCase().includes(search.toLowerCase())).map(u => /*#__PURE__*/React.createElement("div", {
+    size: 11,
+    style: {
+      flexShrink: 0
+    }
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      wordBreak: "break-all"
+    }
+  }, rep.e)))))))), tab === 2 && !detail && /*#__PURE__*/React.createElement("div", null, retailerUsers.filter(u => u.n.toLowerCase().includes(search.toLowerCase()) || u.c.toLowerCase().includes(search.toLowerCase())).map(u => /*#__PURE__*/React.createElement("div", {
     key: u.n,
     style: {
       ...S.card,
@@ -5376,7 +5395,8 @@ const AppComponent = function App() {
     size: 12
   }), "800-225-5865")), /*#__PURE__*/React.createElement("div", {
     style: {
-      padding: "8px 0"
+      padding: "8px 0",
+      borderBottom: "1px solid #f0f0f0"
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -5401,7 +5421,34 @@ const AppComponent = function App() {
     }
   }, /*#__PURE__*/React.createElement(Phone, {
     size: 12
-  }), "800-225-5865"))), /*#__PURE__*/React.createElement("div", {
+  }), "800-225-5865")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "8px 0"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 16,
+      fontWeight: 600
+    }
+  }, "Rachel Rosen"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 13,
+      color: "var(--lpg-text-muted)",
+      marginBottom: 4
+    }
+  }, "LP Gas Event Team"), /*#__PURE__*/React.createElement("a", {
+    href: "tel:3304169129",
+    style: {
+      fontSize: 14,
+      color: BLUE,
+      textDecoration: "none",
+      display: "flex",
+      alignItems: "center",
+      gap: 4
+    }
+  }, /*#__PURE__*/React.createElement(Phone, {
+    size: 12
+  }), "330-416-9129"))), /*#__PURE__*/React.createElement("div", {
     style: S.card
   }, /*#__PURE__*/React.createElement("div", {
     style: {
