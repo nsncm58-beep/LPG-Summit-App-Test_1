@@ -931,7 +931,7 @@ const MTIMES = ["8:15 AM", "8:37 AM", "8:59 AM", "9:21 AM", "9:43 AM", "10:05 AM
 const BLUE = "#005D8C";
 const LBLUE = "#C1E0EC";
 const DBLUE = "#004870";
-const APP_VERSION = "2026.08.21.12";
+const APP_VERSION = "2026.08.21.13";
 const HEADSHOTS = {
   "Anthony Buck": "anthony-buck.jpg",
   "Brandon Hewett": "brandon-hewett.jpg",
@@ -4879,11 +4879,6 @@ const AppComponent = function App() {
   }, /*#__PURE__*/React.createElement(SummitLogo, {
     size: "large"
   })), [{
-    id: "sponsors",
-    label: "Event Sponsors",
-    icon: Trophy,
-    desc: "Partners sponsoring event activities"
-  }, {
     id: "calendar",
     label: "Add Schedule to Calendar",
     icon: Calendar,
@@ -4972,84 +4967,7 @@ const AppComponent = function App() {
   }, item.desc)), /*#__PURE__*/React.createElement(ChevronRight, {
     size: 16,
     color: "#ccc"
-  }))))), tab === 3 && infoSection === "sponsors" && /*#__PURE__*/React.createElement("div", {
-    style: {
-      padding: 12
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    onClick: () => setInfoSection(null),
-    style: {
-      fontSize: 15,
-      color: BLUE,
-      fontWeight: 600,
-      cursor: "pointer",
-      marginBottom: 12,
-      display: "flex",
-      alignItems: "center",
-      gap: 4
-    }
-  }, /*#__PURE__*/React.createElement(ArrowLeft, {
-    size: 14
-  }), " Event Info"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 17,
-      fontWeight: 700,
-      color: "var(--lpg-text)",
-      padding: "0 4px 8px"
-    }
-  }, "Thank You to Our Sponsors"), SPONSORS.map((s, i) => /*#__PURE__*/React.createElement("div", {
-    key: i,
-    style: {
-      ...S.card,
-      display: "flex",
-      alignItems: "center",
-      gap: 12
-    }
-  }, LOGOS[s.sponsor] ? /*#__PURE__*/React.createElement("img", {
-    src: LOGOS[s.sponsor],
-    alt: s.sponsor,
-    style: {
-      width: 50,
-      height: 50,
-      objectFit: "contain",
-      borderRadius: 6,
-      border: "1px solid #eee",
-      padding: 2,
-      flexShrink: 0
-    }
-  }) : /*#__PURE__*/React.createElement("div", {
-    style: {
-      width: 50,
-      height: 50,
-      borderRadius: 6,
-      background: LBLUE,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      fontWeight: 700,
-      fontSize: 12,
-      color: BLUE,
-      flexShrink: 0,
-      textAlign: "center"
-    }
-  }, s.sponsor), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 15,
-      fontWeight: 700,
-      color: "var(--lpg-text)"
-    }
-  }, s.event), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 14,
-      color: BLUE,
-      fontWeight: 600
-    }
-  }, "Courtesy of ", s.sponsor), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 13,
-      color: "var(--lpg-text-muted)"
-    }
-  }, s.detail))))), tab === 3 && infoSection === "map" && /*#__PURE__*/React.createElement("div", {
+  }))))), tab === 3 && infoSection === "map" && /*#__PURE__*/React.createElement("div", {
     style: {
       padding: 12
     }
