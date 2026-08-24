@@ -928,7 +928,7 @@ const MTIMES = ["8:15 AM", "8:37 AM", "8:59 AM", "9:21 AM", "9:43 AM", "10:05 AM
 const BLUE = "#005D8C";
 const LBLUE = "#C1E0EC";
 const DBLUE = "#004870";
-const APP_VERSION = "2026.08.21.3";
+const APP_VERSION = "2026.08.21.4";
 const HEADSHOTS = {
   "Anthony Buck": "anthony-buck.jpg",
   "Brandon Hewett": "brandon-hewett.jpg",
@@ -2335,6 +2335,7 @@ const AppComponent = function App() {
   const [composeText, setComposeText] = useState("");
   const [composeTo, setComposeTo] = useState(""); // "" = everyone, else attendee name
   const [avatarMenu, setAvatarMenu] = useState(false); // top-left avatar dropdown
+  const [openSlot, setOpenSlot] = useState(null); // master view accordion: open slot time, "__none", or null = auto
   const [bellOpen, setBellOpen] = useState(false); // top-right announcements panel
   const [lastSeenBroadcast, setLastSeenBroadcast] = useState(0);
   const [now, setNow] = useState(() => new Date());
@@ -2358,27 +2359,44 @@ const AppComponent = function App() {
   const [pushError, setPushError] = useState("");
   const [mapZoom, setMapZoom] = useState(false);
   // Dark mode — persisted, applied via [data-theme] attribute on <html> so CSS vars flip.
-  const [dark, setDark] = useState(() => {
+  // Theme: follows the device (prefers-color-scheme) unless the user picked an override.
+  const [darkPref, setDarkPref] = useState(() => {
     try {
-      return localStorage.getItem("lpg-dark") === "1";
+      const v = localStorage.getItem("lpg-dark");
+      return v === "1" ? "dark" : v === "0" ? "light" : "auto";
+    } catch (e) {
+      return "auto";
+    }
+  });
+  const [sysDark, setSysDark] = useState(() => {
+    try {
+      return window.matchMedia("(prefers-color-scheme: dark)").matches;
     } catch (e) {
       return false;
     }
   });
   useEffect(() => {
     try {
+      const mq = window.matchMedia("(prefers-color-scheme: dark)");
+      const h = e => setSysDark(e.matches);
+      if (mq.addEventListener) mq.addEventListener("change", h);else mq.addListener(h);
+      return () => {
+        if (mq.removeEventListener) mq.removeEventListener("change", h);else mq.removeListener(h);
+      };
+    } catch (e) {}
+  }, []);
+  const dark = darkPref === "auto" ? sysDark : darkPref === "dark";
+  const setTheme = v => {
+    setDarkPref(v);
+    try {
+      if (v === "auto") localStorage.removeItem("lpg-dark");else localStorage.setItem("lpg-dark", v === "dark" ? "1" : "0");
+    } catch (e) {}
+  };
+  useEffect(() => {
+    try {
       document.documentElement.dataset.theme = dark ? "dark" : "light";
     } catch (e) {}
   }, [dark]);
-  const toggleDark = useCallback(() => {
-    setDark(d => {
-      const nd = !d;
-      try {
-        localStorage.setItem("lpg-dark", nd ? "1" : "0");
-      } catch (e) {}
-      return nd;
-    });
-  }, []);
   // Full-screen install prompt: shown on every visit from a mobile browser until
   // the app is installed (standalone). "Continue in browser" hides it for the
   // current session only (sessionStorage), so it returns on the next visit.
@@ -3249,22 +3267,39 @@ const AppComponent = function App() {
       letterSpacing: 1
     }
   }, "STAFF")), /*#__PURE__*/React.createElement("div", {
-    onClick: toggleDark,
     style: {
       padding: "12px 16px",
-      display: "flex",
-      alignItems: "center",
-      gap: 10,
-      cursor: "pointer",
-      borderBottom: "1px solid var(--lpg-border)",
-      color: "var(--lpg-text)",
-      fontSize: 14
+      borderBottom: "1px solid var(--lpg-border)"
     }
-  }, dark ? /*#__PURE__*/React.createElement(Sun, {
-    size: 15
-  }) : /*#__PURE__*/React.createElement(Moon, {
-    size: 15
-  }), " ", dark ? "Light Mode" : "Dark Mode"), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 10,
+      fontWeight: 700,
+      letterSpacing: 1,
+      color: "var(--lpg-text-faint)",
+      marginBottom: 7
+    }
+  }, "APPEARANCE"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 6
+    }
+  }, [["auto", "Auto"], ["light", "Light"], ["dark", "Dark"]].map(([v, l]) => /*#__PURE__*/React.createElement("div", {
+    key: v,
+    onClick: () => setTheme(v),
+    style: {
+      flex: 1,
+      textAlign: "center",
+      padding: "7px 0",
+      borderRadius: 8,
+      fontSize: 13,
+      fontWeight: 600,
+      cursor: "pointer",
+      background: darkPref === v ? BLUE : "var(--lpg-page)",
+      color: darkPref === v ? "#fff" : "var(--lpg-text-muted)",
+      border: "1px solid var(--lpg-border)"
+    }
+  }, l)))), /*#__PURE__*/React.createElement("div", {
     onClick: () => {
       setAvatarMenu(false);
       setUser(null);
@@ -4007,77 +4042,122 @@ const AppComponent = function App() {
         color: "var(--lpg-text-muted)",
         fontSize: 14
       }
-    }, "No meetings match \"", search.trim(), "\"", day === "Tuesday" ? " (no individual meetings on Tuesday)" : ""), masterSlots.map((slot, si) => /*#__PURE__*/React.createElement("div", {
-      key: si,
-      style: S.card
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        display: "flex",
-        alignItems: "center",
-        gap: 8,
-        marginBottom: slot.meetings.length ? 8 : 0
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: S.badge(slot.type)
-    }), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 13,
-        color: BLUE,
-        fontWeight: 700
-      }
-    }, slot.time), /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 15,
-        fontWeight: 600,
-        color: "var(--lpg-text)"
-      }
-    }, slot.label), slot.loc && /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 12,
-        color: "var(--lpg-text-muted)"
-      }
-    }, slot.loc))), slot.meetings.length > 0 && /*#__PURE__*/React.createElement("div", {
-      style: {
-        borderTop: "1px solid #eee",
-        paddingTop: 6
-      }
-    }, slot.meetings.map((m, mi) => /*#__PURE__*/React.createElement("div", {
-      key: mi,
-      style: {
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        padding: "4px 0",
-        borderBottom: mi < slot.meetings.length - 1 ? "1px solid #f5f5f5" : "none",
-        fontSize: 13
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        flex: 1
-      }
-    }, /*#__PURE__*/React.createElement("span", {
-      style: {
-        fontWeight: 600,
-        color: "var(--lpg-text)"
-      }
-    }, m.retailer), /*#__PURE__*/React.createElement("span", {
-      style: {
-        color: "var(--lpg-text-faint)"
-      }
-    }, " (", m.retailerCo, ")")), /*#__PURE__*/React.createElement("div", {
-      style: {
-        color: BLUE,
-        fontWeight: 600,
-        textAlign: "right",
-        flexShrink: 0,
-        marginLeft: 8
-      }
-    }, m.partner, " ", /*#__PURE__*/React.createElement("span", {
-      style: {
-        fontWeight: 400,
-        color: "var(--lpg-text-faint)"
-      }
-    }, m.suite)))))))));
+    }, "No meetings match \"", search.trim(), "\"", day === "Tuesday" ? " (no individual meetings on Tuesday)" : ""), (() => {
+      // Accordion: while not searching, meeting slots collapse to a header row.
+      // The slot happening right now auto-expands; tap any header to open it.
+      const autoOpen = (() => {
+        for (const t of MTIMES) {
+          const st = eventStartDate(day, t);
+          if (st && now >= st && now < new Date(st.getTime() + 22 * 60000)) return t;
+        }
+        return "__none";
+      })();
+      const effOpen = openSlot !== null ? openSlot : autoOpen;
+      return masterSlots.map((slot, si) => {
+        const collapsible = !q && slot.type === "meeting";
+        const isOpen = !collapsible || effOpen === slot.time;
+        return /*#__PURE__*/React.createElement("div", {
+          key: si,
+          style: S.card
+        }, /*#__PURE__*/React.createElement("div", {
+          onClick: collapsible ? () => setOpenSlot(effOpen === slot.time ? "__none" : slot.time) : undefined,
+          style: {
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            marginBottom: isOpen && slot.meetings.length ? 8 : 0,
+            cursor: collapsible ? "pointer" : "default"
+          }
+        }, /*#__PURE__*/React.createElement("div", {
+          style: S.badge(slot.type)
+        }), /*#__PURE__*/React.createElement("div", {
+          style: {
+            flex: 1
+          }
+        }, /*#__PURE__*/React.createElement("div", {
+          style: {
+            fontSize: 13,
+            color: BLUE,
+            fontWeight: 700
+          }
+        }, slot.time, !q && slot.type === "meeting" && effOpen === slot.time && autoOpen === slot.time ? "  ·  NOW" : ""), /*#__PURE__*/React.createElement("div", {
+          style: {
+            fontSize: 15,
+            fontWeight: 600,
+            color: "var(--lpg-text)"
+          }
+        }, slot.label), slot.loc && /*#__PURE__*/React.createElement("div", {
+          style: {
+            fontSize: 12,
+            color: "var(--lpg-text-muted)"
+          }
+        }, slot.loc)), collapsible && /*#__PURE__*/React.createElement("div", {
+          style: {
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            flexShrink: 0
+          }
+        }, /*#__PURE__*/React.createElement("div", {
+          style: {
+            fontSize: 11,
+            fontWeight: 700,
+            background: LBLUE,
+            color: BLUE,
+            padding: "2px 8px",
+            borderRadius: 10
+          }
+        }, slot.meetings.length), /*#__PURE__*/React.createElement(ChevronRight, {
+          size: 14,
+          color: "var(--lpg-text-faint)",
+          style: {
+            transform: isOpen ? "rotate(90deg)" : "none",
+            transition: "transform 0.15s"
+          }
+        }))), isOpen && slot.meetings.length > 0 && /*#__PURE__*/React.createElement("div", {
+          style: {
+            borderTop: "1px solid var(--lpg-border)",
+            paddingTop: 6
+          }
+        }, slot.meetings.map((m, mi) => /*#__PURE__*/React.createElement("div", {
+          key: mi,
+          style: {
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            padding: "4px 0",
+            borderBottom: mi < slot.meetings.length - 1 ? "1px solid var(--lpg-border)" : "none",
+            fontSize: 13
+          }
+        }, /*#__PURE__*/React.createElement("div", {
+          style: {
+            flex: 1
+          }
+        }, /*#__PURE__*/React.createElement("span", {
+          style: {
+            fontWeight: 600,
+            color: "var(--lpg-text)"
+          }
+        }, m.retailer), /*#__PURE__*/React.createElement("span", {
+          style: {
+            color: "var(--lpg-text-faint)"
+          }
+        }, " (", m.retailerCo, ")")), /*#__PURE__*/React.createElement("div", {
+          style: {
+            color: BLUE,
+            fontWeight: 600,
+            textAlign: "right",
+            flexShrink: 0,
+            marginLeft: 8
+          }
+        }, m.partner, " ", /*#__PURE__*/React.createElement("span", {
+          style: {
+            fontWeight: 400,
+            color: "var(--lpg-text-faint)"
+          }
+        }, m.suite))))));
+      });
+    })()));
   })(), tab === 1 && !detail && /*#__PURE__*/React.createElement("div", null, partnerList.filter(([name]) => name.toLowerCase().includes(search.toLowerCase())).map(([name, info]) => {
     const reps = PARTNER_REPS[name] || [];
     return /*#__PURE__*/React.createElement("div", {
@@ -4635,11 +4715,6 @@ const AppComponent = function App() {
   }, /*#__PURE__*/React.createElement(SummitLogo, {
     size: "large"
   })), [{
-    id: "speakers",
-    label: "Speakers & Panel",
-    icon: MessageCircle,
-    desc: "Keynote and panel discussion details"
-  }, {
     id: "sponsors",
     label: "Event Sponsors",
     icon: Trophy,
@@ -4669,11 +4744,6 @@ const AppComponent = function App() {
     label: "Notifications",
     icon: Bell,
     desc: "Meeting reminder preferences"
-  }, {
-    id: "updates",
-    label: "App Updates",
-    icon: RefreshCw,
-    desc: "Check for the latest version"
   }, {
     id: "terms",
     label: "Terms of Use & Privacy",
@@ -4727,148 +4797,7 @@ const AppComponent = function App() {
   }, item.desc)), /*#__PURE__*/React.createElement(ChevronRight, {
     size: 16,
     color: "#ccc"
-  }))))), tab === 3 && infoSection === "speakers" && /*#__PURE__*/React.createElement("div", {
-    style: {
-      padding: 12
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    onClick: () => setInfoSection(null),
-    style: {
-      fontSize: 15,
-      color: BLUE,
-      fontWeight: 600,
-      cursor: "pointer",
-      marginBottom: 12,
-      display: "flex",
-      alignItems: "center",
-      gap: 4
-    }
-  }, /*#__PURE__*/React.createElement(ArrowLeft, {
-    size: 14
-  }), " Event Info"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      ...S.card,
-      borderLeft: `4px solid ${BLUE}`
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 12,
-      color: BLUE,
-      fontWeight: 700,
-      marginBottom: 4
-    }
-  }, "KEYNOTE SPEAKER"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 17,
-      fontWeight: 800,
-      color: "var(--lpg-text)"
-    }
-  }, SPEAKERS.keynote.name), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 14,
-      color: "var(--lpg-text-muted)",
-      fontStyle: "italic",
-      margin: "4px 0"
-    }
-  }, SPEAKERS.keynote.title), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 14,
-      color: BLUE,
-      fontWeight: 600
-    }
-  }, SPEAKERS.keynote.org), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 13,
-      color: "var(--lpg-text-muted)",
-      marginTop: 8,
-      display: "flex",
-      alignItems: "center",
-      gap: 4
-    }
-  }, /*#__PURE__*/React.createElement(Calendar, {
-    size: 12
-  }), SPEAKERS.keynote.when), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 13,
-      color: "var(--lpg-text-muted)",
-      display: "flex",
-      alignItems: "center",
-      gap: 4
-    }
-  }, /*#__PURE__*/React.createElement(MapPin, {
-    size: 12
-  }), SPEAKERS.keynote.where), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 14,
-      color: "#444",
-      marginTop: 10,
-      lineHeight: 1.5
-    }
-  }, SPEAKERS.keynote.bio)), /*#__PURE__*/React.createElement("div", {
-    style: {
-      ...S.card,
-      borderLeft: `4px solid #2E7D32`,
-      marginTop: 8
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 12,
-      color: "#2E7D32",
-      fontWeight: 700,
-      marginBottom: 4
-    }
-  }, "PANEL DISCUSSION"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 17,
-      fontWeight: 800,
-      color: "var(--lpg-text)"
-    }
-  }, SPEAKERS.panel.title), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 13,
-      color: "var(--lpg-text-muted)",
-      marginTop: 6,
-      display: "flex",
-      alignItems: "center",
-      gap: 4
-    }
-  }, /*#__PURE__*/React.createElement(Calendar, {
-    size: 12
-  }), SPEAKERS.panel.when), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 13,
-      color: "var(--lpg-text-muted)",
-      display: "flex",
-      alignItems: "center",
-      gap: 4
-    }
-  }, /*#__PURE__*/React.createElement(MapPin, {
-    size: 12
-  }), SPEAKERS.panel.where), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 14,
-      color: "#444",
-      marginTop: 10
-    }
-  }, SPEAKERS.panel.desc), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 14,
-      fontWeight: 600,
-      color: BLUE,
-      marginTop: 10
-    }
-  }, "Moderator: ", SPEAKERS.panel.moderator), /*#__PURE__*/React.createElement("div", {
-    style: {
-      marginTop: 8
-    }
-  }, SPEAKERS.panel.panelists.map(p => /*#__PURE__*/React.createElement("div", {
-    key: p,
-    style: {
-      fontSize: 14,
-      color: "#444",
-      padding: "3px 0"
-    }
-  }, p))))), tab === 3 && infoSection === "sponsors" && /*#__PURE__*/React.createElement("div", {
+  }))))), tab === 3 && infoSection === "sponsors" && /*#__PURE__*/React.createElement("div", {
     style: {
       padding: 12
     }
@@ -5725,101 +5654,7 @@ const AppComponent = function App() {
       color: "var(--lpg-text-muted)",
       lineHeight: 1.5
     }
-  }, "Meeting Reminders run locally in your browser \u2014 best when the app stays open in a tab. Push Notifications work even when the app is closed, but require permission and (on iPhone/iPad) installing to the home screen first.")))), tab === 3 && infoSection === "updates" && /*#__PURE__*/React.createElement("div", {
-    style: {
-      padding: 12
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    onClick: () => setInfoSection(null),
-    style: {
-      fontSize: 15,
-      color: BLUE,
-      fontWeight: 600,
-      cursor: "pointer",
-      marginBottom: 12,
-      display: "flex",
-      alignItems: "center",
-      gap: 4
-    }
-  }, /*#__PURE__*/React.createElement(ArrowLeft, {
-    size: 14
-  }), " Event Info"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 17,
-      fontWeight: 700,
-      color: "var(--lpg-text)",
-      padding: "0 4px 8px"
-    }
-  }, "App Updates"), /*#__PURE__*/React.createElement("div", {
-    style: S.card
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-      marginBottom: 4
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 15,
-      fontWeight: 700,
-      color: "var(--lpg-text)"
-    }
-  }, "Current Version"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 15,
-      color: "var(--lpg-text-muted)",
-      fontFamily: "monospace"
-    }
-  }, APP_VERSION)), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 13,
-      color: "var(--lpg-text-muted)",
-      lineHeight: 1.5
-    }
-  }, "Tap below to fetch the latest version of the app. Your notes, ratings, follow-up flags, and photos will not be affected.")), /*#__PURE__*/React.createElement("button", {
-    style: {
-      ...S.btn,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      gap: 8,
-      marginTop: 8
-    },
-    onClick: () => {
-      const base = window.location.pathname.split("?")[0].split("#")[0];
-      window.location.replace(base + "?v=" + Date.now());
-    }
-  }, /*#__PURE__*/React.createElement(RefreshCw, {
-    size: 18,
-    color: "#fff"
-  }), " Check for Updates"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      ...S.card,
-      background: LBLUE,
-      border: `1px solid ${BLUE}20`,
-      marginTop: 12
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      gap: 8,
-      alignItems: "flex-start"
-    }
-  }, /*#__PURE__*/React.createElement(Info, {
-    size: 16,
-    color: BLUE,
-    style: {
-      flexShrink: 0,
-      marginTop: 2
-    }
-  }), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 14,
-      color: "#444",
-      lineHeight: 1.5
-    }
-  }, "This reloads the app from the server to pick up any new content or fixes published by staff. Your personal data (notes, ratings, follow-ups) lives on your device and in the shared event database \u2014 nothing is cleared.")))), tab === 3 && infoSection === "terms" && /*#__PURE__*/React.createElement("div", {
+  }, "Meeting Reminders run locally in your browser \u2014 best when the app stays open in a tab. Push Notifications work even when the app is closed, but require permission and (on iPhone/iPad) installing to the home screen first.")))), tab === 3 && infoSection === "terms" && /*#__PURE__*/React.createElement("div", {
     style: {
       padding: 12
     }
