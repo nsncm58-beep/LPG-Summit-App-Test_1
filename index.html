@@ -931,7 +931,7 @@ const MTIMES = ["8:15 AM", "8:37 AM", "8:59 AM", "9:21 AM", "9:43 AM", "10:05 AM
 const BLUE = "#005D8C";
 const LBLUE = "#C1E0EC";
 const DBLUE = "#004870";
-const APP_VERSION = "2026.08.21.13";
+const APP_VERSION = "2026.08.21.14";
 const HEADSHOTS = {
   "Anthony Buck": "anthony-buck.jpg",
   "Brandon Hewett": "brandon-hewett.jpg",
@@ -1619,13 +1619,19 @@ function buildSchedule(user) {
     t: "6:30 PM  -  9:30 PM",
     e: "Welcome Reception",
     l: "Eleven Restaurant",
-    type: "social"
+    type: "social",
+    sp: [{
+      c: "Cargas"
+    }]
   }];
   const wedCommon = [{
     t: "7:00 AM",
     e: "Breakfast + Speaker: Dustin Delay (CMS)",
     l: "Eleven Restaurant",
-    type: "meal"
+    type: "meal",
+    sp: [{
+      c: "PriMedia"
+    }]
   }];
   const wedMeetings = user.w.map((m, i) => ({
     t: MTIMES[i],
@@ -1647,18 +1653,31 @@ function buildSchedule(user) {
     t: "12:30 PM  -  6:00 PM",
     e: "Golf Outing",
     l: "Palmer Course",
-    type: "social"
+    type: "social",
+    sp: [{
+      c: "Metsa",
+      f: "Beverage cart"
+    }, {
+      c: "Quality Steel",
+      f: "Contest holes"
+    }]
   }, {
     t: "7:00 PM  -  10:00 PM",
     e: "Casual BBQ Dinner",
     l: "Seven Eagles Pool",
-    type: "social"
+    type: "social",
+    sp: [{
+      c: "Otodata"
+    }]
   }];
   const thuCommon = [{
     t: "7:00 AM",
     e: "Breakfast + Panel Discussion",
     l: "Eleven Restaurant",
-    type: "meal"
+    type: "meal",
+    sp: [{
+      c: "PriMedia"
+    }]
   }];
   const thuMeetings = user.t.map((m, i) => ({
     t: MTIMES[i],
@@ -3974,7 +3993,8 @@ const AppComponent = function App() {
         style: S.badge(ev.type)
       }), /*#__PURE__*/React.createElement("div", {
         style: {
-          flex: 1
+          flex: 1,
+          minWidth: 0
         }
       }, /*#__PURE__*/React.createElement("div", {
         style: {
@@ -4006,6 +4026,7 @@ const AppComponent = function App() {
         alt: "",
         style: {
           height: 24,
+          maxWidth: 90,
           objectFit: "contain",
           flexShrink: 0,
           borderRadius: 3
@@ -4014,7 +4035,9 @@ const AppComponent = function App() {
         style: {
           fontSize: 16,
           fontWeight: 600,
-          color: "var(--lpg-text)"
+          color: "var(--lpg-text)",
+          minWidth: 0,
+          overflowWrap: "break-word"
         }
       }, ev.e)), ev.l && !(ev.type === "meeting" && /Suite/i.test(ev.l)) && /*#__PURE__*/React.createElement("div", {
         style: {
@@ -4039,7 +4062,42 @@ const AppComponent = function App() {
           padding: "2px 8px",
           borderRadius: 10
         }
-      }, "Individual Meeting")), ev.type === "meeting" && ev.l && /Suite\s*(\S+)/i.test(ev.l) && /*#__PURE__*/React.createElement("div", {
+      }, "Individual Meeting"), ev.sp && ev.sp.map((x, xi) => {
+        const lk = LOGOS[x.c] || LOGOS[Object.keys(LOGOS).find(k => k.toLowerCase().includes(x.c.toLowerCase()))];
+        return /*#__PURE__*/React.createElement("div", {
+          key: xi,
+          style: {
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            marginTop: xi === 0 ? 7 : 4,
+            flexWrap: "wrap"
+          }
+        }, /*#__PURE__*/React.createElement("span", {
+          style: {
+            fontSize: 11,
+            color: "var(--lpg-text-faint)",
+            fontStyle: "italic"
+          }
+        }, x.f ? `${x.f} courtesy of` : "Courtesy of"), lk ? /*#__PURE__*/React.createElement("img", {
+          src: lk,
+          alt: x.c,
+          style: {
+            height: 16,
+            objectFit: "contain",
+            borderRadius: 2,
+            background: "#fff",
+            padding: "1px 3px",
+            border: "1px solid var(--lpg-border)"
+          }
+        }) : /*#__PURE__*/React.createElement("span", {
+          style: {
+            fontSize: 12,
+            fontWeight: 700,
+            color: "var(--lpg-text-muted)"
+          }
+        }, x.c));
+      })), ev.type === "meeting" && ev.l && /Suite\s*(\S+)/i.test(ev.l) && /*#__PURE__*/React.createElement("div", {
         style: {
           flexShrink: 0,
           alignSelf: "center",
