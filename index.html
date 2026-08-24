@@ -931,7 +931,7 @@ const MTIMES = ["8:15 AM", "8:37 AM", "8:59 AM", "9:21 AM", "9:43 AM", "10:05 AM
 const BLUE = "#005D8C";
 const LBLUE = "#C1E0EC";
 const DBLUE = "#004870";
-const APP_VERSION = "2026.08.21.8";
+const APP_VERSION = "2026.08.21.9";
 const HEADSHOTS = {
   "Anthony Buck": "anthony-buck.jpg",
   "Brandon Hewett": "brandon-hewett.jpg",
@@ -2327,7 +2327,17 @@ const AppComponent = function App() {
     }
   });
   const [tab, setTab] = useState(0);
-  const [day, setDay] = useState("Wednesday");
+  const [day, setDay] = useState(() => {
+    // Open on today's event day during the Summit (Wednesday otherwise).
+    try {
+      const n = new Date();
+      for (const dn of ["Tuesday", "Wednesday", "Thursday"]) {
+        const d = EVENT_DATES[dn];
+        if (n >= new Date(d[0], d[1], d[2]) && n < new Date(d[0], d[1], d[2] + 1)) return dn;
+      }
+    } catch (e) {}
+    return "Wednesday";
+  });
   const [search, setSearch] = useState("");
   const [notes, setNotes] = useState({});
   const [reg, setReg] = useState({}); // shared attendee check-in/golf registration (staff)
