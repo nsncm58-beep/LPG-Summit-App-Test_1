@@ -931,7 +931,7 @@ const MTIMES = ["8:15 AM", "8:37 AM", "8:59 AM", "9:21 AM", "9:43 AM", "10:05 AM
 const BLUE = "#005D8C";
 const LBLUE = "#C1E0EC";
 const DBLUE = "#004870";
-const APP_VERSION = "2026.08.21.11";
+const APP_VERSION = "2026.08.21.12";
 const HEADSHOTS = {
   "Anthony Buck": "anthony-buck.jpg",
   "Brandon Hewett": "brandon-hewett.jpg",
@@ -3520,7 +3520,7 @@ const AppComponent = function App() {
     }
   }, b.by, " \xB7 ", b.at)))))), /*#__PURE__*/React.createElement("div", {
     style: {
-      padding: "0 0 12px 0",
+      padding: "0 0 calc(96px + env(safe-area-inset-bottom)) 0",
       overflowY: "auto"
     }
   }, mapZoom && /*#__PURE__*/React.createElement(MapZoomModal, {
@@ -6373,16 +6373,6 @@ const AppComponent = function App() {
       }), "Right")))));
     })));
   })()))), /*#__PURE__*/React.createElement("div", {
-    style: {
-      marginTop: "auto",
-      background: `linear-gradient(135deg,${DBLUE},${BLUE})`,
-      color: "#fff",
-      textAlign: "center",
-      padding: "10px 8px calc(86px + env(safe-area-inset-bottom))",
-      fontSize: 12,
-      opacity: 0.9
-    }
-  }, "LP Gas Growth Summit | Reunion Resort, Orlando FL"), /*#__PURE__*/React.createElement("div", {
     style: {
       position: "fixed",
       bottom: "calc(12px + env(safe-area-inset-bottom))",
