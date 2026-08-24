@@ -931,7 +931,7 @@ const MTIMES = ["8:15 AM", "8:37 AM", "8:59 AM", "9:21 AM", "9:43 AM", "10:05 AM
 const BLUE = "#005D8C";
 const LBLUE = "#C1E0EC";
 const DBLUE = "#004870";
-const APP_VERSION = "2026.08.21.14";
+const APP_VERSION = "2026.08.21.15";
 const HEADSHOTS = {
   "Anthony Buck": "anthony-buck.jpg",
   "Brandon Hewett": "brandon-hewett.jpg",
@@ -4937,35 +4937,35 @@ const AppComponent = function App() {
   }, /*#__PURE__*/React.createElement(SummitLogo, {
     size: "large"
   })), [{
-    id: "calendar",
-    label: "Add Schedule to Calendar",
-    icon: Calendar,
-    desc: "Save your Summit agenda to your phone's calendar"
+    id: "notifications",
+    label: "Notifications",
+    icon: Bell,
+    desc: "Meeting reminder preferences"
   }, {
     id: "map",
     label: "Venue Map",
     icon: Image,
     desc: "Interactive resort map with event locations"
   }, {
-    id: "attire",
-    label: "Attire & Reminders",
-    icon: Shirt,
-    desc: "Dress code and important notes"
+    id: "help",
+    label: "Help & Emergency",
+    icon: AlertCircle,
+    desc: "On-site contacts and support"
   }, {
     id: "photos",
     label: "Photo Gallery",
     icon: Camera,
     desc: "Share and browse event photos"
   }, {
-    id: "help",
-    label: "Help & Emergency",
-    icon: AlertCircle,
-    desc: "On-site contacts and support"
+    id: "attire",
+    label: "Attire & Reminders",
+    icon: Shirt,
+    desc: "Dress code and important notes"
   }, {
-    id: "notifications",
-    label: "Notifications",
-    icon: Bell,
-    desc: "Meeting reminder preferences"
+    id: "calendar",
+    label: "Add Schedule to Calendar",
+    icon: Calendar,
+    desc: "Save your Summit agenda to your phone's calendar"
   }, {
     id: "terms",
     label: "Terms of Use & Privacy",
@@ -6366,10 +6366,10 @@ const AppComponent = function App() {
       padding: "7px 8px",
       gap: 2
     }
-  }, [["Schedule", Calendar], ["Partners", Building2], ["Attendees", Users], ["Info", Info], ["Notes", StickyNote], ...(user.r === "staff" ? [["Check-In", ClipboardCheck]] : [])].map(([t, Icon], i) => /*#__PURE__*/React.createElement("div", {
+  }, [["Schedule", Calendar, 0], ["Partners", Building2, 1], ["Attendees", Users, 2], ["Notes", StickyNote, 4], ["Info", Info, 3], ...(user.r === "staff" ? [["Check-In", ClipboardCheck, 5]] : [])].map(([t, Icon, ti]) => /*#__PURE__*/React.createElement("div", {
     key: t,
     onClick: () => {
-      setTab(i);
+      setTab(ti);
       setDetail(null);
       setSearch("");
       setInfoSection(null);
@@ -6385,8 +6385,8 @@ const AppComponent = function App() {
       padding: "7px 0",
       borderRadius: 22,
       cursor: "pointer",
-      background: tab === i ? BLUE : "transparent",
-      color: tab === i ? "#fff" : "var(--lpg-text-muted)",
+      background: tab === ti ? BLUE : "transparent",
+      color: tab === ti ? "#fff" : "var(--lpg-text-muted)",
       transition: "background 0.2s, color 0.2s"
     }
   }, /*#__PURE__*/React.createElement(Icon, {
@@ -6394,7 +6394,7 @@ const AppComponent = function App() {
   }), /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: 9.5,
-      fontWeight: tab === i ? 700 : 500,
+      fontWeight: tab === ti ? 700 : 500,
       letterSpacing: 0.1
     }
   }, t)))));
