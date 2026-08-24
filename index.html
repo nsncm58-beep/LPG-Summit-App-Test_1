@@ -931,7 +931,7 @@ const MTIMES = ["8:15 AM", "8:37 AM", "8:59 AM", "9:21 AM", "9:43 AM", "10:05 AM
 const BLUE = "#005D8C";
 const LBLUE = "#C1E0EC";
 const DBLUE = "#004870";
-const APP_VERSION = "2026.08.21.10";
+const APP_VERSION = "2026.08.21.11";
 const HEADSHOTS = {
   "Anthony Buck": "anthony-buck.jpg",
   "Brandon Hewett": "brandon-hewett.jpg",
@@ -2291,6 +2291,56 @@ function downloadCsv(filename, csv) {
     } catch (_) {}
   }
 }
+function downloadTextFile(filename, text, mime) {
+  try {
+    const blob = new Blob([text], {
+      type: mime
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.style.display = "none";
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      try {
+        document.body.removeChild(a);
+      } catch (e) {}
+      try {
+        URL.revokeObjectURL(url);
+      } catch (e) {}
+    }, 1500);
+  } catch (e) {
+    try {
+      alert("Couldn't generate the file on this device.");
+    } catch (_) {}
+  }
+}
+
+// Personal agenda as an iCalendar file (Eastern time, matching the venue).
+function buildICS(user) {
+  const sched = buildSchedule(user);
+  const pad = n => String(n).padStart(2, "0");
+  const fmt = d => `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}00`;
+  const esc = t => String(t || "").replace(/\\/g, "\\\\").replace(/,/g, "\\,").replace(/;/g, "\\;");
+  const events = [];
+  Object.entries(sched).forEach(([dayName, list]) => {
+    const dd = EVENT_DATES[dayName];
+    if (!dd) return;
+    (list || []).forEach((e, i) => {
+      const parts = String(e.t).split(/\s*-\s*/);
+      const p1 = parseTime12(parts[0]);
+      if (!p1) return;
+      const start = new Date(dd[0], dd[1], dd[2], p1.h, p1.m);
+      const p2 = parts[1] ? parseTime12(parts[1]) : null;
+      const end = p2 ? new Date(dd[0], dd[1], dd[2], p2.h, p2.m) : new Date(start.getTime() + (e.type === "meeting" ? 22 : 60) * 60000);
+      events.push(["BEGIN:VEVENT", `UID:lpg2026-${dayName}-${i}-${regKey(user.n)}@lpgasgrowthsummit.com`, "DTSTAMP:20260821T120000Z", `DTSTART;TZID=America/New_York:${fmt(start)}`, `DTEND;TZID=America/New_York:${fmt(end)}`, `SUMMARY:${esc(e.type === "meeting" ? "Meeting: " + e.e : e.e)} (LPG Summit)`, `LOCATION:${esc((e.l ? e.l + ", " : "") + "Reunion Resort, Orlando FL")}`, "END:VEVENT"].join("\r\n"));
+    });
+  });
+  return ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//LP Gas Growth Summit 2026//App//EN", "CALSCALE:GREGORIAN", "METHOD:PUBLISH", "BEGIN:VTIMEZONE", "TZID:America/New_York", "BEGIN:DAYLIGHT", "TZOFFSETFROM:-0500", "TZOFFSETTO:-0400", "TZNAME:EDT", "DTSTART:19700308T020000", "RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=2SU", "END:DAYLIGHT", "BEGIN:STANDARD", "TZOFFSETFROM:-0400", "TZOFFSETTO:-0500", "TZNAME:EST", "DTSTART:19701101T020000", "RRULE:FREQ=YEARLY;BYMONTH=11;BYDAY=1SU", "END:STANDARD", "END:VTIMEZONE", events.join("\r\n"), "END:VCALENDAR"].join("\r\n");
+}
+
 // Rows of [Day,Time,Partner,Suite,Rating,Flagged,Note] for one user's meetings.
 // Day labels match the Notes tab (user.w = "Wed", user.t = "Thu").
 function userNoteRows(u, notesObj, opts) {
@@ -2355,6 +2405,23 @@ const AppComponent = function App() {
   const [composeTo, setComposeTo] = useState(""); // "" = everyone, else attendee name
   const [avatarMenu, setAvatarMenu] = useState(false); // top-left avatar dropdown
   const [openSlot, setOpenSlot] = useState(null); // master view accordion: open slot time, "__none", or null = auto
+  const [online, setOnline] = useState(() => {
+    try {
+      return navigator.onLine !== false;
+    } catch (e) {
+      return true;
+    }
+  });
+  useEffect(() => {
+    const on = () => setOnline(true),
+      off = () => setOnline(false);
+    window.addEventListener("online", on);
+    window.addEventListener("offline", off);
+    return () => {
+      window.removeEventListener("online", on);
+      window.removeEventListener("offline", off);
+    };
+  }, []);
   const [bellOpen, setBellOpen] = useState(false); // top-right announcements panel
   const [lastSeenBroadcast, setLastSeenBroadcast] = useState(0);
   const [now, setNow] = useState(() => new Date());
@@ -2635,6 +2702,15 @@ const AppComponent = function App() {
       }
     } catch (e) {}
   }, []);
+  const exportRegistration = useCallback(() => {
+    const roster = USERS.filter(u => u.r !== "staff").slice().sort((a, b) => a.n.localeCompare(b.n));
+    const header = ["Name", "Company", "Role", "Checked In", "Golfing", "Clubs", "Hand"];
+    const rows = roster.map(u => {
+      const r = reg[regKey(u.n)] || {};
+      return [u.n, u.c, u.r, r.in ? "Yes" : "", r.golf === true ? "Yes" : r.golf === false ? "No" : "", r.clubs === "rent" ? "Renting" : r.clubs === "own" ? "Own clubs" : "", r.hand || ""];
+    });
+    downloadCsv("LPG-Summit-CheckIn.csv", csvJoin([header, ...rows]));
+  }, [reg]);
   const exportMyNotes = useCallback(() => {
     const header = ["Day", "Time", "Partner", "Suite", "Rating (0-5)", "Flagged", "Note"];
     downloadCsv(`LPG-Summit-Notes-${regKey(user.n) || "notes"}.csv`, csvJoin([header, ...userNoteRows(user, notes, {})]));
@@ -3249,7 +3325,16 @@ const AppComponent = function App() {
       background: "#F9A825",
       border: "1.5px solid #004870"
     }
-  }))), avatarMenu && /*#__PURE__*/React.createElement("div", {
+  }))), !online && /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "#91003D",
+      color: "#fff",
+      textAlign: "center",
+      fontSize: 12.5,
+      fontWeight: 600,
+      padding: "7px 12px"
+    }
+  }, "You're offline. Announcements, notes syncing and photos are paused until you reconnect."), avatarMenu && /*#__PURE__*/React.createElement("div", {
     onClick: () => setAvatarMenu(false),
     style: {
       position: "fixed",
@@ -3931,7 +4016,7 @@ const AppComponent = function App() {
           fontWeight: 600,
           color: "var(--lpg-text)"
         }
-      }, ev.e)), ev.l && /*#__PURE__*/React.createElement("div", {
+      }, ev.e)), ev.l && !(ev.type === "meeting" && /Suite/i.test(ev.l)) && /*#__PURE__*/React.createElement("div", {
         style: {
           fontSize: 13,
           color: "var(--lpg-text-muted)",
@@ -3954,7 +4039,32 @@ const AppComponent = function App() {
           padding: "2px 8px",
           borderRadius: 10
         }
-      }, "Individual Meeting")));
+      }, "Individual Meeting")), ev.type === "meeting" && ev.l && /Suite\s*(\S+)/i.test(ev.l) && /*#__PURE__*/React.createElement("div", {
+        style: {
+          flexShrink: 0,
+          alignSelf: "center",
+          textAlign: "center",
+          background: LBLUE,
+          borderRadius: 12,
+          padding: "8px 13px",
+          marginLeft: 8
+        }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 9,
+          fontWeight: 700,
+          letterSpacing: 1.2,
+          color: BLUE,
+          opacity: 0.75
+        }
+      }, "SUITE"), /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 23,
+          fontWeight: 800,
+          color: BLUE,
+          lineHeight: 1.05
+        }
+      }, ev.l.match(/Suite\s*(\S+)/i)[1])));
     })));
   })(), tab === 0 && user.r === "staff" && (() => {
     const allRetailers = USERS.filter(u => u.r === "retailer");
@@ -4774,6 +4884,11 @@ const AppComponent = function App() {
     icon: Trophy,
     desc: "Partners sponsoring event activities"
   }, {
+    id: "calendar",
+    label: "Add Schedule to Calendar",
+    icon: Calendar,
+    desc: "Save your Summit agenda to your phone's calendar"
+  }, {
     id: "map",
     label: "Venue Map",
     icon: Image,
@@ -4812,7 +4927,13 @@ const AppComponent = function App() {
       ...S.card,
       cursor: "pointer"
     },
-    onClick: () => setInfoSection(item.id)
+    onClick: () => {
+      if (item.id === "calendar") {
+        downloadTextFile(`LPG-Summit-Schedule-${regKey(user.n)}.ics`, buildICS(user), "text/calendar;charset=utf-8");
+      } else {
+        setInfoSection(item.id);
+      }
+    }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
@@ -6120,11 +6241,30 @@ const AppComponent = function App() {
     return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
       style: {
         padding: "12px 12px 4px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between"
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
         fontSize: 15,
         fontWeight: 700,
         color: BLUE
       }
     }, "Attendee Check-In"), /*#__PURE__*/React.createElement("div", {
+      onClick: exportRegistration,
+      style: {
+        ...S.btn,
+        width: "auto",
+        padding: "7px 12px",
+        fontSize: 12,
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 5
+      }
+    }, /*#__PURE__*/React.createElement(Download, {
+      size: 13
+    }), " CSV")), /*#__PURE__*/React.createElement("div", {
       style: {
         padding: "0 12px 4px",
         fontSize: 13,
