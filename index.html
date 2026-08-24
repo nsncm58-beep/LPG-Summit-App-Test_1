@@ -39,6 +39,9 @@
     --lpg-input-bg: #0d1117;
     --lpg-overlay: rgba(0,0,0,0.7);
   }
+  /* iOS rubber-band overscroll shows the html background-color: paint it footer
+     blue so bouncing past the bottom (or top) never flashes white. */
+  html { background-color: #005D8C; }
   body { margin: 0; padding: 0; background: var(--lpg-page); color: var(--lpg-text); overflow-x: hidden; transition: background 0.2s, color 0.2s; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
   input, select, textarea, button { font-family: inherit; }
   ::-webkit-scrollbar { display: none; }
@@ -928,7 +931,7 @@ const MTIMES = ["8:15 AM", "8:37 AM", "8:59 AM", "9:21 AM", "9:43 AM", "10:05 AM
 const BLUE = "#005D8C";
 const LBLUE = "#C1E0EC";
 const DBLUE = "#004870";
-const APP_VERSION = "2026.08.21.4";
+const APP_VERSION = "2026.08.21.5";
 const HEADSHOTS = {
   "Anthony Buck": "anthony-buck.jpg",
   "Brandon Hewett": "brandon-hewett.jpg",
