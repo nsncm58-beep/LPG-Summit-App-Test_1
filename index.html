@@ -931,7 +931,7 @@ const MTIMES = ["8:15 AM", "8:37 AM", "8:59 AM", "9:21 AM", "9:43 AM", "10:05 AM
 const BLUE = "#005D8C";
 const LBLUE = "#C1E0EC";
 const DBLUE = "#004870";
-const APP_VERSION = "2026.08.21.6";
+const APP_VERSION = "2026.08.21.7";
 const HEADSHOTS = {
   "Anthony Buck": "anthony-buck.jpg",
   "Brandon Hewett": "brandon-hewett.jpg",
@@ -1501,16 +1501,16 @@ const ATTIRE = [{
 const REMINDERS = ["Please refer to your personalized meeting schedule for details on your individual meetings.", "For those golfing, please wear your golf clothes to Wednesday's breakfast and meetings - there is limited time before the golf outing.", "Schedule is subject to change."];
 const TERMS = [{
   h: "Acceptance of Terms",
-  b: "By accessing, downloading, installing, or otherwise using the LPGas Growth Summit mobile application (the \"App\"), you acknowledge that you have read, understood, and agree to be bound by these Terms of Use and by the data and privacy practices described herein. These Terms constitute a binding agreement between you (the \"attendee\" or \"user\") and the organizers of the LPGas Growth Summit (collectively, the \"Organizer,\" \"we,\" \"us,\" or \"our\"). If you do not agree with any portion of these Terms, you should discontinue use of the App. Your continued use of the App constitutes your ongoing acceptance of these Terms as they may be amended from time to time."
+  b: "By accessing, downloading, installing, or otherwise using the LPGas Growth Summit mobile application (the \"App\"), you acknowledge that you have read, understood, and agree to be bound by these Terms of Use and by the data and privacy practices described herein. These Terms constitute a binding agreement between you (the \"attendee\" or \"user\") and North Coast Media LLC, publisher of LP Gas magazine and organizer of the LPGas Growth Summit (collectively, the \"Organizer,\" \"we,\" \"us,\" or \"our\"). If you do not agree with any portion of these Terms, you should discontinue use of the App. Your continued use of the App constitutes your ongoing acceptance of these Terms as they may be amended from time to time."
 }, {
   h: "Description of the Service",
   b: "The App is a complimentary, on-site event companion provided solely for the convenience of registered attendees of the LPGas Growth Summit. It is intended to help you navigate the event by providing access to your personalized meeting schedule, general agenda information, venue details, sponsor recognition, attendee and exhibitor listings, real-time announcements, a personal note-taking feature, and a shared photo gallery. The App is provided exclusively in connection with this event and is not intended for any other purpose."
 }, {
   h: "Information We Collect",
-  b: "In order to provide its features, the App makes available and processes the following categories of information: (a) your name, company affiliation, role, and pre-assigned meeting schedule, each of which is provided to us by you or by the event registration process; (b) any notes you choose to record using the note-taking feature; (c) any photographs you choose to upload to the shared photo gallery; (d) if you elect to enable push notifications, a unique device messaging token that allows us to deliver announcements to your device; and (e) limited technical information such as whether the App is running as an installed home-screen application. The App does not request or require access to your contacts, location, camera roll beyond images you expressly select, or other device data."
+  b: "In order to provide its features, the App makes available and processes the following categories of information: (a) your name, company affiliation, role, professional headshot, profile details and business contact information you provided during event registration, and your pre-assigned meeting schedule; (b) event logistics information collected during registration or recorded by event staff during the event, such as your check-in status, golf participation, and club rental preferences; (c) any notes you choose to record using the note-taking feature; (d) any photographs you choose to upload to the shared photo gallery; (e) if you elect to enable push notifications, a unique device messaging token that allows us to deliver announcements to your device; and (f) limited technical information such as whether the App is running as an installed home-screen application. The App does not request or require access to your contacts, location, camera roll beyond images you expressly select, or other device data."
 }, {
   h: "How Your Information Is Used and Shared",
-  b: "Information processed by the App is used to operate and improve the event experience, deliver announcements, and enable the collaborative features described in these Terms. IMPORTANT: Notes you record in the App are synchronized to the event's cloud database and are associated with your name. Authorized LPGas event organizers, staff, and administrators may be able to access, view, and retain the content of your notes. You should therefore not store any confidential, proprietary, sensitive, or personal information in your notes that you are unwilling to have viewed by event personnel. We do not sell your information to third parties."
+  b: "Information processed by the App is used to operate and improve the event experience, deliver announcements, and enable the collaborative features described in these Terms. Your name, company, role, headshot, and the profile and business contact details you provided during registration may be displayed to other registered attendees within the App directory and schedule features, consistent with the networking purpose of the event. Event logistics information such as check-in and golf details is visible to authorized event staff. IMPORTANT: Notes you record in the App are synchronized to the event's cloud database and are associated with your name. Authorized LPGas event organizers, staff, and administrators may be able to access, view, and retain the content of your notes. You should therefore not store any confidential, proprietary, sensitive, or personal information in your notes that you are unwilling to have viewed by event personnel. We do not sell your information to third parties."
 }, {
   h: "Notes",
   b: "The note-taking feature is provided for your convenience in capturing thoughts during the event. Notes are stored both on your device and in the event's cloud database under an identifier associated with your name, which enables your notes to persist across sessions and devices. Notes are not encrypted end-to-end and are not private to you; as described above, they may be accessible to authorized event personnel. We make no guarantee regarding the permanence, availability, or recoverability of any note, and you are responsible for independently retaining any information you consider important."
@@ -1519,7 +1519,7 @@ const TERMS = [{
   b: "The App includes a shared photo gallery feature. Any photograph you upload to the gallery is shared with, and visible to, all other attendees who use the App, and is stored on the event's cloud servers. You should only upload images that are appropriate for a professional audience and that you have the right to share. Do not upload photographs containing confidential information, or images of individuals who have not consented to being photographed or to having their image shared. The Organizer reserves the right to remove any uploaded image at its sole discretion and without notice."
 }, {
   h: "Push Notifications",
-  b: "If you enable push notifications, the App registers a unique messaging token for your device with our notification service. This token is used solely to deliver event-related announcements and reminders to your device, including when the App is closed or in the background. You may disable push notifications at any time through your device's system settings. Notification delivery depends on third-party services and network conditions and cannot be guaranteed."
+  b: "If you enable push notifications, the App registers a unique messaging token for your device with our notification service. This token is used solely to deliver event-related announcements, reminders, and messages from event staff (including messages directed individually to you) to your device, including when the App is closed or in the background. You may disable push notifications at any time through your device's system settings. Notification delivery depends on third-party services and network conditions and cannot be guaranteed."
 }, {
   h: "Data Storage and Security",
   b: "Information processed by the App is stored using Google Firebase services, with data maintained on servers located in the United States. We employ reasonable administrative and technical measures intended to protect the information handled by the App. However, no method of electronic transmission or storage is completely secure, and we cannot and do not guarantee the absolute security of any information. You use the App and submit information at your own risk."
@@ -1536,6 +1536,9 @@ const TERMS = [{
   h: "Acceptable Use",
   b: "You agree to use the App only for lawful purposes and only in connection with the LPGas Growth Summit. You agree not to use the App to upload, store, or transmit any content that is unlawful, harassing, defamatory, obscene, infringing, or otherwise objectionable; to interfere with or disrupt the App or its underlying services; to attempt to gain unauthorized access to any account, system, or data; or to impersonate any person or entity. The Organizer may suspend or revoke your access to the App at any time for any reason, including violation of these Terms."
 }, {
+  h: "Access Credentials",
+  b: "Access to the App is provided through credentials supplied to you by the Organizer for this event. Your credentials are personal to you; you agree not to share them with others or to access the App using credentials that were not issued to you. The App is an event convenience tool, not a secured system of record, and the Organizer is not responsible for access to your in-App information by anyone with whom you share your credentials."
+}, {
   h: "Disclaimers",
   b: "The App and all information provided through it are made available on an \"as is\" and \"as available\" basis, without warranties of any kind, whether express or implied. Schedule, agenda, venue, and other event information is subject to change and may contain inaccuracies or omissions. We do not warrant that the App will be uninterrupted, timely, secure, or error-free, or that any information provided through it is accurate, complete, or current. You should confirm important event details directly with event staff."
 }, {
@@ -1544,6 +1547,9 @@ const TERMS = [{
 }, {
   h: "Changes to These Terms",
   b: "We may update or modify these Terms at any time, including to reflect changes to the App's features or applicable law. Any updated Terms will be made available within the App. Your continued use of the App following the posting of revised Terms constitutes your acceptance of those revised Terms. We encourage you to review these Terms periodically."
+}, {
+  h: "Governing Law; Severability",
+  b: "These Terms are governed by the laws of the State of Ohio, without regard to its conflict of law principles. If any provision of these Terms is held to be invalid or unenforceable, that provision shall be enforced to the maximum extent permissible and the remaining provisions shall remain in full force and effect."
 }, {
   h: "Contact",
   b: "If you have any questions about these Terms or about the data practices described herein, please contact the LP Gas event team. Contact details for on-site personnel are available in the Help & Emergency section of this App."
@@ -3095,7 +3101,7 @@ const AppComponent = function App() {
   }))];
 
   // The single top search pill filters whatever page is open.
-  const searchPlaceholder = tab === 0 ? user.r === "staff" ? "Search people, companies, partners..." : "Search your schedule..." : tab === 1 ? "Search partners..." : tab === 2 ? "Search attendees..." : tab === 3 ? "Search event info..." : tab === 4 ? "Search your meetings..." : "Search the check-in roster...";
+  const searchPlaceholder = tab === 0 ? user.r === "staff" ? "Search people..." : "Search schedule..." : tab === 1 ? "Search partners..." : tab === 2 ? "Search attendees..." : tab === 3 ? "Search event info..." : tab === 4 ? "Search meetings..." : "Search roster...";
   return /*#__PURE__*/React.createElement("div", {
     style: S.root
   }, /*#__PURE__*/React.createElement("div", {
@@ -5692,7 +5698,7 @@ const AppComponent = function App() {
       color: "var(--lpg-text-muted)",
       padding: "0 4px 10px"
     }
-  }, "Last updated: September 2026 \xB7 Please read these Terms carefully."), TERMS.map((t, i) => /*#__PURE__*/React.createElement("div", {
+  }, "Last updated: August 2026 \xB7 Please read these Terms carefully."), TERMS.map((t, i) => /*#__PURE__*/React.createElement("div", {
     key: i,
     style: S.card
   }, /*#__PURE__*/React.createElement("div", {
