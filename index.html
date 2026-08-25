@@ -996,7 +996,7 @@ const MTIMES = ["8:15 AM", "8:37 AM", "8:59 AM", "9:21 AM", "9:43 AM", "10:05 AM
 const BLUE = "#005D8C";
 const LBLUE = "#C1E0EC";
 const DBLUE = "#004870";
-const APP_VERSION = "2026.08.21.19";
+const APP_VERSION = "2026.08.21.20";
 const HEADSHOTS = {
   "Anthony Buck": "anthony-buck.jpg",
   "Brandon Hewett": "brandon-hewett.jpg",
@@ -4564,8 +4564,8 @@ const AppComponent = function App() {
         marginLeft: ri === 0 ? 0 : -8,
         flexShrink: 0
       }
-    }, HEADSHOTS[rep.n] ? /*#__PURE__*/React.createElement("img", {
-      src: "headshots/" + HEADSHOTS[rep.n] + "?v=" + APP_VERSION,
+    }, PARTNER_HEADSHOTS[rep.n] || HEADSHOTS[rep.n] ? /*#__PURE__*/React.createElement("img", {
+      src: "headshots/" + (PARTNER_HEADSHOTS[rep.n] || HEADSHOTS[rep.n]) + "?v=" + APP_VERSION,
       alt: rep.n,
       style: {
         width: "100%",
