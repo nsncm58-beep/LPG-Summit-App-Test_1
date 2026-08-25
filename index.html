@@ -996,7 +996,7 @@ const MTIMES = ["8:15 AM", "8:37 AM", "8:59 AM", "9:21 AM", "9:43 AM", "10:05 AM
 const BLUE = "#005D8C";
 const LBLUE = "#C1E0EC";
 const DBLUE = "#004870";
-const APP_VERSION = "2026.08.21.21";
+const APP_VERSION = "2026.08.21.22";
 const HEADSHOTS = {
   "Anthony Buck": "anthony-buck.jpg",
   "Brandon Hewett": "brandon-hewett.jpg",
@@ -2585,6 +2585,15 @@ const AppComponent = function App() {
   useEffect(() => {
     autoScrolledRef.current = false;
   }, [user?.n]);
+
+  // Every navigation (tab, detail page, info section, note editor) opens at the top.
+  // Without this the body keeps the previous scroll offset, so a short detail page
+  // tapped from deep in a list appears scrolled to its bottom.
+  useEffect(() => {
+    try {
+      window.scrollTo(0, 0);
+    } catch (e) {}
+  }, [tab, detail, infoSection, noteEdit]);
 
   // Auto-scroll Schedule tab to current/next event on first open
   useEffect(() => {
