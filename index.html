@@ -53,6 +53,10 @@
     will-change: transform; }
   [data-theme="dark"] .lpg-tabbar { background: rgba(13,17,23,0.72); }
 
+  /* Summit logo on page backgrounds: white-out in dark mode so the dark wordmark
+     doesn't sit muddy on a near-black background. */
+  [data-theme="dark"] .lpg-logo-adaptive { filter: brightness(0) invert(1); opacity: 0.95; }
+
   /* iOS rubber-band overscroll shows the html background-color: paint it footer
      blue so bouncing past the bottom (or top) never flashes white. */
   html { background-color: #005D8C; }
@@ -945,7 +949,7 @@ const MTIMES = ["8:15 AM", "8:37 AM", "8:59 AM", "9:21 AM", "9:43 AM", "10:05 AM
 const BLUE = "#005D8C";
 const LBLUE = "#C1E0EC";
 const DBLUE = "#004870";
-const APP_VERSION = "2026.08.21.16";
+const APP_VERSION = "2026.08.21.17";
 const HEADSHOTS = {
   "Anthony Buck": "anthony-buck.jpg",
   "Brandon Hewett": "brandon-hewett.jpg",
@@ -1606,6 +1610,7 @@ function SummitLogo({
   }, /*#__PURE__*/React.createElement("img", {
     src: SUMMIT_LOGO_IMG,
     alt: "LPGas Growth Summit",
+    className: "lpg-logo-adaptive",
     style: {
       height: isLg ? 70 : 36,
       display: "inline-block",
