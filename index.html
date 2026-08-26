@@ -1314,6 +1314,10 @@ const REG_PREFILL = {
     "golf": true,
     "clubs": "rent",
     "hand": "R"
+  },
+  "mike-demarco": {
+    "golf": true,
+    "clubs": "own"
   }
 };
 const PARTNER_HEADSHOTS = {
@@ -1364,7 +1368,7 @@ const MTIMES = ["8:15 AM", "8:37 AM", "8:59 AM", "9:21 AM", "9:43 AM", "10:05 AM
 const BLUE = "#005D8C";
 const LBLUE = "#C1E0EC";
 const DBLUE = "#004870";
-const APP_VERSION = "2026.08.26.5";
+const APP_VERSION = "2026.08.26.6";
 const HEADSHOTS = {
   "Alexander Delevan": "alexander-delevan.jpg",
   "Ashley Carmon": "ashley-carmon.jpg",
@@ -7283,7 +7287,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(
 // release triggers a fresh install + old caches get cleared.
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    const v = "2026.08.26.5";
+    const v = "2026.08.26.6";
     navigator.serviceWorker.register('sw.js?v=' + v, { scope: './' }).catch(() => {});
   });
 }
