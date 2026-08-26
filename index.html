@@ -2,6 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<link rel="preconnect" href="https://cdnjs.cloudflare.com">
+<link rel="preconnect" href="https://www.gstatic.com">
+<link rel="preconnect" href="https://lpgsummittest-3ea64-default-rtdb.firebaseio.com">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -1361,7 +1364,7 @@ const MTIMES = ["8:15 AM", "8:37 AM", "8:59 AM", "9:21 AM", "9:43 AM", "10:05 AM
 const BLUE = "#005D8C";
 const LBLUE = "#C1E0EC";
 const DBLUE = "#004870";
-const APP_VERSION = "2026.08.26.4";
+const APP_VERSION = "2026.08.26.5";
 const HEADSHOTS = {
   "Alexander Delevan": "alexander-delevan.jpg",
   "Ashley Carmon": "ashley-carmon.jpg",
@@ -5113,6 +5116,8 @@ const AppComponent = function App() {
         flexShrink: 0
       }
     }, PARTNER_HEADSHOTS[rep.n] || HEADSHOTS[rep.n] ? /*#__PURE__*/React.createElement("img", {
+      loading: "lazy",
+      decoding: "async",
       src: "headshots/" + (PARTNER_HEADSHOTS[rep.n] || HEADSHOTS[rep.n]) + "?v=" + APP_VERSION,
       alt: rep.n,
       style: {
@@ -5213,6 +5218,8 @@ const AppComponent = function App() {
       border: "2px solid var(--lpg-border)"
     }
   }, PARTNER_HEADSHOTS[rep.n] || HEADSHOTS[rep.n] ? /*#__PURE__*/React.createElement("img", {
+    loading: "lazy",
+    decoding: "async",
     src: "headshots/" + (PARTNER_HEADSHOTS[rep.n] || HEADSHOTS[rep.n]) + "?v=" + APP_VERSION,
     alt: rep.n,
     style: {
@@ -5386,6 +5393,8 @@ const AppComponent = function App() {
       flexShrink: 0
     }
   }, HEADSHOTS[u.n] ? /*#__PURE__*/React.createElement("img", {
+    loading: "lazy",
+    decoding: "async",
     src: "headshots/" + HEADSHOTS[u.n] + "?v=" + APP_VERSION,
     alt: u.n,
     style: {
@@ -7274,7 +7283,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(
 // release triggers a fresh install + old caches get cleared.
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    const v = "2026.05.15.5";
+    const v = "2026.08.26.5";
     navigator.serviceWorker.register('sw.js?v=' + v, { scope: './' }).catch(() => {});
   });
 }

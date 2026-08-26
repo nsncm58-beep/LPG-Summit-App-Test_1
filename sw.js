@@ -68,10 +68,28 @@ const SHELL = [
   BASE + 'manifest.json',
 ];
 
+// The app cannot boot without these CDN scripts. Pre-cache them (and serve
+// cache-first) so a flaky or captive-portal connection can't strand a device
+// that has loaded the app once. URLs are version-pinned, so cache-first is safe.
+const CDN = [
+  'https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js',
+  'https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js',
+  'https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js',
+  'https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js',
+];
+
 self.addEventListener('install', (e) => {
   e.waitUntil((async () => {
     const cache = await caches.open(CACHE);
     try { await cache.addAll(SHELL); } catch (_) {}
+    // cache.put (not addAll) — addAll rejects the opaque responses no-cors fetches return.
+    await Promise.all(CDN.map(async (u) => {
+      try {
+        const r = await fetch(u, { mode: 'no-cors' });
+        if (r) await cache.put(u, r);
+      } catch (_) {}
+    }));
     self.skipWaiting();
   })());
 });
@@ -95,6 +113,18 @@ self.addEventListener('fetch', (e) => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
 
+  // Boot-critical CDN scripts: cache-first (pre-cached at install; URLs are version-pinned).
+  if (CDN.includes(req.url)) {
+    e.respondWith((async () => {
+      const cached = await caches.match(req.url);
+      if (cached) return cached;
+      const fresh = await fetch(req);
+      try { const c = await caches.open(CACHE); c.put(req.url, fresh.clone()); } catch (_) {}
+      return fresh;
+    })());
+    return;
+  }
+
   // Only handle requests within our origin + app path
   if (url.origin !== self.location.origin) return;
   if (!url.pathname.startsWith(BASE)) return;
@@ -104,14 +134,24 @@ self.addEventListener('fetch', (e) => {
 
   if (isShell) {
     e.respondWith((async () => {
-      try {
+      // Network-first, but only wait 3.5s: on a slow connection the cached
+      // shell opens instantly while the fresh copy keeps downloading in the
+      // background for next launch. No cache yet = keep waiting on network.
+      const network = (async () => {
         const fresh = await fetch(req);
-        const cache = await caches.open(CACHE);
-        cache.put(req, fresh.clone());
+        try {
+          if (fresh && fresh.ok) { const c = await caches.open(CACHE); c.put(req, fresh.clone()); }
+        } catch (_) {}
         return fresh;
-      } catch (_) {
-        const cached = await caches.match(req) || await caches.match(BASE + 'index.html') || await caches.match(BASE);
-        if (cached) return cached;
+      })();
+      const settled = await Promise.race([
+        network.catch(() => '__fail__'),
+        new Promise((res) => setTimeout(() => res('__slow__'), 3500)),
+      ]);
+      if (settled !== '__fail__' && settled !== '__slow__') return settled;
+      const cached = await caches.match(req) || await caches.match(BASE + 'index.html') || await caches.match(BASE);
+      if (cached) { network.catch(() => {}); return cached; }
+      try { return await network; } catch (_) {
         return new Response('Offline — app shell not cached yet.', { status: 503, headers: { 'Content-Type': 'text/plain' } });
       }
     })());
