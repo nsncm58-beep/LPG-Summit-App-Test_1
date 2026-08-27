@@ -1368,7 +1368,7 @@ const MTIMES = ["8:15 AM", "8:37 AM", "8:59 AM", "9:21 AM", "9:43 AM", "10:05 AM
 const BLUE = "#005D8C";
 const LBLUE = "#C1E0EC";
 const DBLUE = "#004870";
-const APP_VERSION = "2026.08.26.9";
+const APP_VERSION = "2026.08.27.1";
 const HEADSHOTS = {
   "Alexander Delevan": "alexander-delevan.jpg",
   "Ashley Carmon": "ashley-carmon.jpg",
@@ -3433,9 +3433,20 @@ const AppComponent = function App() {
   const scheduleMeetingNotifs = useCallback(usr => {
     clearScheduled();
     if (!usr || !("Notification" in window) || Notification.permission !== "granted") return;
-    // Wednesday = Sept 2, 2026 (meetings: usr.w); Thursday = Sept 3, 2026 (meetings: usr.t)
+    // Wednesday = Sept 2, 2026 (meetings: usr.w); Thursday = Sept 3, 2026 (meetings: usr.t).
+    // Staff have no personal meetings, so they get a 5-minute heads-up before EVERY
+    // meeting slot (9 Wed, 12 Thu); attendees/partners keep 2-minute personal reminders.
+    const isStaff = usr.r === "staff";
+    const leadMin = isStaff ? 5 : 2;
+    const staffSlots = n => MTIMES.slice(0, n).map((t, i) => ["Meeting slot " + (i + 1) + " starting", "all suites"]);
     const eventYear = 2026;
-    const days = [{
+    const days = isStaff ? [{
+      d: new Date(eventYear, 8, 2),
+      meetings: staffSlots(9)
+    }, {
+      d: new Date(eventYear, 8, 3),
+      meetings: staffSlots(12)
+    }] : [{
       d: new Date(eventYear, 8, 2),
       meetings: usr.w
     }, {
@@ -3460,12 +3471,12 @@ const AppComponent = function App() {
         if (ampm === "AM" && hr === 12) hr = 0;
         const meetTime = new Date(d);
         meetTime.setHours(hr, mn, 0, 0);
-        const notifTime = meetTime.getTime() - 2 * 60 * 1000;
+        const notifTime = meetTime.getTime() - leadMin * 60 * 1000;
         const delay = notifTime - Date.now();
         if (delay > 0 && delay < 3 * 24 * 60 * 60 * 1000) {
           const tid = setTimeout(() => {
             try {
-              new Notification("Meeting in 2 minutes", {
+              new Notification("Meeting in " + leadMin + " minutes", {
                 body: `${m[0]} - ${m[1]} (${dayNames[di]})`,
                 icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%230E5A8A' width='100' height='100' rx='20'/><text x='50' y='65' text-anchor='middle' fill='white' font-size='40' font-family='sans-serif' font-weight='bold'>LP</text></svg>",
                 tag: `meeting-${di}-${i}`
@@ -6417,7 +6428,7 @@ const AppComponent = function App() {
       color: "var(--lpg-text-muted)",
       marginTop: 2
     }
-  }, "Get notified 2 minutes before each meeting")), /*#__PURE__*/React.createElement("div", {
+  }, "Get notified before each meeting (2 min ahead; staff get 5 min before every slot)")), /*#__PURE__*/React.createElement("div", {
     onClick: () => toggleNotif(!notifEnabled),
     style: {
       width: 48,
@@ -6451,7 +6462,7 @@ const AppComponent = function App() {
     }
   }, /*#__PURE__*/React.createElement(Bell, {
     size: 12
-  }), "Reminders active! You'll be notified 2 min before each meeting."), notifStatus === "denied" && /*#__PURE__*/React.createElement("div", {
+  }), "Reminders active! You'll be notified before each meeting."), notifStatus === "denied" && /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 13,
       color: "#c00",
@@ -7290,7 +7301,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(
 // release triggers a fresh install + old caches get cleared.
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    const v = "2026.08.26.9";
+    const v = "2026.08.27.1";
     navigator.serviceWorker.register('sw.js?v=' + v, { scope: './' }).catch(() => {});
   });
 }
