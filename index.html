@@ -1353,7 +1353,7 @@ const MTIMES = ["8:15 AM", "8:37 AM", "8:59 AM", "9:21 AM", "9:43 AM", "10:05 AM
 const BLUE = "#005D8C";
 const LBLUE = "#C1E0EC";
 const DBLUE = "#004870";
-const APP_VERSION = "2026.08.27.15";
+const APP_VERSION = "2026.08.27.16";
 const HEADSHOTS = {
   "Alexander Delavan": "alexander-delevan.jpg",
   "Ashley Carmon": "ashley-carmon.jpg",
@@ -3591,10 +3591,14 @@ const AppComponent = function App() {
     try {
       await window.storage.set("lpg-photos", JSON.stringify(updated), true);
     } catch (e) {}
+    // window.storage.get REJECTS when a key does not exist yet, so the very first
+    // delete must not let that abort the trash write (isolated try; [] fallback).
+    let trash = [];
     try {
-      let trash = [];
       const r = await window.storage.get("lpg-photos-trash", true);
-      if (r) trash = JSON.parse(r.value) || [];
+      if (r && r.value) trash = JSON.parse(r.value) || [];
+    } catch (e) {}
+    try {
       trash = [{
         ...p,
         deletedBy: user?.n || "?",
@@ -7854,7 +7858,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(
 // release triggers a fresh install + old caches get cleared.
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    const v = "2026.08.27.15";
+    const v = "2026.08.27.16";
     navigator.serviceWorker.register('sw.js?v=' + v, { scope: './' }).catch(() => {});
   });
 }
