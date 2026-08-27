@@ -974,7 +974,7 @@ const PARTNERS = {
     "p": "781-820-6473"
   },
   "PriMedia": {
-    "d": "Company description to come. Company description to come. Company description to come. Company description to come. Company description to come. Company description to come. Company description to come. Company description to come. Company description to come.",
+    "d": "PriMedia is the leading provider of integrated marketing, advertising, communications and cloud-based software solutions to the home comfort industry. Pairing new and innovative digital marketing strategies with proven off-line approaches, PriMedia develops custom, multi-channel marketing campaigns that connect our clients with their customers and prospects, including website design, search engine and AI optimization, strategic planning and branding, event marketing and public relations services, and print, broadcast, out-of-home and OTT advertising. PriMedia takes a 360-degree approach to optimizing your company\u2019s online presence. From website creation, robust customer acquisition and retention strategies to full e-commerce functionality, its proprietary Software as a Service (SaaS) makes your business thrive as never before. Its powerful SaaS lineup helps you attract and automatically onboard more customers, better organize and control your sales pipeline, create greater efficiency in promoting and managing your value-added programs, accelerate cash flow and offer a robust customer portal experience.",
     "w": "primediany.com",
     "p": "800-796-3342"
   },
@@ -1353,7 +1353,7 @@ const MTIMES = ["8:15 AM", "8:37 AM", "8:59 AM", "9:21 AM", "9:43 AM", "10:05 AM
 const BLUE = "#005D8C";
 const LBLUE = "#C1E0EC";
 const DBLUE = "#004870";
-const APP_VERSION = "2026.08.27.14";
+const APP_VERSION = "2026.08.27.15";
 const HEADSHOTS = {
   "Alexander Delavan": "alexander-delevan.jpg",
   "Ashley Carmon": "ashley-carmon.jpg",
@@ -3109,15 +3109,19 @@ const AppComponent = function App() {
   });
   const [tab, setTab] = useState(0);
   const [day, setDay] = useState(() => {
-    // Open on today's event day during the Summit (Wednesday otherwise).
+    // Open on today's event day during the Summit; otherwise the CLOSEST day
+    // (Tuesday before the event starts, Thursday after it ends). Never an
+    // arbitrary middle day (Nate, 2026-08-27).
     try {
       const n = new Date();
       for (const dn of ["Tuesday", "Wednesday", "Thursday"]) {
         const d = EVENT_DATES[dn];
         if (n >= new Date(d[0], d[1], d[2]) && n < new Date(d[0], d[1], d[2] + 1)) return dn;
       }
+      const first = EVENT_DATES["Tuesday"];
+      return n < new Date(first[0], first[1], first[2]) ? "Tuesday" : "Thursday";
     } catch (e) {}
-    return "Wednesday";
+    return "Tuesday";
   });
   const [search, setSearch] = useState("");
   const [notes, setNotes] = useState({});
@@ -7850,7 +7854,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(
 // release triggers a fresh install + old caches get cleared.
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    const v = "2026.08.27.14";
+    const v = "2026.08.27.15";
     navigator.serviceWorker.register('sw.js?v=' + v, { scope: './' }).catch(() => {});
   });
 }
