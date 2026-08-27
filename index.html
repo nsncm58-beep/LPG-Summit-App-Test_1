@@ -1353,7 +1353,7 @@ const MTIMES = ["8:15 AM", "8:37 AM", "8:59 AM", "9:21 AM", "9:43 AM", "10:05 AM
 const BLUE = "#005D8C";
 const LBLUE = "#C1E0EC";
 const DBLUE = "#004870";
-const APP_VERSION = "2026.08.27.17";
+const APP_VERSION = "2026.08.27.18";
 const HEADSHOTS = {
   "Alexander Delavan": "alexander-delevan.jpg",
   "Ashley Carmon": "ashley-carmon.jpg",
@@ -3279,17 +3279,25 @@ const AppComponent = function App() {
       try {
         // Notes are device-local. If this device has none but a pre-privacy cloud
         // copy exists (from before 2026-08-27), import it once so nobody loses notes.
-        const local = await window.storage.get("lpg-notes");
-        if (local) {
-          setNotes(JSON.parse(local.value));
+        // storage.get REJECTS on missing keys, so each read gets its own try or the
+        // throw for "no local notes yet" would skip the migration entirely.
+        let localNotes = null;
+        try {
+          const local = await window.storage.get("lpg-notes");
+          if (local && local.value) localNotes = local.value;
+        } catch (e) {}
+        if (localNotes) {
+          setNotes(JSON.parse(localNotes));
         } else if (user?.n) {
-          const fb = await window.storage.get("lpg-notes-" + user.n, true);
-          if (fb) {
-            setNotes(JSON.parse(fb.value));
-            try {
-              await window.storage.set("lpg-notes", fb.value);
-            } catch (e) {}
-          }
+          try {
+            const fb = await window.storage.get("lpg-notes-" + user.n, true);
+            if (fb && fb.value) {
+              setNotes(JSON.parse(fb.value));
+              try {
+                await window.storage.set("lpg-notes", fb.value);
+              } catch (e) {}
+            }
+          } catch (e) {}
         }
       } catch (e) {}
       try {
@@ -7864,7 +7872,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(
 // release triggers a fresh install + old caches get cleared.
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    const v = "2026.08.27.17";
+    const v = "2026.08.27.18";
     navigator.serviceWorker.register('sw.js?v=' + v, { scope: './' }).catch(() => {});
   });
 }
