@@ -1353,7 +1353,7 @@ const MTIMES = ["8:15 AM", "8:37 AM", "8:59 AM", "9:21 AM", "9:43 AM", "10:05 AM
 const BLUE = "#005D8C";
 const LBLUE = "#C1E0EC";
 const DBLUE = "#004870";
-const APP_VERSION = "2026.08.27.13";
+const APP_VERSION = "2026.08.27.14";
 const HEADSHOTS = {
   "Alexander Delavan": "alexander-delevan.jpg",
   "Ashley Carmon": "ashley-carmon.jpg",
@@ -2931,6 +2931,95 @@ function downloadCsv(filename, csv) {
       alert("Couldn't generate the CSV on this device.");
     } catch (_) {}
   }
+}
+// ---- Photo download helpers ----
+// Downloads use Blob URLs (reliable on iOS Safari + desktop); data-URI anchors are not.
+function dataUriToU8(src) {
+  const b64 = String(src).split(",")[1] || "";
+  const bin = atob(b64);
+  const u8 = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+  return u8;
+}
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.style.display = "none";
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => {
+    try {
+      document.body.removeChild(a);
+    } catch (e) {}
+    try {
+      URL.revokeObjectURL(url);
+    } catch (e) {}
+  }, 2000);
+}
+function downloadOnePhoto(p, label) {
+  try {
+    downloadBlob(new Blob([dataUriToU8(p.src)], {
+      type: "image/jpeg"
+    }), (label || "summit_photo_" + p.id) + ".jpg");
+  } catch (e) {}
+}
+// Minimal ZIP writer (store method, no compression — JPEGs are already compressed).
+// "Download All" hands over ONE .zip; browsers block N sequential downloads after
+// the first without a fresh user gesture each, which is why per-file loops fail.
+function crc32(u8) {
+  if (!crc32.T) {
+    const t = [];
+    for (let n = 0; n < 256; n++) {
+      let c = n;
+      for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ c >>> 1 : c >>> 1;
+      t[n] = c >>> 0;
+    }
+    crc32.T = t;
+  }
+  let c = 0 ^ -1;
+  for (let i = 0; i < u8.length; i++) c = c >>> 8 ^ crc32.T[(c ^ u8[i]) & 0xFF];
+  return (c ^ -1) >>> 0;
+}
+function buildZip(files) {
+  const enc = new TextEncoder();
+  const D = (n, b) => {
+    const a = new Uint8Array(b);
+    let v = n >>> 0;
+    for (let i = 0; i < b; i++) {
+      a[i] = v & 255;
+      v >>>= 8;
+    }
+    return a;
+  };
+  const DOSDATE = 46 << 9 | 9 << 5 | 1; // 2026-09-01
+  const chunks = [],
+    central = [];
+  let offset = 0;
+  files.forEach(f => {
+    const name = enc.encode(f.name),
+      crc = crc32(f.data),
+      sz = f.data.length;
+    [D(0x04034b50, 4), D(20, 2), D(0, 2), D(0, 2), D(0, 2), D(DOSDATE, 2), D(crc, 4), D(sz, 4), D(sz, 4), D(name.length, 2), D(0, 2), name, f.data].forEach(x => chunks.push(x));
+    central.push({
+      name,
+      crc,
+      sz,
+      offset
+    });
+    offset += 30 + name.length + sz;
+  });
+  const cdStart = offset;
+  let cdSize = 0;
+  central.forEach(c => {
+    [D(0x02014b50, 4), D(20, 2), D(20, 2), D(0, 2), D(0, 2), D(0, 2), D(DOSDATE, 2), D(c.crc, 4), D(c.sz, 4), D(c.sz, 4), D(c.name.length, 2), D(0, 2), D(0, 2), D(0, 2), D(0, 2), D(0, 4), D(c.offset, 4), c.name].forEach(x => chunks.push(x));
+    cdSize += 46 + c.name.length;
+  });
+  [D(0x06054b50, 4), D(0, 2), D(0, 2), D(files.length, 2), D(files.length, 2), D(cdSize, 4), D(cdStart, 4), D(0, 2)].forEach(x => chunks.push(x));
+  return new Blob(chunks, {
+    type: "application/zip"
+  });
 }
 function downloadTextFile(filename, text, mime) {
   try {
@@ -6400,16 +6489,14 @@ const AppComponent = function App() {
     size: 14
   }), " Event Info"), /*#__PURE__*/React.createElement("div", {
     style: {
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
       marginBottom: 12
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 17,
       fontWeight: 700,
-      color: "var(--lpg-text)"
+      color: "var(--lpg-text)",
+      marginBottom: 10
     }
   }, "Photo Gallery"), /*#__PURE__*/React.createElement("div", {
     style: {
@@ -6419,38 +6506,41 @@ const AppComponent = function App() {
     }
   }, user?.r === "staff" && photos.length > 0 && /*#__PURE__*/React.createElement("div", {
     onClick: async () => {
-      // Gallery shows only the newest photos; the archive holds the rest.
-      // Fetch it here (staff, on demand) and download everything sequentially
-      // with a delay so browsers don't block the downloads as spam.
+      // One .zip with every photo (visible feed + archive).
       let archive = [];
       try {
         const r = await window.storage.get("lpg-photos-archive", true);
         if (r) archive = JSON.parse(r.value) || [];
       } catch (e) {}
       const all = [...photos, ...archive];
-      all.forEach((p, i) => {
-        setTimeout(() => {
-          const a = document.createElement("a");
-          a.href = p.src;
-          a.download = `summit_photo_${i + 1}.jpg`;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-        }, i * 400);
-      });
+      if (!all.length) return;
+      try {
+        const files = all.map((p, i) => ({
+          name: "summit_photo_" + String(i + 1).padStart(2, "0") + ".jpg",
+          data: dataUriToU8(p.src)
+        }));
+        downloadBlob(buildZip(files), "LPG-Summit-Photos.zip");
+      } catch (e) {
+        try {
+          alert("Could not build the photo file. Try again.");
+        } catch (_) {}
+      }
     },
     style: {
       ...S.btn,
       width: "auto",
-      padding: "8px 12px",
+      padding: "9px 12px",
       fontSize: 13,
       cursor: "pointer",
       background: "#2E7D32",
       display: "flex",
       alignItems: "center",
-      gap: 4
+      gap: 6,
+      whiteSpace: "nowrap"
     }
-  }, "\u2193 All"), user?.r === "staff" && /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement(Download, {
+    size: 14
+  }), "All (zip)"), user?.r === "staff" && /*#__PURE__*/React.createElement("div", {
     onClick: () => {
       const opening = !showTrash;
       setShowTrash(opening);
@@ -6459,23 +6549,25 @@ const AppComponent = function App() {
     style: {
       ...S.btn,
       width: "auto",
-      padding: "8px 12px",
+      padding: "9px 12px",
       fontSize: 13,
       cursor: "pointer",
       background: showTrash ? "#8C1D2F" : "#777",
       display: "flex",
       alignItems: "center",
-      gap: 4
+      gap: 6,
+      whiteSpace: "nowrap"
     }
   }, "Trash"), /*#__PURE__*/React.createElement("label", {
     style: {
       ...S.btn,
       width: "auto",
-      padding: "8px 16px",
-      fontSize: 14,
+      padding: "9px 12px",
+      fontSize: 13,
       display: "flex",
       alignItems: "center",
       gap: 6,
+      whiteSpace: "nowrap",
       cursor: uploadingPhoto ? "wait" : "pointer",
       opacity: uploadingPhoto ? 0.6 : 1,
       pointerEvents: uploadingPhoto ? "none" : "auto"
@@ -6647,14 +6739,7 @@ const AppComponent = function App() {
       gap: 6
     }
   }, user?.r === "staff" && /*#__PURE__*/React.createElement("div", {
-    onClick: () => {
-      const a = document.createElement("a");
-      a.href = p.src;
-      a.download = `summit_photo_${p.id}.jpg`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-    },
+    onClick: () => downloadOnePhoto(p, "summit_photo_" + p.id),
     style: {
       fontSize: 14,
       color: "#fff",
@@ -7765,7 +7850,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(
 // release triggers a fresh install + old caches get cleared.
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    const v = "2026.08.27.13";
+    const v = "2026.08.27.14";
     navigator.serviceWorker.register('sw.js?v=' + v, { scope: './' }).catch(() => {});
   });
 }
