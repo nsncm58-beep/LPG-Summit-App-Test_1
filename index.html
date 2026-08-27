@@ -1353,7 +1353,7 @@ const MTIMES = ["8:15 AM", "8:37 AM", "8:59 AM", "9:21 AM", "9:43 AM", "10:05 AM
 const BLUE = "#005D8C";
 const LBLUE = "#C1E0EC";
 const DBLUE = "#004870";
-const APP_VERSION = "2026.08.27.19";
+const APP_VERSION = "2026.08.27.20";
 const HEADSHOTS = {
   "Alexander Delavan": "alexander-delevan.jpg",
   "Ashley Carmon": "ashley-carmon.jpg",
@@ -2256,6 +2256,9 @@ const EVENT_DATES = {
   Wednesday: [2026, 8, 2],
   Thursday: [2026, 8, 3]
 };
+// Account deactivation unlocks only after the Summit ends (guards against
+// accidentally locking someone out mid-event). Reactivate is never locked.
+const DEACTIVATION_UNLOCK_MS = new Date(2026, 8, 4).getTime(); // Fri Sept 4, 2026 00:00
 function parseTime12(t) {
   // accepts "7:00 AM" or "12:30 PM"; returns {h:0-23,m:0-59} or null
   if (!t) return null;
@@ -3357,16 +3360,16 @@ const AppComponent = function App() {
       } catch (e) {}
     }
   }, [disabledMap, user]);
-  const toggleDisabled = useCallback(async name => {
+  const [confirmDeact, setConfirmDeact] = useState(null); // {name, reactivate}
+  const applyDisabled = useCallback(async (name, reactivate) => {
     const k = regKey(name);
     const next = {
       ...disabledMap
     };
-    if (next[k]) {
-      if (!window.confirm("Reactivate " + name + "? They will be able to sign in again.")) return;
+    if (reactivate) {
       delete next[k];
     } else {
-      if (!window.confirm("Deactivate " + name + "? They will be signed out immediately and blocked from signing in.")) return;
+      if (Date.now() < DEACTIVATION_UNLOCK_MS) return; // belt-and-suspenders with the UI gate
       next[k] = {
         by: user?.n || "staff",
         at: new Date().toLocaleString()
@@ -4643,7 +4646,75 @@ const AppComponent = function App() {
       fontWeight: 700,
       cursor: "pointer"
     }
-  }, "Delete")))), composing && /*#__PURE__*/React.createElement("div", {
+  }, "Delete")))), confirmDeact && /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "fixed",
+      inset: 0,
+      background: "rgba(0,0,0,0.5)",
+      zIndex: 1100,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: 24
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "var(--lpg-card)",
+      borderRadius: 16,
+      padding: 22,
+      maxWidth: 340,
+      width: "100%",
+      boxShadow: "0 20px 60px rgba(0,0,0,0.3)"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 16,
+      fontWeight: 700,
+      color: "var(--lpg-text)",
+      marginBottom: 8
+    }
+  }, confirmDeact.reactivate ? "Reactivate" : "Deactivate", " ", confirmDeact.name, "?"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 13,
+      color: "var(--lpg-text-muted)",
+      marginBottom: 16,
+      lineHeight: 1.5
+    }
+  }, confirmDeact.reactivate ? "They will be able to sign in to the app again." : "They will be signed out immediately and blocked from signing in. You can undo this at any time with Reactivate."), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 8
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => setConfirmDeact(null),
+    style: {
+      flex: 1,
+      padding: 11,
+      background: "#eee",
+      color: "var(--lpg-text-muted)",
+      border: "none",
+      borderRadius: 8,
+      fontSize: 15,
+      fontWeight: 600,
+      cursor: "pointer"
+    }
+  }, "Cancel"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => {
+      applyDisabled(confirmDeact.name, confirmDeact.reactivate);
+      setConfirmDeact(null);
+    },
+    style: {
+      flex: 1,
+      padding: 11,
+      background: confirmDeact.reactivate ? "#2E7D32" : "#c00",
+      color: "#fff",
+      border: "none",
+      borderRadius: 8,
+      fontSize: 15,
+      fontWeight: 700,
+      cursor: "pointer"
+    }
+  }, confirmDeact.reactivate ? "Reactivate" : "Deactivate")))), composing && /*#__PURE__*/React.createElement("div", {
     style: {
       position: "fixed",
       top: 0,
@@ -7233,7 +7304,7 @@ const AppComponent = function App() {
       color: "var(--lpg-text-muted)",
       padding: "0 4px 10px"
     }
-  }, "Staff only. Use the search bar above to find someone fast."), (() => {
+  }, "Staff only. Use the search bar above to find someone fast.", Date.now() < DEACTIVATION_UNLOCK_MS && " Account deactivation unlocks after the Summit ends (Sept 4)."), (() => {
     const q = search.trim().toLowerCase();
     const list = USERS.filter(u => q ? (u.n + " " + u.c + " " + u.pw).toLowerCase().includes(q) : true);
     const groups = [["Staff", "staff"], ["Retailers", "retailer"], ["Partners & Speaker", "partner"]];
@@ -7297,8 +7368,11 @@ const AppComponent = function App() {
           flexShrink: 0,
           textDecoration: disabledMap[regKey(u.n)] ? "line-through" : "none"
         }
-      }, u.pw), u.r !== "staff" && /*#__PURE__*/React.createElement("div", {
-        onClick: () => toggleDisabled(u.n),
+      }, u.pw), u.r !== "staff" && (disabledMap[regKey(u.n)] ? /*#__PURE__*/React.createElement("div", {
+        onClick: () => setConfirmDeact({
+          name: u.n,
+          reactivate: true
+        }),
         style: {
           fontSize: 11,
           fontWeight: 700,
@@ -7306,10 +7380,37 @@ const AppComponent = function App() {
           cursor: "pointer",
           padding: "4px 8px",
           borderRadius: 6,
-          border: "1px solid " + (disabledMap[regKey(u.n)] ? "#2E7D32" : "#c00"),
-          color: disabledMap[regKey(u.n)] ? "#2E7D32" : "#c00"
+          border: "1px solid #2E7D32",
+          color: "#2E7D32"
         }
-      }, disabledMap[regKey(u.n)] ? "Reactivate" : "Deactivate")))));
+      }, "Reactivate") : Date.now() >= DEACTIVATION_UNLOCK_MS ? /*#__PURE__*/React.createElement("div", {
+        onClick: () => setConfirmDeact({
+          name: u.n,
+          reactivate: false
+        }),
+        style: {
+          fontSize: 11,
+          fontWeight: 700,
+          flexShrink: 0,
+          cursor: "pointer",
+          padding: "4px 8px",
+          borderRadius: 6,
+          border: "1px solid #c00",
+          color: "#c00"
+        }
+      }, "Deactivate") : /*#__PURE__*/React.createElement("div", {
+        title: "Unlocks after the Summit",
+        style: {
+          fontSize: 11,
+          fontWeight: 700,
+          flexShrink: 0,
+          padding: "4px 8px",
+          borderRadius: 6,
+          border: "1px solid var(--lpg-border)",
+          color: "var(--lpg-text-faint)",
+          cursor: "not-allowed"
+        }
+      }, "Deactivate"))))));
     });
   })()), tab === 3 && infoSection === "terms" && /*#__PURE__*/React.createElement("div", {
     style: {
@@ -7886,7 +7987,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(
 // release triggers a fresh install + old caches get cleared.
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    const v = "2026.08.27.19";
+    const v = "2026.08.27.20";
     navigator.serviceWorker.register('sw.js?v=' + v, { scope: './' }).catch(() => {});
   });
 }
