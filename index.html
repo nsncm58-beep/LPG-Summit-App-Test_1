@@ -1368,7 +1368,7 @@ const MTIMES = ["8:15 AM", "8:37 AM", "8:59 AM", "9:21 AM", "9:43 AM", "10:05 AM
 const BLUE = "#005D8C";
 const LBLUE = "#C1E0EC";
 const DBLUE = "#004870";
-const APP_VERSION = "2026.08.27.1";
+const APP_VERSION = "2026.08.27.2";
 const HEADSHOTS = {
   "Alexander Delevan": "alexander-delevan.jpg",
   "Ashley Carmon": "ashley-carmon.jpg",
@@ -3438,7 +3438,7 @@ const AppComponent = function App() {
     // meeting slot (9 Wed, 12 Thu); attendees/partners keep 2-minute personal reminders.
     const isStaff = usr.r === "staff";
     const leadMin = isStaff ? 5 : 2;
-    const staffSlots = n => MTIMES.slice(0, n).map((t, i) => ["Meeting slot " + (i + 1) + " starting", "all suites"]);
+    const staffSlots = n => MTIMES.slice(0, n).map((t, i) => ["Meeting slot " + (i + 1), t]);
     const eventYear = 2026;
     const days = isStaff ? [{
       d: new Date(eventYear, 8, 2),
@@ -3476,7 +3476,7 @@ const AppComponent = function App() {
         if (delay > 0 && delay < 3 * 24 * 60 * 60 * 1000) {
           const tid = setTimeout(() => {
             try {
-              new Notification("Meeting in " + leadMin + " minutes", {
+              new Notification(isStaff ? "5 minutes until switch" : "Meeting in " + leadMin + " minutes", {
                 body: `${m[0]} - ${m[1]} (${dayNames[di]})`,
                 icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%230E5A8A' width='100' height='100' rx='20'/><text x='50' y='65' text-anchor='middle' fill='white' font-size='40' font-family='sans-serif' font-weight='bold'>LP</text></svg>",
                 tag: `meeting-${di}-${i}`
@@ -7301,7 +7301,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(
 // release triggers a fresh install + old caches get cleared.
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    const v = "2026.08.27.1";
+    const v = "2026.08.27.2";
     navigator.serviceWorker.register('sw.js?v=' + v, { scope: './' }).catch(() => {});
   });
 }
