@@ -1368,7 +1368,7 @@ const MTIMES = ["8:15 AM", "8:37 AM", "8:59 AM", "9:21 AM", "9:43 AM", "10:05 AM
 const BLUE = "#005D8C";
 const LBLUE = "#C1E0EC";
 const DBLUE = "#004870";
-const APP_VERSION = "2026.08.27.5";
+const APP_VERSION = "2026.08.27.6";
 const HEADSHOTS = {
   "Alexander Delevan": "alexander-delevan.jpg",
   "Ashley Carmon": "ashley-carmon.jpg",
@@ -3207,12 +3207,6 @@ const AppComponent = function App() {
       } catch (e) {}
     };
   }, [user]);
-  useEffect(() => {
-    const recent = broadcasts.find(b => Date.now() - b.id < ANNOUNCE_TTL);
-    if (recent && lastSeenBroadcast < recent.id) {
-      setShowBroadcast(recent);
-    }
-  }, [broadcasts, lastSeenBroadcast]);
 
   // Tick every minute so announcements visibly disappear once they cross the 30-min TTL,
   // without needing a refresh or a new broadcast to retrigger the filter.
@@ -4211,75 +4205,7 @@ const AppComponent = function App() {
         boxShadow: "0 1px 3px rgba(0,0,0,0.2)"
       }
     })));
-  })())), showBroadcast && /*#__PURE__*/React.createElement("div", {
-    style: {
-      position: "fixed",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      background: "rgba(0,0,0,0.5)",
-      zIndex: 1000,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      padding: 24
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      background: "#fff",
-      borderRadius: 16,
-      padding: 24,
-      maxWidth: 400,
-      width: "100%",
-      boxShadow: "0 20px 60px rgba(0,0,0,0.3)"
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      alignItems: "center",
-      gap: 10,
-      marginBottom: 16
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      width: 36,
-      height: 36,
-      borderRadius: 18,
-      background: LBLUE,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center"
-    }
-  }, /*#__PURE__*/React.createElement(Megaphone, {
-    size: 18,
-    color: BLUE
-  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 16,
-      fontWeight: 700,
-      color: "var(--lpg-text)"
-    }
-  }, "Announcement"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 12,
-      color: "var(--lpg-text-muted)"
-    }
-  }, showBroadcast.by, " | ", showBroadcast.at))), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 16,
-      color: "var(--lpg-text)",
-      lineHeight: 1.6,
-      marginBottom: 20,
-      whiteSpace: "pre-wrap"
-    }
-  }, showBroadcast.text), /*#__PURE__*/React.createElement("button", {
-    onClick: dismissBroadcast,
-    style: {
-      ...S.btn,
-      fontSize: 16
-    }
-  }, "Got It"))), composing && /*#__PURE__*/React.createElement("div", {
+  })())), composing && /*#__PURE__*/React.createElement("div", {
     style: {
       position: "fixed",
       top: 0,
@@ -4454,7 +4380,79 @@ const AppComponent = function App() {
       opacity: 0.75,
       marginTop: 3
     }
-  }, b.by, " \xB7 ", b.at))))), user.r === "staff" && /*#__PURE__*/React.createElement("div", {
+  }, b.by, " \xB7 ", b.at))))), user.r !== "staff" && tab !== 0 && (() => {
+    const upNext = findUpNext(schedule, now);
+    if (!upNext) return null;
+    return /*#__PURE__*/React.createElement("div", {
+      onClick: () => {
+        setTab(0);
+        if (day !== upNext.day) setDay(upNext.day);
+        setTimeout(() => {
+          const el = document.querySelector(`[data-sched-idx="${upNext.idx}"]`);
+          if (el) el.scrollIntoView({
+            behavior: "smooth",
+            block: "center"
+          });
+        }, 120);
+      },
+      style: {
+        margin: "10px 12px 0",
+        background: `linear-gradient(135deg,${BLUE},${DBLUE})`,
+        color: "#fff",
+        borderRadius: 12,
+        padding: "12px 14px",
+        display: "flex",
+        alignItems: "center",
+        gap: 12,
+        boxShadow: "0 2px 10px rgba(14,90,138,0.25)",
+        cursor: "pointer"
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        width: 38,
+        height: 38,
+        borderRadius: "50%",
+        background: "rgba(255,255,255,0.18)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        flexShrink: 0
+      }
+    }, /*#__PURE__*/React.createElement(Clock, {
+      size: 18,
+      color: "#fff"
+    })), /*#__PURE__*/React.createElement("div", {
+      style: {
+        flex: 1,
+        minWidth: 0
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 12,
+        fontWeight: 700,
+        letterSpacing: 1,
+        opacity: 0.8
+      }
+    }, upNext.minutesUntil <= 0 ? "HAPPENING NOW" : "UP NEXT", " \xB7 ", upNext.day.toUpperCase(), upNext.minutesUntil > 0 ? ` · ${formatCountdown(upNext.minutesUntil).toUpperCase()}` : ""), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 16,
+        fontWeight: 700,
+        marginTop: 2,
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+        whiteSpace: "nowrap"
+      }
+    }, upNext.ev.e), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 13,
+        opacity: 0.85,
+        marginTop: 1
+      }
+    }, upNext.ev.t, upNext.ev.l ? ` · ${upNext.ev.l}` : "")), /*#__PURE__*/React.createElement(ChevronRight, {
+      size: 16,
+      color: "#fff"
+    }));
+  })(), user.r === "staff" && /*#__PURE__*/React.createElement("div", {
     style: {
       padding: "8px 12px 0"
     }
@@ -4522,7 +4520,74 @@ const AppComponent = function App() {
     const upNext = findUpNext(schedule, now);
     return /*#__PURE__*/React.createElement("div", {
       ref: scheduleScrollRef
+    }, upNext && /*#__PURE__*/React.createElement("div", {
+      onClick: () => {
+        if (day !== upNext.day) setDay(upNext.day);
+        setTimeout(() => {
+          const el = document.querySelector(`[data-sched-idx="${upNext.idx}"]`);
+          if (el) el.scrollIntoView({
+            behavior: "smooth",
+            block: "center"
+          });
+        }, 80);
+      },
+      style: {
+        margin: "10px 12px 0",
+        background: `linear-gradient(135deg,${BLUE},${DBLUE})`,
+        color: "#fff",
+        borderRadius: 12,
+        padding: "12px 14px",
+        display: "flex",
+        alignItems: "center",
+        gap: 12,
+        boxShadow: "0 2px 10px rgba(14,90,138,0.25)",
+        cursor: "pointer"
+      }
     }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        width: 38,
+        height: 38,
+        borderRadius: "50%",
+        background: "rgba(255,255,255,0.18)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        flexShrink: 0
+      }
+    }, /*#__PURE__*/React.createElement(Clock, {
+      size: 18,
+      color: "#fff"
+    })), /*#__PURE__*/React.createElement("div", {
+      style: {
+        flex: 1,
+        minWidth: 0
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 12,
+        fontWeight: 700,
+        letterSpacing: 1,
+        opacity: 0.8
+      }
+    }, upNext.minutesUntil <= 0 ? "HAPPENING NOW" : "UP NEXT", " \xB7 ", upNext.day.toUpperCase(), upNext.minutesUntil > 0 ? ` · ${formatCountdown(upNext.minutesUntil).toUpperCase()}` : ""), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 16,
+        fontWeight: 700,
+        marginTop: 2,
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+        whiteSpace: "nowrap"
+      }
+    }, upNext.ev.e), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 13,
+        opacity: 0.85,
+        marginTop: 1
+      }
+    }, upNext.ev.t, upNext.ev.l ? ` · ${upNext.ev.l}` : "")), /*#__PURE__*/React.createElement(ChevronRight, {
+      size: 16,
+      color: "#fff"
+    })), /*#__PURE__*/React.createElement("div", {
       style: {
         display: "flex",
         gap: 8,
@@ -7252,7 +7317,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(
 // release triggers a fresh install + old caches get cleared.
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    const v = "2026.08.27.5";
+    const v = "2026.08.27.6";
     navigator.serviceWorker.register('sw.js?v=' + v, { scope: './' }).catch(() => {});
   });
 }
