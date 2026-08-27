@@ -1368,7 +1368,7 @@ const MTIMES = ["8:15 AM", "8:37 AM", "8:59 AM", "9:21 AM", "9:43 AM", "10:05 AM
 const BLUE = "#005D8C";
 const LBLUE = "#C1E0EC";
 const DBLUE = "#004870";
-const APP_VERSION = "2026.08.27.6";
+const APP_VERSION = "2026.08.27.7";
 const HEADSHOTS = {
   "Alexander Delevan": "alexander-delevan.jpg",
   "Ashley Carmon": "ashley-carmon.jpg",
@@ -3207,6 +3207,12 @@ const AppComponent = function App() {
       } catch (e) {}
     };
   }, [user]);
+  useEffect(() => {
+    const recent = broadcasts.find(b => Date.now() - b.id < ANNOUNCE_TTL);
+    if (recent && lastSeenBroadcast < recent.id) {
+      setShowBroadcast(recent);
+    }
+  }, [broadcasts, lastSeenBroadcast]);
 
   // Tick every minute so announcements visibly disappear once they cross the 30-min TTL,
   // without needing a refresh or a new broadcast to retrigger the filter.
@@ -4205,7 +4211,75 @@ const AppComponent = function App() {
         boxShadow: "0 1px 3px rgba(0,0,0,0.2)"
       }
     })));
-  })())), composing && /*#__PURE__*/React.createElement("div", {
+  })())), showBroadcast && /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "fixed",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      background: "rgba(0,0,0,0.5)",
+      zIndex: 1000,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: 24
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "#fff",
+      borderRadius: 16,
+      padding: 24,
+      maxWidth: 400,
+      width: "100%",
+      boxShadow: "0 20px 60px rgba(0,0,0,0.3)"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 10,
+      marginBottom: 16
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      background: LBLUE,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center"
+    }
+  }, /*#__PURE__*/React.createElement(Megaphone, {
+    size: 18,
+    color: BLUE
+  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 16,
+      fontWeight: 700,
+      color: "var(--lpg-text)"
+    }
+  }, "Announcement"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: "var(--lpg-text-muted)"
+    }
+  }, showBroadcast.by, " | ", showBroadcast.at))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 16,
+      color: "var(--lpg-text)",
+      lineHeight: 1.6,
+      marginBottom: 20,
+      whiteSpace: "pre-wrap"
+    }
+  }, showBroadcast.text), /*#__PURE__*/React.createElement("button", {
+    onClick: dismissBroadcast,
+    style: {
+      ...S.btn,
+      fontSize: 16
+    }
+  }, "Got It"))), composing && /*#__PURE__*/React.createElement("div", {
     style: {
       position: "fixed",
       top: 0,
@@ -7317,7 +7391,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(
 // release triggers a fresh install + old caches get cleared.
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    const v = "2026.08.27.6";
+    const v = "2026.08.27.7";
     navigator.serviceWorker.register('sw.js?v=' + v, { scope: './' }).catch(() => {});
   });
 }
