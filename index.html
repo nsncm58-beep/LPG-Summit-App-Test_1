@@ -1368,7 +1368,7 @@ const MTIMES = ["8:15 AM", "8:37 AM", "8:59 AM", "9:21 AM", "9:43 AM", "10:05 AM
 const BLUE = "#005D8C";
 const LBLUE = "#C1E0EC";
 const DBLUE = "#004870";
-const APP_VERSION = "2026.08.27.7";
+const APP_VERSION = "2026.08.27.8";
 const HEADSHOTS = {
   "Alexander Delevan": "alexander-delevan.jpg",
   "Ashley Carmon": "ashley-carmon.jpg",
@@ -2363,9 +2363,13 @@ function formatCountdown(mins) {
 // and on a 1-minute ticking interval so the UI auto-clears without a refresh.
 const ANNOUNCE_TTL = 30 * 60 * 1000;
 
-// Photo gallery safety caps — keep RTDB storage well under the Spark 1 GB limit.
-// At ~250-500 KB per stored base64 photo, 50 photos × 500 KB ≈ 25 MB (2.5% of cap).
-const MAX_GALLERY_PHOTOS = 50;
+// Photo gallery caps (Nate, 2026-08-27): the live gallery feed keeps only the newest
+// photos so every open stays light on hotel Wi-Fi (~15 x 300 KB ≈ 4.5 MB worst case).
+// Older photos roll into shared/lpg-photos-archive (fetched ONLY by the staff
+// "Download All" button), up to 100 total; beyond that the oldest are dropped.
+// Storage worst case: 100 x 500 KB ≈ 50 MB, 5% of the free 1 GB RTDB cap.
+const GALLERY_VISIBLE_MAX = 15;
+const GALLERY_TOTAL_MAX = 100;
 const MAX_PHOTO_BYTES = 600 * 1024; // hard reject anything still over 600 KB after retries
 
 // Approximate decoded size of a base64 dataURL (chars * 0.75 ≈ raw bytes).
@@ -3404,11 +3408,25 @@ const AppComponent = function App() {
         by: user?.n || "Unknown",
         at: new Date().toLocaleString()
       };
-      const updated = [newPhoto, ...photos].slice(0, MAX_GALLERY_PHOTOS);
-      setPhotos(updated);
+      const updated = [newPhoto, ...photos];
+      const visible = updated.slice(0, GALLERY_VISIBLE_MAX);
+      const overflow = updated.slice(GALLERY_VISIBLE_MAX);
+      setPhotos(visible);
       try {
-        await window.storage.set("lpg-photos", JSON.stringify(updated), true);
+        await window.storage.set("lpg-photos", JSON.stringify(visible), true);
       } catch (e) {}
+      if (overflow.length) {
+        // Move the photos that fell out of the live feed into the archive (staff download only).
+        let archive = [];
+        try {
+          const r = await window.storage.get("lpg-photos-archive", true);
+          if (r) archive = JSON.parse(r.value) || [];
+        } catch (e) {}
+        const merged = [...overflow, ...archive].slice(0, GALLERY_TOTAL_MAX - GALLERY_VISIBLE_MAX);
+        try {
+          await window.storage.set("lpg-photos-archive", JSON.stringify(merged), true);
+        } catch (e) {}
+      }
     } catch (err) {
       try {
         alert("Couldn't upload that photo. Try a different one.");
@@ -6163,9 +6181,17 @@ const AppComponent = function App() {
       alignItems: "center"
     }
   }, user?.r === "staff" && photos.length > 0 && /*#__PURE__*/React.createElement("div", {
-    onClick: () => {
-      // Sequential downloads with delay so browsers don't block them as spam
-      photos.forEach((p, i) => {
+    onClick: async () => {
+      // Gallery shows only the newest photos; the archive holds the rest.
+      // Fetch it here (staff, on demand) and download everything sequentially
+      // with a delay so browsers don't block the downloads as spam.
+      let archive = [];
+      try {
+        const r = await window.storage.get("lpg-photos-archive", true);
+        if (r) archive = JSON.parse(r.value) || [];
+      } catch (e) {}
+      const all = [...photos, ...archive];
+      all.forEach((p, i) => {
         setTimeout(() => {
           const a = document.createElement("a");
           a.href = p.src;
@@ -6187,7 +6213,7 @@ const AppComponent = function App() {
       alignItems: "center",
       gap: 4
     }
-  }, "\u2193 All (", photos.length, ")"), /*#__PURE__*/React.createElement("label", {
+  }, "\u2193 All"), /*#__PURE__*/React.createElement("label", {
     style: {
       ...S.btn,
       width: "auto",
@@ -6214,7 +6240,13 @@ const AppComponent = function App() {
       if (e.target.files[0]) addPhoto(e.target.files[0]);
       e.target.value = "";
     }
-  })))), photos.length === 0 && /*#__PURE__*/React.createElement("div", {
+  })))), photos.length >= GALLERY_VISIBLE_MAX && /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12.5,
+      color: "var(--lpg-text-muted)",
+      padding: "0 4px 10px"
+    }
+  }, "Showing the ", GALLERY_VISIBLE_MAX, " newest photos. Every photo is saved", user?.r === "staff" ? ". Download All grabs the full set." : " for the event team."), photos.length === 0 && /*#__PURE__*/React.createElement("div", {
     style: {
       ...S.card,
       textAlign: "center",
@@ -7391,7 +7423,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(
 // release triggers a fresh install + old caches get cleared.
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    const v = "2026.08.27.7";
+    const v = "2026.08.27.8";
     navigator.serviceWorker.register('sw.js?v=' + v, { scope: './' }).catch(() => {});
   });
 }
