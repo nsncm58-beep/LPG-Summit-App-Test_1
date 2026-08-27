@@ -1353,7 +1353,7 @@ const MTIMES = ["8:15 AM", "8:37 AM", "8:59 AM", "9:21 AM", "9:43 AM", "10:05 AM
 const BLUE = "#005D8C";
 const LBLUE = "#C1E0EC";
 const DBLUE = "#004870";
-const APP_VERSION = "2026.08.27.16";
+const APP_VERSION = "2026.08.27.17";
 const HEADSHOTS = {
   "Alexander Delavan": "alexander-delevan.jpg",
   "Ashley Carmon": "ashley-carmon.jpg",
@@ -6749,30 +6749,36 @@ const AppComponent = function App() {
   }, user?.r === "staff" && /*#__PURE__*/React.createElement("div", {
     onClick: () => downloadOnePhoto(p, "summit_photo_" + p.id),
     style: {
-      fontSize: 14,
-      color: "#fff",
-      fontWeight: 700,
-      padding: "4px 8px",
+      width: 30,
+      height: 30,
       background: "#2E7D32",
-      borderRadius: 4,
+      borderRadius: 8,
       cursor: "pointer",
       display: "flex",
       alignItems: "center",
-      gap: 3
+      justifyContent: "center",
+      flexShrink: 0
     }
-  }, "\u2193"), (p.by === user?.n || user?.r === "staff") && /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement(Download, {
+    size: 15,
+    color: "#fff"
+  })), (p.by === user?.n || user?.r === "staff") && /*#__PURE__*/React.createElement("div", {
     onClick: () => setConfirmDeletePhoto(p),
     style: {
-      fontSize: 16,
-      color: "#c00",
+      width: 30,
+      height: 30,
+      background: "#c00",
+      borderRadius: 8,
       cursor: "pointer",
-      fontWeight: 700,
-      padding: "2px 6px",
-      border: "1px solid #c00",
-      borderRadius: 4,
-      lineHeight: 1
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      flexShrink: 0
     }
-  }, "\xD7"))))))), tab === 3 && infoSection === "help" && /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement(X, {
+    size: 15,
+    color: "#fff"
+  })))))))), tab === 3 && infoSection === "help" && /*#__PURE__*/React.createElement("div", {
     style: {
       padding: 12
     }
@@ -7858,7 +7864,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(
 // release triggers a fresh install + old caches get cleared.
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    const v = "2026.08.27.16";
+    const v = "2026.08.27.17";
     navigator.serviceWorker.register('sw.js?v=' + v, { scope: './' }).catch(() => {});
   });
 }
