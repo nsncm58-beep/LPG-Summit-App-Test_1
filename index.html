@@ -472,7 +472,7 @@ const USERS = [{
   "t": [],
   "pw": "dolphin81"
 }, {
-  "n": "Alexander Delevan",
+  "n": "Alex Delavan",
   "c": "PDI Technologies",
   "r": "partner",
   "w": [["Fall River Propane", "Suite 604"], ["Newport Propane", "Suite 604"], ["Owens Energy", "Suite 604"], ["Townsend Energy", "Suite 604"], ["Country Visions Cooperative", "Suite 604"], ["Durkin Fuel & Propane", "Suite 604"], ["Coles Energy", "Suite 604"], ["Headwaters Holdings", "Suite 604"], ["Matador Gas", "Suite 604"]],
@@ -1137,7 +1137,7 @@ const REG_PREFILL = {
   "nancy-thomas": {
     "golf": false
   },
-  "alexander-delevan": {
+  "alex-delavan": {
     "golf": true,
     "clubs": "own"
   },
@@ -1306,7 +1306,7 @@ const REG_PREFILL = {
   }
 };
 const PARTNER_HEADSHOTS = {
-  "Alexander Delevan": "alexander-delevan.jpg",
+  "Alex Delavan": "alexander-delevan.jpg",
   "Ashley Carmon": "ashley-carmon.jpg",
   "Brian Freeth": "brian-freeth.jpg",
   "Brian Humphrey": "brian-humphrey.jpg",
@@ -1353,9 +1353,9 @@ const MTIMES = ["8:15 AM", "8:37 AM", "8:59 AM", "9:21 AM", "9:43 AM", "10:05 AM
 const BLUE = "#005D8C";
 const LBLUE = "#C1E0EC";
 const DBLUE = "#004870";
-const APP_VERSION = "2026.08.27.10";
+const APP_VERSION = "2026.08.27.11";
 const HEADSHOTS = {
-  "Alexander Delevan": "alexander-delevan.jpg",
+  "Alex Delavan": "alexander-delevan.jpg",
   "Ashley Carmon": "ashley-carmon.jpg",
   "Brady Jones": "brady-jones.jpg",
   "Brett Holtz": "brett-holtz.jpg",
@@ -1596,7 +1596,7 @@ const PARTNER_REPS = {
     "e": "nick.quaratiello@pditechnologies.com",
     "p": "781-820-6473"
   }, {
-    "n": "Alexander Delevan",
+    "n": "Alex Delavan",
     "t": "",
     "e": "alex.delavan@pditechnologies.com",
     "p": "470-587-6951"
@@ -7746,7 +7746,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(
 // release triggers a fresh install + old caches get cleared.
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    const v = "2026.08.27.10";
+    const v = "2026.08.27.11";
     navigator.serviceWorker.register('sw.js?v=' + v, { scope: './' }).catch(() => {});
   });
 }
