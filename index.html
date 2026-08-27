@@ -1353,7 +1353,7 @@ const MTIMES = ["8:15 AM", "8:37 AM", "8:59 AM", "9:21 AM", "9:43 AM", "10:05 AM
 const BLUE = "#005D8C";
 const LBLUE = "#C1E0EC";
 const DBLUE = "#004870";
-const APP_VERSION = "2026.08.27.18";
+const APP_VERSION = "2026.08.27.19";
 const HEADSHOTS = {
   "Alexander Delavan": "alexander-delevan.jpg",
   "Ashley Carmon": "ashley-carmon.jpg",
@@ -3529,6 +3529,17 @@ const AppComponent = function App() {
     const header = ["Day", "Time", "Partner", "Suite", "Rating (0-5)", "Flagged", "Note"];
     downloadCsv(`LPG-Summit-Notes-${regKey(user.n) || "notes"}.csv`, csvJoin([header, ...userNoteRows(user, notes, {})]));
   }, [user, notes]);
+
+  // The gallery is loaded once at boot, so a long-open device holds a stale copy.
+  // Every write must re-read the live list first, or one upload from a stale phone
+  // would overwrite (and lose) every photo added since that phone loaded.
+  const freshPhotos = useCallback(async () => {
+    try {
+      const r = await window.storage.get("lpg-photos", true);
+      if (r && r.value) return JSON.parse(r.value) || [];
+    } catch (e) {}
+    return photos;
+  }, [photos]);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const addPhoto = useCallback(async file => {
     if (!file) return;
@@ -3553,7 +3564,8 @@ const AppComponent = function App() {
         by: user?.n || "Unknown",
         at: new Date().toLocaleString()
       };
-      const updated = [newPhoto, ...photos];
+      const base = await freshPhotos();
+      const updated = [newPhoto, ...base.filter(x => x.id !== newPhoto.id)];
       const visible = updated.slice(0, GALLERY_VISIBLE_MAX);
       const overflow = updated.slice(GALLERY_VISIBLE_MAX);
       setPhotos(visible);
@@ -3579,7 +3591,7 @@ const AppComponent = function App() {
     } finally {
       setUploadingPhoto(false);
     }
-  }, [photos, user]);
+  }, [photos, user, freshPhotos]);
   const [confirmDeletePhoto, setConfirmDeletePhoto] = useState(null); // photo pending delete confirmation
   const [viewPhoto, setViewPhoto] = useState(null); // lightbox
   const [showTrash, setShowTrash] = useState(false); // staff trash panel
@@ -3594,8 +3606,9 @@ const AppComponent = function App() {
   }, []);
   const deletePhoto = useCallback(async p => {
     // Deleted photos move to a staff-only trash rather than vanishing.
-    const updated = photos.filter(x => x.id !== p.id);
-    setPhotos(updated);
+    const base = await freshPhotos();
+    const updated = base.filter(x => x.id !== p.id);
+    setPhotos(updated.slice(0, GALLERY_VISIBLE_MAX));
     try {
       await window.storage.set("lpg-photos", JSON.stringify(updated), true);
     } catch (e) {}
@@ -3615,7 +3628,7 @@ const AppComponent = function App() {
       await window.storage.set("lpg-photos-trash", JSON.stringify(trash), true);
       setTrashItems(trash);
     } catch (e) {}
-  }, [photos, user]);
+  }, [photos, user, freshPhotos]);
   const restorePhoto = useCallback(async p => {
     const trash = (trashItems || []).filter(x => x.id !== p.id);
     setTrashItems(trash);
@@ -3628,7 +3641,8 @@ const AppComponent = function App() {
       by: p.by,
       at: p.at
     };
-    const updated = [clean, ...photos];
+    const base = await freshPhotos();
+    const updated = [clean, ...base.filter(x => x.id !== p.id)];
     const visible = updated.slice(0, GALLERY_VISIBLE_MAX);
     const overflow = updated.slice(GALLERY_VISIBLE_MAX);
     setPhotos(visible);
@@ -3645,7 +3659,7 @@ const AppComponent = function App() {
         await window.storage.set("lpg-photos-archive", JSON.stringify([...overflow, ...archive].slice(0, GALLERY_TOTAL_MAX - GALLERY_VISIBLE_MAX)), true);
       } catch (e) {}
     }
-  }, [trashItems, photos]);
+  }, [trashItems, photos, freshPhotos]);
   const purgePhoto = useCallback(async p => {
     const trash = (trashItems || []).filter(x => x.id !== p.id);
     setTrashItems(trash);
@@ -7872,7 +7886,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(
 // release triggers a fresh install + old caches get cleared.
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    const v = "2026.08.27.18";
+    const v = "2026.08.27.19";
     navigator.serviceWorker.register('sw.js?v=' + v, { scope: './' }).catch(() => {});
   });
 }
