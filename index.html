@@ -55,6 +55,12 @@
     box-shadow: 0 8px 30px rgba(0,0,0,0.22); display: flex; padding: 7px 8px; gap: 2px;
     will-change: transform; }
   [data-theme="dark"] .lpg-tabbar { background: rgba(13,17,23,0.72); }
+  /* While the on-screen keyboard is open, slide the bar out of view. iOS pins
+     position:fixed to the layout viewport, so with the keyboard up the bar
+     otherwise floats mid-screen or strands after dismissal. Driven by a body
+     class (never inline styles on the bar itself; see WebKit note above). */
+  .lpg-tabbar { transition: transform 0.18s ease; }
+  body.lpg-kb .lpg-tabbar { -webkit-transform: translate3d(-50%,250%,0); transform: translate3d(-50%,250%,0); pointer-events: none; }
 
   /* Summit logo on page backgrounds: white-out in dark mode so the dark wordmark
      doesn't sit muddy on a near-black background. */
@@ -844,20 +850,6 @@ const USERS = [{
   "t": [["ADD Systems", "Suite 204"], ["First West Insurance", "Suite 205"], ["Gray, Gray & Gray", "Suite 206"], ["IPS Equipment", "Suite 207"], ["Anova", "Suite 208"], ["Legacy Energy Consulting", "Suite 211"], ["Quality Steel / LP Cylinder", "Suite 302"], ["LP Gas Video", "Suite 304"], ["Mopeka Products", "Suite 305"], ["Tiger Payment Solutions", "Suite 307"], ["JMcLean Energy Insurance", "Suite 404"], ["Nexio", "Suite 405"]],
   "pw": "grove78"
 }, {
-  "n": "Brookes Townsend",
-  "c": "Townsend Energy",
-  "r": "retailer",
-  "w": [["Otodata", "Suite 507"], ["Rural Computer Consultants", "Suite 509"], ["Fisk Tank Carrier", "Suite 602"], ["PDI Technologies", "Suite 604"], ["Westmor Industries", "Suite 606"], ["ADD Systems", "Suite 204"], ["First West Insurance", "Suite 205"], ["Gray, Gray & Gray", "Suite 206"], ["IPS Equipment", "Suite 207"]],
-  "t": [["Anova", "Suite 208"], ["Legacy Energy Consulting", "Suite 211"], ["Quality Steel / LP Cylinder", "Suite 302"], ["LP Gas Video", "Suite 304"], ["Mopeka Products", "Suite 305"], ["Tiger Payment Solutions", "Suite 307"], ["JMcLean Energy Insurance", "Suite 404"], ["Nexio", "Suite 405"], ["One-Tank", "Suite 408"], ["PriMedia", "Suite 411"], ["Cargas", "Suite 504"], ["Metsa Tanks", "Suite 506"]],
-  "pw": "ridge89"
-}, {
-  "n": "Jim Townsend",
-  "c": "Townsend Energy",
-  "r": "retailer",
-  "w": [["Otodata", "Suite 507"], ["Rural Computer Consultants", "Suite 509"], ["Fisk Tank Carrier", "Suite 602"], ["PDI Technologies", "Suite 604"], ["Westmor Industries", "Suite 606"], ["ADD Systems", "Suite 204"], ["First West Insurance", "Suite 205"], ["Gray, Gray & Gray", "Suite 206"], ["IPS Equipment", "Suite 207"]],
-  "t": [["Anova", "Suite 208"], ["Legacy Energy Consulting", "Suite 211"], ["Quality Steel / LP Cylinder", "Suite 302"], ["LP Gas Video", "Suite 304"], ["Mopeka Products", "Suite 305"], ["Tiger Payment Solutions", "Suite 307"], ["JMcLean Energy Insurance", "Suite 404"], ["Nexio", "Suite 405"], ["One-Tank", "Suite 408"], ["PriMedia", "Suite 411"], ["Cargas", "Suite 504"], ["Metsa Tanks", "Suite 506"]],
-  "pw": "delta74"
-}, {
   "n": "Matt Tredinnick",
   "c": "Mopeka Products",
   "r": "partner",
@@ -1294,13 +1286,6 @@ const REG_PREFILL = {
   "cory-grimm": {
     "golf": false
   },
-  "jim-townsend": {
-    "golf": false
-  },
-  "brookes-townsend": {
-    "golf": true,
-    "clubs": "own"
-  },
   "dustin-rose": {
     "golf": true,
     "clubs": "own"
@@ -1368,7 +1353,7 @@ const MTIMES = ["8:15 AM", "8:37 AM", "8:59 AM", "9:21 AM", "9:43 AM", "10:05 AM
 const BLUE = "#005D8C";
 const LBLUE = "#C1E0EC";
 const DBLUE = "#004870";
-const APP_VERSION = "2026.08.27.9";
+const APP_VERSION = "2026.08.27.10";
 const HEADSHOTS = {
   "Alexander Delevan": "alexander-delevan.jpg",
   "Ashley Carmon": "ashley-carmon.jpg",
@@ -1376,7 +1361,6 @@ const HEADSHOTS = {
   "Brett Holtz": "brett-holtz.jpg",
   "Brian Freeth": "brian-freeth.jpg",
   "Brian Humphrey": "brian-humphrey.jpg",
-  "Brookes Townsend": "brookes-townsend.jpg",
   "Bryan Robertson": "bryan-robertson.jpg",
   "Carl Kaplan": "carl-kaplan.jpg",
   "Carl Kiedrowski": "carl-kiedrowski.jpg",
@@ -1410,7 +1394,6 @@ const HEADSHOTS = {
   "Jake Lindauer": "jake-lindauer.jpg",
   "James Hoyt": "james-hoyt.jpg",
   "Jane Hanlon": "jane-hanlon.jpg",
-  "Jim Townsend": "jim-townsend.jpg",
   "Jonathan Loeb": "jonathan-loeb.jpg",
   "Jordan Landrum": "jordan-landrum.jpg",
   "Justin Teegarden": "justin-teegarden.jpg",
@@ -1927,19 +1910,6 @@ const PROFILES = {
     "advice": "My father, idol and mentor \u2013 who, unfortunately, succumbed to cancer in 1997 \u2013 once told me, \u201cEvery gallon we deliver bears your name. Conduct yourself accordingly.\u201d That principle has guided me throughout my career. In this industry, diligence, safety and integrity are not obstacles to success. They are its foundation!",
     "island": "My fly rod."
   },
-  "Jim Townsend": {
-    "title": "Executive Chairman",
-    "city": "Danvers, Massachusetts",
-    "email": "jtownsend@townsendtotalenergy.com",
-    "phone": "978-729-2790",
-    "years": 26,
-    "start": "Responding to the industry\u2019s growth and its important role in meeting customers\u2019 energy needs. I enjoyed being part of a business that provided \u2013 and continues to provide \u2013 dependable solutions not only then, but today and continuing to [prepare] for the needs of the future.",
-    "quote": "We are committed to delivering exceptional customer service every day. Our focus on growth and diversification has allowed us to expand our capabilities while continuing to meet the evolving needs of our customers. We take pride in building strong relationships, embracing new opportunities and positioning our company for long-term success.",
-    "hobbies": "Serve others, spend time with family, travel and play golf.",
-    "teams": "Boston Red Sox and the U.S. Ryder Cup team.",
-    "advice": "From Luke 12:48: For unto whomsoever much is given, of him shall be much required.",
-    "island": "[A] book of best quotes from Winston Churchill."
-  },
   "Don Chagnon": {
     "title": "Executive Adviser",
     "city": "Manchester, Massachusetts",
@@ -1952,19 +1922,6 @@ const PROFILES = {
     "teams": "New England Patriots, Boston Red Sox, Boston Celtics and Boston Bruins.",
     "advice": "Walk through the door every day with a smile on your face and take the opportunity to acknowledge those that allow you to be where you are at.",
     "island": "A magnifying glass. It would allow me to be able to start fires for warmth and amuse me."
-  },
-  "Brookes Townsend": {
-    "title": "President",
-    "city": "Danvers, Massachusetts",
-    "email": "btownsend@townsendtotalenergy.com",
-    "phone": "978-821-8822",
-    "years": 10,
-    "start": "Digging trenches and installing 120s for my family\u2019s business.",
-    "quote": "The Townsend Way: The Townsend Way is a legacy in motion that is built on \u201ca promise made is a promise kept.\u201d Townsend Mission: To honor our promise of consistently delivering reliable services through the strength of our people and the power of our values.",
-    "hobbies": "Spend time with family, golf and snowboard.",
-    "teams": "Boston Red Sox, New England Patriots, Boston Bruins and Boston Celtics.",
-    "advice": "Enjoy the journey.",
-    "island": "Fishing rod."
   },
   "Cory Grimm": {
     "title": "Chief Information Officer",
@@ -2020,7 +1977,7 @@ const SPEAKERS = {
     when: "Thursday, Sept. 3 at 7:15 AM",
     where: "Eleven Restaurant",
     moderator: "Brian Richesson, LP Gas magazine Editor in Chief",
-    panelists: ["J.D. Stem - Stem Brothers", "Justin Teegarden - Clifford Farmers Cooperative Elevator", "Brookes Townsend - Townsend Energy"],
+    panelists: ["J.D. Stem - Stem Brothers", "Justin Teegarden - Clifford Farmers Cooperative Elevator"],
     desc: "Retailers discuss their experiences working on the front lines of the industry. While LP Gas Editor Brian Richesson moderates, all attendees are encouraged to participate in the conversation."
   }
 };
@@ -2100,10 +2057,10 @@ const TERMS = [{
   b: "The App is a complimentary, on-site event companion provided solely for the convenience of registered attendees of the LPGas Growth Summit. It is intended to help you navigate the event by providing access to your personalized meeting schedule, general agenda information, venue details, sponsor recognition, attendee and exhibitor listings, real-time announcements, a personal note-taking feature, and a shared photo gallery. The App is provided exclusively in connection with this event and is not intended for any other purpose."
 }, {
   h: "Information We Collect",
-  b: "In order to provide its features, the App makes available and processes the following categories of information: (a) your name, company affiliation, role, professional headshot, profile details and business contact information you provided during event registration, and your pre-assigned meeting schedule; (b) event logistics information collected during registration or recorded by event staff during the event, such as your check-in status, golf participation, and club rental preferences; (c) any notes you choose to record using the note-taking feature; (d) any photographs you choose to upload to the shared photo gallery; (e) if you elect to enable push notifications, a unique device messaging token that allows us to deliver announcements to your device; and (f) limited technical information such as whether the App is running as an installed home-screen application. The App does not request or require access to your contacts, location, camera roll beyond images you expressly select, or other device data."
+  b: "In order to provide its features, the App makes available and processes the following categories of information: (a) your name, company affiliation, role, professional headshot, profile details and business contact information you provided during event registration, and your pre-assigned meeting schedule; (b) event logistics information collected during registration or recorded by event staff during the event, such as your check-in status, golf participation, and club rental preferences; (c) any notes you choose to record using the note-taking feature, which are stored only on your own device and are not transmitted to or retained by our systems; (d) any photographs you choose to upload to the shared photo gallery; (e) if you elect to enable push notifications, a unique device messaging token that allows us to deliver announcements to your device; and (f) limited technical information such as whether the App is running as an installed home-screen application. The App does not request or require access to your contacts, location, camera roll beyond images you expressly select, or other device data."
 }, {
   h: "How Your Information Is Used and Shared",
-  b: "Information processed by the App is used to operate and improve the event experience, deliver announcements, and enable the collaborative features described in these Terms. Your name, company, role, headshot, and the profile and business contact details you provided during registration may be displayed to other registered attendees within the App directory and schedule features, consistent with the networking purpose of the event. Event logistics information such as check-in and golf details is visible to authorized event staff. IMPORTANT: Notes you record in the App are synchronized to the event's cloud database and are associated with your name. Authorized LPGas event organizers, staff, and administrators may be able to access, view, and retain the content of your notes. You should therefore not store any confidential, proprietary, sensitive, or personal information in your notes that you are unwilling to have viewed by event personnel. We do not sell your information to third parties."
+  b: "Information processed by the App is used to operate and improve the event experience, deliver announcements, and enable the collaborative features described in these Terms. Your name, company, role, headshot, and the profile and business contact details you provided during registration may be displayed to other registered attendees within the App directory and schedule features, consistent with the networking purpose of the event. Event logistics information such as check-in and golf details is visible to authorized event staff. Notes you record in the App are private: they are stored only on your own device, are not synchronized to the event's systems and cannot be accessed or viewed by event organizers or staff. Photographs removed from the shared gallery may be retained by event staff for moderation purposes. We do not sell your information to third parties."
 }, {
   h: "Notes",
   b: "The note-taking feature is provided for your convenience in capturing thoughts during the event. Notes are stored both on your device and in the event's cloud database under an identifier associated with your name, which enables your notes to persist across sessions and devices. Notes are not encrypted end-to-end and are not private to you; as described above, they may be accessible to authorized event personnel. We make no guarantee regarding the permanence, availability, or recoverability of any note, and you are responsible for independently retaining any information you consider important."
@@ -2823,56 +2780,121 @@ function MapZoomModal({
 }
 
 // Standalone component so hooks aren't called inside a .map()
-function AttendeeNotesCard({
-  u,
+// One live notepad shared by every staff device (attendee notes are private now).
+function StaffSharedNotes({
+  user,
   BLUE,
+  LBLUE,
   S
 }) {
-  const [uNotes, setUNotes] = React.useState(null);
+  const [val, setVal] = React.useState("");
+  const [meta, setMeta] = React.useState(null);
+  const [saved, setSaved] = React.useState(true);
+  const skipRef = React.useRef(false);
   React.useEffect(() => {
-    window.storage.get("lpg-notes-" + u.n, true).then(r => {
+    let unsub = null;
+    try {
+      unsub = window.storage.subscribe("lpg-staff-notes", r => {
+        try {
+          const o = JSON.parse(r.value);
+          if (skipRef.current) {
+            skipRef.current = false;
+            return;
+          }
+          setVal(o.text || "");
+          setMeta(o);
+        } catch (e) {}
+      });
+    } catch (e) {}
+    window.storage.get("lpg-staff-notes", true).then(r => {
       try {
-        setUNotes(JSON.parse(r.value));
+        const o = JSON.parse(r.value);
+        setVal(o.text || "");
+        setMeta(o);
       } catch (e) {}
     }).catch(() => {});
-  }, [u.n]);
-  const hasnotes = uNotes && Object.values(uNotes).some(n => n.text || n.rating || n.flag);
-  if (!hasnotes) return null;
+    return () => {
+      if (typeof unsub === "function") try {
+        unsub();
+      } catch (e) {}
+    };
+  }, []);
+  const save = async () => {
+    const o = {
+      text: val,
+      by: user.n,
+      at: new Date().toLocaleString()
+    };
+    skipRef.current = true;
+    try {
+      await window.storage.set("lpg-staff-notes", JSON.stringify(o), true);
+      setMeta(o);
+      setSaved(true);
+    } catch (e) {}
+  };
   return /*#__PURE__*/React.createElement("div", {
     style: {
-      ...S.card,
-      marginBottom: 6
+      margin: "0 12px 12px",
+      background: LBLUE,
+      borderRadius: 8,
+      padding: 12
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 14,
       fontWeight: 700,
-      color: BLUE
+      color: BLUE,
+      marginBottom: 4
     }
-  }, u.n, " ", /*#__PURE__*/React.createElement("span", {
+  }, "STAFF SHARED NOTES"), /*#__PURE__*/React.createElement("div", {
     style: {
+      fontSize: 12,
       color: "var(--lpg-text-muted)",
-      fontWeight: 400
+      marginBottom: 8
     }
-  }, "(", u.c, ")")), Object.entries(uNotes).filter(([k, v]) => v.text || v.rating || v.flag).map(([k, v]) => /*#__PURE__*/React.createElement("div", {
-    key: k,
+  }, "One live notepad for the whole team. Anyone on the staff login can view and edit it."), /*#__PURE__*/React.createElement("textarea", {
+    value: val,
+    onChange: e => {
+      setVal(e.target.value);
+      setSaved(false);
+    },
+    placeholder: "Type team notes here...",
     style: {
-      fontSize: 13,
-      color: "#444",
-      padding: "4px 0",
-      borderTop: "1px solid #eee",
-      marginTop: 4
+      width: "100%",
+      minHeight: 120,
+      boxSizing: "border-box",
+      border: "1px solid var(--lpg-border)",
+      borderRadius: 8,
+      padding: 10,
+      fontSize: 15,
+      fontFamily: "inherit",
+      background: "var(--lpg-card)",
+      color: "var(--lpg-text)",
+      resize: "vertical"
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 10,
+      marginTop: 8
     }
   }, /*#__PURE__*/React.createElement("div", {
+    onClick: save,
     style: {
-      fontWeight: 600,
+      ...S.btn,
+      width: "auto",
+      padding: "8px 16px",
+      fontSize: 14,
+      opacity: saved ? 0.6 : 1,
+      cursor: "pointer"
+    }
+  }, saved ? "Saved" : "Save"), meta && meta.at && /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
       color: "var(--lpg-text-muted)"
     }
-  }, k), v.text && /*#__PURE__*/React.createElement("div", null, v.text), v.rating > 0 && /*#__PURE__*/React.createElement("div", null, "★".repeat(v.rating), "☆".repeat(5 - v.rating)), v.flag && /*#__PURE__*/React.createElement("div", {
-    style: {
-      color: "#c00"
-    }
-  }, "\u2691 Flagged"))));
+  }, "Last saved by ", meta.by, " \xB7 ", meta.at)));
 }
 
 // ---- CSV export helpers ----
@@ -3011,7 +3033,6 @@ const AppComponent = function App() {
   const [search, setSearch] = useState("");
   const [notes, setNotes] = useState({});
   const [reg, setReg] = useState({}); // shared attendee check-in/golf registration (staff)
-  const [exportingAll, setExportingAll] = useState(false);
   const [selName, setSelName] = useState("");
   const [pw, setPw] = useState("");
   const [pwErr, setPwErr] = useState(false);
@@ -3163,12 +3184,19 @@ const AppComponent = function App() {
   useEffect(() => {
     (async () => {
       try {
-        // Load from localStorage first (fast), then check Firebase for newer version
+        // Notes are device-local. If this device has none but a pre-privacy cloud
+        // copy exists (from before 2026-08-27), import it once so nobody loses notes.
         const local = await window.storage.get("lpg-notes");
-        if (local) setNotes(JSON.parse(local.value));
-        if (user?.n) {
+        if (local) {
+          setNotes(JSON.parse(local.value));
+        } else if (user?.n) {
           const fb = await window.storage.get("lpg-notes-" + user.n, true);
-          if (fb) setNotes(JSON.parse(fb.value));
+          if (fb) {
+            setNotes(JSON.parse(fb.value));
+            try {
+              await window.storage.set("lpg-notes", fb.value);
+            } catch (e) {}
+          }
         }
       } catch (e) {}
       try {
@@ -3192,6 +3220,62 @@ const AppComponent = function App() {
       } catch (e) {}
     })();
   }, []);
+
+  // Deactivated accounts (staff-managed, post-event): shared registry keyed by regKey(name).
+  // Deactivating signs the person out live and blocks further sign-ins.
+  const [disabledMap, setDisabledMap] = useState({});
+  useEffect(() => {
+    let unsub = null;
+    try {
+      unsub = window.storage.subscribe("lpg-disabled", r => {
+        try {
+          setDisabledMap(JSON.parse(r.value) || {});
+        } catch (e) {}
+      });
+    } catch (e) {}
+    window.storage.get("lpg-disabled", true).then(r => {
+      try {
+        setDisabledMap(JSON.parse(r.value) || {});
+      } catch (e) {}
+    }).catch(() => {});
+    return () => {
+      if (typeof unsub === "function") try {
+        unsub();
+      } catch (e) {}
+    };
+  }, []);
+  useEffect(() => {
+    if (user && user.r !== "staff" && disabledMap[regKey(user.n)]) {
+      setUser(null);
+      setTab(0);
+      try {
+        localStorage.removeItem("lpg-session");
+      } catch (e) {}
+      try {
+        alert("Your account has been deactivated by event staff.");
+      } catch (e) {}
+    }
+  }, [disabledMap, user]);
+  const toggleDisabled = useCallback(async name => {
+    const k = regKey(name);
+    const next = {
+      ...disabledMap
+    };
+    if (next[k]) {
+      if (!window.confirm("Reactivate " + name + "? They will be able to sign in again.")) return;
+      delete next[k];
+    } else {
+      if (!window.confirm("Deactivate " + name + "? They will be signed out immediately and blocked from signing in.")) return;
+      next[k] = {
+        by: user?.n || "staff",
+        at: new Date().toLocaleString()
+      };
+    }
+    setDisabledMap(next);
+    try {
+      await window.storage.set("lpg-disabled", JSON.stringify(next), true);
+    } catch (e) {}
+  }, [disabledMap, user]);
 
   // Real-time broadcasts subscription — new announcements appear instantly without reload
   useEffect(() => {
@@ -3285,15 +3369,12 @@ const AppComponent = function App() {
   }, [broadcasts, user]);
   const saveNotes = useCallback(async n => {
     setNotes(n);
-    // Save to local state AND to Firebase under per-user key so staff can read it
+    // Notes are PRIVATE (2026-08-27, Nate's spec): stored on this device only, never
+    // written to the shared database, and not visible to staff. loadNotes imports any
+    // pre-privacy cloud copy once; nothing is written back.
     try {
       await window.storage.set("lpg-notes", JSON.stringify(n));
     } catch (e) {}
-    if (user?.n) {
-      try {
-        await window.storage.set("lpg-notes-" + user.n, JSON.stringify(n), true);
-      } catch (e) {}
-    }
   }, [user]);
 
   // ---- Attendee check-in / golf registration (staff only) ----
@@ -3347,44 +3428,6 @@ const AppComponent = function App() {
     const header = ["Day", "Time", "Partner", "Suite", "Rating (0-5)", "Flagged", "Note"];
     downloadCsv(`LPG-Summit-Notes-${regKey(user.n) || "notes"}.csv`, csvJoin([header, ...userNoteRows(user, notes, {})]));
   }, [user, notes]);
-
-  // Staff: pull every attendee's saved notes (read per-user from RTDB) into one CSV.
-  const exportAllNotes = useCallback(async () => {
-    setExportingAll(true);
-    try {
-      const people = USERS.filter(u => u.r !== "staff");
-      const results = await Promise.all(people.map(async u => {
-        let nObj = {};
-        try {
-          const r = await window.storage.get("lpg-notes-" + u.n, true);
-          if (r && r.value) nObj = JSON.parse(r.value);
-        } catch (e) {}
-        return {
-          u,
-          nObj
-        };
-      }));
-      const header = ["Attendee", "Company", "Role", "Day", "Time", "Partner", "Suite", "Rating (0-5)", "Flagged", "Note"];
-      const rows = [];
-      results.forEach(({
-        u,
-        nObj
-      }) => {
-        userNoteRows(u, nObj, {
-          onlyWithNotes: true
-        }).forEach(r => rows.push([u.n, u.c, u.r, ...r]));
-      });
-      if (rows.length === 0) {
-        try {
-          alert("No attendee notes have been saved yet.");
-        } catch (_) {}
-        return;
-      }
-      downloadCsv("LPG-Summit-All-Attendee-Notes.csv", csvJoin([header, ...rows]));
-    } finally {
-      setExportingAll(false);
-    }
-  }, []);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const addPhoto = useCallback(async file => {
     if (!file) return;
@@ -3393,9 +3436,10 @@ const AppComponent = function App() {
       // Compress with progressively smaller dimensions/quality until under the per-photo
       // byte cap. Hard-reject if even the smallest pass is still too big, so a single
       // huge photo can't blow past Spark storage limits.
-      let dataUrl = await compressImage(file, 1280, 0.7);
-      if (approxBase64Bytes(dataUrl) > MAX_PHOTO_BYTES) dataUrl = await compressImage(file, 1024, 0.65);
-      if (approxBase64Bytes(dataUrl) > MAX_PHOTO_BYTES) dataUrl = await compressImage(file, 800, 0.6);
+      let dataUrl = await compressImage(file, 2048, 0.85);
+      if (approxBase64Bytes(dataUrl) > MAX_PHOTO_BYTES) dataUrl = await compressImage(file, 1600, 0.8);
+      if (approxBase64Bytes(dataUrl) > MAX_PHOTO_BYTES) dataUrl = await compressImage(file, 1280, 0.7);
+      if (approxBase64Bytes(dataUrl) > MAX_PHOTO_BYTES) dataUrl = await compressImage(file, 1024, 0.6);
       if (approxBase64Bytes(dataUrl) > MAX_PHOTO_BYTES) {
         try {
           alert("That photo is too large to upload. Please try a different one.");
@@ -3435,13 +3479,75 @@ const AppComponent = function App() {
       setUploadingPhoto(false);
     }
   }, [photos, user]);
-  const deletePhoto = useCallback(async id => {
-    const updated = photos.filter(p => p.id !== id);
+  const [confirmDeletePhoto, setConfirmDeletePhoto] = useState(null); // photo pending delete confirmation
+  const [viewPhoto, setViewPhoto] = useState(null); // lightbox
+  const [showTrash, setShowTrash] = useState(false); // staff trash panel
+  const [trashItems, setTrashItems] = useState(null); // null = not loaded yet
+  const loadTrash = useCallback(async () => {
+    try {
+      const r = await window.storage.get("lpg-photos-trash", true);
+      setTrashItems(r ? JSON.parse(r.value) || [] : []);
+    } catch (e) {
+      setTrashItems([]);
+    }
+  }, []);
+  const deletePhoto = useCallback(async p => {
+    // Deleted photos move to a staff-only trash rather than vanishing.
+    const updated = photos.filter(x => x.id !== p.id);
     setPhotos(updated);
     try {
       await window.storage.set("lpg-photos", JSON.stringify(updated), true);
     } catch (e) {}
-  }, [photos]);
+    try {
+      let trash = [];
+      const r = await window.storage.get("lpg-photos-trash", true);
+      if (r) trash = JSON.parse(r.value) || [];
+      trash = [{
+        ...p,
+        deletedBy: user?.n || "?",
+        deletedAt: new Date().toLocaleString()
+      }, ...trash].slice(0, 60);
+      await window.storage.set("lpg-photos-trash", JSON.stringify(trash), true);
+      setTrashItems(trash);
+    } catch (e) {}
+  }, [photos, user]);
+  const restorePhoto = useCallback(async p => {
+    const trash = (trashItems || []).filter(x => x.id !== p.id);
+    setTrashItems(trash);
+    try {
+      await window.storage.set("lpg-photos-trash", JSON.stringify(trash), true);
+    } catch (e) {}
+    const clean = {
+      id: p.id,
+      src: p.src,
+      by: p.by,
+      at: p.at
+    };
+    const updated = [clean, ...photos];
+    const visible = updated.slice(0, GALLERY_VISIBLE_MAX);
+    const overflow = updated.slice(GALLERY_VISIBLE_MAX);
+    setPhotos(visible);
+    try {
+      await window.storage.set("lpg-photos", JSON.stringify(visible), true);
+    } catch (e) {}
+    if (overflow.length) {
+      let archive = [];
+      try {
+        const r = await window.storage.get("lpg-photos-archive", true);
+        if (r) archive = JSON.parse(r.value) || [];
+      } catch (e) {}
+      try {
+        await window.storage.set("lpg-photos-archive", JSON.stringify([...overflow, ...archive].slice(0, GALLERY_TOTAL_MAX - GALLERY_VISIBLE_MAX)), true);
+      } catch (e) {}
+    }
+  }, [trashItems, photos]);
+  const purgePhoto = useCallback(async p => {
+    const trash = (trashItems || []).filter(x => x.id !== p.id);
+    setTrashItems(trash);
+    try {
+      await window.storage.set("lpg-photos-trash", JSON.stringify(trash), true);
+    } catch (e) {}
+  }, [trashItems]);
   const notifTimers = useRef([]);
   const [notifStatus, setNotifStatus] = useState("");
   const clearScheduled = () => {
@@ -3618,6 +3724,13 @@ const AppComponent = function App() {
     }
     if (pw.trim().toLowerCase() !== String(found.pw || "").toLowerCase()) {
       setPwErr(true);
+      return;
+    }
+    if (found.r !== "staff" && disabledMap[regKey(found.n)]) {
+      try {
+        alert("This account has been deactivated by event staff.");
+      } catch (e) {}
+      ;
       return;
     }
     {
@@ -4297,7 +4410,121 @@ const AppComponent = function App() {
       ...S.btn,
       fontSize: 16
     }
-  }, "Got It"))), composing && /*#__PURE__*/React.createElement("div", {
+  }, "Got It"))), viewPhoto && /*#__PURE__*/React.createElement("div", {
+    onClick: () => setViewPhoto(null),
+    style: {
+      position: "fixed",
+      inset: 0,
+      background: "rgba(0,0,0,0.88)",
+      zIndex: 1100,
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: 16
+    }
+  }, /*#__PURE__*/React.createElement("img", {
+    src: viewPhoto.src,
+    alt: "",
+    style: {
+      maxWidth: "100%",
+      maxHeight: "78vh",
+      borderRadius: 10,
+      objectFit: "contain"
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: "#fff",
+      fontSize: 13,
+      opacity: 0.85,
+      marginTop: 10,
+      textAlign: "center"
+    }
+  }, viewPhoto.by, " \xB7 ", viewPhoto.at), /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: "#fff",
+      fontSize: 12,
+      opacity: 0.55,
+      marginTop: 4
+    }
+  }, "Tap anywhere to close")), confirmDeletePhoto && /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "fixed",
+      inset: 0,
+      background: "rgba(0,0,0,0.5)",
+      zIndex: 1100,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: 24
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "var(--lpg-card)",
+      borderRadius: 16,
+      padding: 22,
+      maxWidth: 340,
+      width: "100%",
+      boxShadow: "0 20px 60px rgba(0,0,0,0.3)"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 16,
+      fontWeight: 700,
+      color: "var(--lpg-text)",
+      marginBottom: 8
+    }
+  }, "Delete this photo?"), /*#__PURE__*/React.createElement("img", {
+    src: confirmDeletePhoto.src,
+    alt: "",
+    style: {
+      width: "100%",
+      height: 140,
+      objectFit: "cover",
+      borderRadius: 8,
+      marginBottom: 10
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 13,
+      color: "var(--lpg-text-muted)",
+      marginBottom: 16
+    }
+  }, "It will be removed from the gallery and moved to the staff trash."), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 8
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => setConfirmDeletePhoto(null),
+    style: {
+      flex: 1,
+      padding: 11,
+      background: "#eee",
+      color: "var(--lpg-text-muted)",
+      border: "none",
+      borderRadius: 8,
+      fontSize: 15,
+      fontWeight: 600,
+      cursor: "pointer"
+    }
+  }, "Cancel"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => {
+      deletePhoto(confirmDeletePhoto);
+      setConfirmDeletePhoto(null);
+    },
+    style: {
+      flex: 1,
+      padding: 11,
+      background: "#c00",
+      color: "#fff",
+      border: "none",
+      borderRadius: 8,
+      fontSize: 15,
+      fontWeight: 700,
+      cursor: "pointer"
+    }
+  }, "Delete")))), composing && /*#__PURE__*/React.createElement("div", {
     style: {
       position: "fixed",
       top: 0,
@@ -6213,7 +6440,24 @@ const AppComponent = function App() {
       alignItems: "center",
       gap: 4
     }
-  }, "\u2193 All"), /*#__PURE__*/React.createElement("label", {
+  }, "\u2193 All"), user?.r === "staff" && /*#__PURE__*/React.createElement("div", {
+    onClick: () => {
+      const opening = !showTrash;
+      setShowTrash(opening);
+      if (opening && trashItems === null) loadTrash();
+    },
+    style: {
+      ...S.btn,
+      width: "auto",
+      padding: "8px 12px",
+      fontSize: 13,
+      cursor: "pointer",
+      background: showTrash ? "#8C1D2F" : "#777",
+      display: "flex",
+      alignItems: "center",
+      gap: 4
+    }
+  }, "Trash"), /*#__PURE__*/React.createElement("label", {
     style: {
       ...S.btn,
       width: "auto",
@@ -6231,7 +6475,6 @@ const AppComponent = function App() {
   }), uploadingPhoto ? "Uploading…" : "Add Photo", /*#__PURE__*/React.createElement("input", {
     type: "file",
     accept: "image/*",
-    capture: "environment",
     disabled: uploadingPhoto,
     style: {
       display: "none"
@@ -6240,7 +6483,89 @@ const AppComponent = function App() {
       if (e.target.files[0]) addPhoto(e.target.files[0]);
       e.target.value = "";
     }
-  })))), photos.length >= GALLERY_VISIBLE_MAX && /*#__PURE__*/React.createElement("div", {
+  })))), user?.r === "staff" && showTrash && /*#__PURE__*/React.createElement("div", {
+    style: {
+      margin: "0 0 12px",
+      background: "var(--lpg-card)",
+      border: "1px solid var(--lpg-border)",
+      borderRadius: 10,
+      padding: 12
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 14,
+      fontWeight: 700,
+      color: "#8C1D2F",
+      marginBottom: 6
+    }
+  }, "PHOTO TRASH (STAFF)"), trashItems === null && /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 13,
+      color: "var(--lpg-text-muted)"
+    }
+  }, "Loading..."), trashItems && trashItems.length === 0 && /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 13,
+      color: "var(--lpg-text-muted)"
+    }
+  }, "Trash is empty."), trashItems && trashItems.map(p => /*#__PURE__*/React.createElement("div", {
+    key: p.id,
+    style: {
+      display: "flex",
+      gap: 10,
+      alignItems: "center",
+      padding: "8px 0",
+      borderBottom: "1px solid var(--lpg-border)"
+    }
+  }, /*#__PURE__*/React.createElement("img", {
+    onClick: () => setViewPhoto(p),
+    src: p.src,
+    alt: "",
+    style: {
+      width: 54,
+      height: 54,
+      objectFit: "cover",
+      borderRadius: 8,
+      cursor: "pointer",
+      flexShrink: 0
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      minWidth: 0,
+      fontSize: 12,
+      color: "var(--lpg-text-muted)"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontWeight: 600,
+      color: "var(--lpg-text)"
+    }
+  }, p.by), /*#__PURE__*/React.createElement("div", null, "Deleted by ", p.deletedBy, " \xB7 ", p.deletedAt)), /*#__PURE__*/React.createElement("div", {
+    onClick: () => restorePhoto(p),
+    style: {
+      fontSize: 12,
+      fontWeight: 700,
+      color: "#2E7D32",
+      border: "1px solid #2E7D32",
+      borderRadius: 6,
+      padding: "4px 8px",
+      cursor: "pointer",
+      flexShrink: 0
+    }
+  }, "Restore"), /*#__PURE__*/React.createElement("div", {
+    onClick: () => purgePhoto(p),
+    style: {
+      fontSize: 12,
+      fontWeight: 700,
+      color: "#c00",
+      border: "1px solid #c00",
+      borderRadius: 6,
+      padding: "4px 8px",
+      cursor: "pointer",
+      flexShrink: 0
+    }
+  }, "Delete")))), photos.length >= GALLERY_VISIBLE_MAX && /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 12.5,
       color: "var(--lpg-text-muted)",
@@ -6283,13 +6608,15 @@ const AppComponent = function App() {
       position: "relative"
     }
   }, /*#__PURE__*/React.createElement("img", {
+    onClick: () => setViewPhoto(p),
     src: p.src,
     alt: "",
     style: {
       width: "100%",
       height: 160,
       objectFit: "cover",
-      display: "block"
+      display: "block",
+      cursor: "pointer"
     }
   }), /*#__PURE__*/React.createElement("div", {
     style: {
@@ -6331,7 +6658,7 @@ const AppComponent = function App() {
       gap: 3
     }
   }, "\u2193"), (p.by === user?.n || user?.r === "staff") && /*#__PURE__*/React.createElement("div", {
-    onClick: () => deletePhoto(p.id),
+    onClick: () => setConfirmDeletePhoto(p),
     style: {
       fontSize: 16,
       color: "#c00",
@@ -6835,10 +7162,23 @@ const AppComponent = function App() {
           fontFamily: "Menlo, monospace",
           fontSize: 14,
           fontWeight: 700,
-          color: BLUE,
-          flexShrink: 0
+          color: disabledMap[regKey(u.n)] ? "var(--lpg-text-faint)" : BLUE,
+          flexShrink: 0,
+          textDecoration: disabledMap[regKey(u.n)] ? "line-through" : "none"
         }
-      }, u.pw)))));
+      }, u.pw), u.r !== "staff" && /*#__PURE__*/React.createElement("div", {
+        onClick: () => toggleDisabled(u.n),
+        style: {
+          fontSize: 11,
+          fontWeight: 700,
+          flexShrink: 0,
+          cursor: "pointer",
+          padding: "4px 8px",
+          borderRadius: 6,
+          border: "1px solid " + (disabledMap[regKey(u.n)] ? "#2E7D32" : "#c00"),
+          color: disabledMap[regKey(u.n)] ? "#2E7D32" : "#c00"
+        }
+      }, disabledMap[regKey(u.n)] ? "Reactivate" : "Deactivate")))));
     });
   })()), tab === 3 && infoSection === "terms" && /*#__PURE__*/React.createElement("div", {
     style: {
@@ -6948,44 +7288,12 @@ const AppComponent = function App() {
     }
   }, /*#__PURE__*/React.createElement(Download, {
     size: 15
-  }), " Download My Notes"), user?.r === "staff" && /*#__PURE__*/React.createElement("div", {
-    onClick: () => {
-      if (!exportingAll) exportAllNotes();
-    },
-    style: {
-      ...S.btn,
-      width: "auto",
-      padding: "9px 14px",
-      fontSize: 13,
-      display: "inline-flex",
-      alignItems: "center",
-      gap: 6,
-      background: "#91003D",
-      boxShadow: "0 2px 10px rgba(145,0,61,0.25)",
-      opacity: exportingAll ? 0.6 : 1
-    }
-  }, /*#__PURE__*/React.createElement(Download, {
-    size: 15
-  }), " ", exportingAll ? "Preparing…" : "Export All Attendees")), user?.r === "staff" && /*#__PURE__*/React.createElement("div", {
-    style: {
-      margin: "0 12px 12px",
-      background: LBLUE,
-      borderRadius: 8,
-      padding: 12
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 14,
-      fontWeight: 700,
-      color: BLUE,
-      marginBottom: 8
-    }
-  }, "STAFF: All Attendee Notes"), USERS.filter(u => u.r !== "staff").map(u => /*#__PURE__*/React.createElement(AttendeeNotesCard, {
-    key: u.n,
-    u: u,
+  }), " Download My Notes")), user?.r === "staff" && /*#__PURE__*/React.createElement(StaffSharedNotes, {
+    user: user,
     BLUE: BLUE,
+    LBLUE: LBLUE,
     S: S
-  }))), allMeetings.filter(m => {
+  }), allMeetings.filter(m => {
     const q = search.trim().toLowerCase();
     return !q || (m.name + " " + m.loc).toLowerCase().includes(q);
   }).map(m => {
@@ -7419,11 +7727,26 @@ ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(
 </script>
 <!-- LPG:COMPILED-APP END -->
 <script>
+// Keyboard watcher for the floating tab bar: toggles body.lpg-kb when the visual
+// viewport shrinks (on-screen keyboard). Desktop is unaffected (no real shrink).
+(function(){
+  if(!window.visualViewport) return;
+  var vv=window.visualViewport, raf=null;
+  function apply(){
+    raf=null;
+    document.body.classList.toggle('lpg-kb', (window.innerHeight - vv.height) > 120);
+  }
+  function onchg(){ if(!raf) raf=requestAnimationFrame(apply); }
+  vv.addEventListener('resize', onchg);
+  vv.addEventListener('scroll', onchg);
+})();
+</script>
+<script>
 // Register service worker for offline support. Versioned via APP_VERSION so a new
 // release triggers a fresh install + old caches get cleared.
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    const v = "2026.08.27.9";
+    const v = "2026.08.27.10";
     navigator.serviceWorker.register('sw.js?v=' + v, { scope: './' }).catch(() => {});
   });
 }
