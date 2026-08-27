@@ -1368,7 +1368,7 @@ const MTIMES = ["8:15 AM", "8:37 AM", "8:59 AM", "9:21 AM", "9:43 AM", "10:05 AM
 const BLUE = "#005D8C";
 const LBLUE = "#C1E0EC";
 const DBLUE = "#004870";
-const APP_VERSION = "2026.08.27.2";
+const APP_VERSION = "2026.08.27.3";
 const HEADSHOTS = {
   "Alexander Delevan": "alexander-delevan.jpg",
   "Ashley Carmon": "ashley-carmon.jpg",
@@ -3411,7 +3411,7 @@ const AppComponent = function App() {
       } catch (e) {}
     } catch (err) {
       try {
-        alert("Couldn't upload that photo — try a different one.");
+        alert("Couldn't upload that photo. Try a different one.");
       } catch (_) {}
     } finally {
       setUploadingPhoto(false);
@@ -6428,7 +6428,7 @@ const AppComponent = function App() {
       color: "var(--lpg-text-muted)",
       marginTop: 2
     }
-  }, "Get notified before each meeting (2 min ahead; staff get 5 min before every slot)")), /*#__PURE__*/React.createElement("div", {
+  }, user.r === "staff" ? "5-minute heads-up before every meeting slot" : "Get notified 2 minutes before each meeting")), /*#__PURE__*/React.createElement("div", {
     onClick: () => toggleNotif(!notifEnabled),
     style: {
       width: 48,
@@ -6437,7 +6437,9 @@ const AppComponent = function App() {
       background: notifEnabled ? "#4CAF50" : "#ddd",
       cursor: "pointer",
       position: "relative",
-      transition: "background 0.2s"
+      transition: "background 0.2s",
+      flexShrink: 0,
+      marginLeft: 12
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -6516,7 +6518,7 @@ const AppComponent = function App() {
         color: "var(--lpg-text-muted)",
         marginTop: 2
       }
-    }, "Get announcements and schedule changes \u2014 even when the app isn't open.")), /*#__PURE__*/React.createElement("div", {
+    }, "Get announcements and schedule changes, even when the app isn't open.")), /*#__PURE__*/React.createElement("div", {
       onClick: () => {
         if (!disabled || pushEnabled) togglePush(!pushEnabled);
       },
@@ -6584,7 +6586,7 @@ const AppComponent = function App() {
         color: "#E65100",
         marginTop: 8
       }
-    }, "Not configured yet \u2014 admin needs to paste the Firebase VAPID key into the app."), !ps.supported && ps.configured && /*#__PURE__*/React.createElement("div", {
+    }, "Not configured yet: admin needs to paste the Firebase VAPID key into the app."), !ps.supported && ps.configured && /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 13,
         color: "#c00",
@@ -6622,7 +6624,7 @@ const AppComponent = function App() {
       color: "var(--lpg-text-muted)",
       lineHeight: 1.5
     }
-  }, "Meeting Reminders run locally in your browser \u2014 best when the app stays open in a tab. Push Notifications work even when the app is closed, but require permission and (on iPhone/iPad) installing to the home screen first.")))), tab === 3 && infoSection === "passwords" && user.r === "staff" && /*#__PURE__*/React.createElement("div", {
+  }, "Meeting Reminders run locally in your browser and work best when the app stays open in a tab. Push Notifications work even when the app is closed, but require permission and (on iPhone/iPad) installing to the home screen first.")))), tab === 3 && infoSection === "passwords" && user.r === "staff" && /*#__PURE__*/React.createElement("div", {
     style: {
       padding: 12
     }
@@ -7301,7 +7303,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(
 // release triggers a fresh install + old caches get cleared.
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    const v = "2026.08.27.2";
+    const v = "2026.08.27.3";
     navigator.serviceWorker.register('sw.js?v=' + v, { scope: './' }).catch(() => {});
   });
 }
