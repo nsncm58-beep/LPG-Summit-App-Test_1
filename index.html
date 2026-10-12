@@ -1353,7 +1353,7 @@ const MTIMES = ["8:15 AM", "8:37 AM", "8:59 AM", "9:21 AM", "9:43 AM", "10:05 AM
 const BLUE = "#005D8C";
 const LBLUE = "#C1E0EC";
 const DBLUE = "#004870";
-const APP_VERSION = "2026.08.27.20";
+const APP_VERSION = "2026.10.12.01";
 const HEADSHOTS = {
   "Alexander Delavan": "alexander-delevan.jpg",
   "Ashley Carmon": "ashley-carmon.jpg",
@@ -1963,6 +1963,28 @@ const PROFILES = {
     "island": "Satphone."
   }
 };
+
+// A partner's schedule row names the retailer's COMPANY ("Santa Energy"), never a
+// person, so PARTNERS[ev.e] never matched and the row was dead for partners. Index
+// the retailer roster by a normalized company name so a row can resolve to the real
+// people. Normalizing absorbs the spelling drift between the schedule and the roster
+// ("Sayle Propane LLC" vs "Sayle Propane", "Clifford Farmers Cooperative" vs
+// "Clifford Farmers Cooperative Elevator").
+function companyKey(c) {
+  return String(c || "").toLowerCase().replace(/&/g, " and ").replace(/\b(llc|inc|co|corp|corporation|company|cooperative|coop|elevator|ltd|lp|the)\b/g, " ").replace(/[^a-z0-9]+/g, " ").trim();
+}
+const RETAILERS_BY_COMPANY = USERS.filter(u => u.r === "retailer").reduce((m, u) => {
+  const k = companyKey(u.c);
+  (m[k] = m[k] || []).push(u);
+  return m;
+}, {});
+// Who a meeting row is with. Empty for a retailer's rows (those name a partner and
+// already link to the partner page) and for rows like "LP Gas Video" that are not a
+// retailer at all, which keeps those rows correctly inert.
+function meetingAttendees(ev) {
+  if (!ev || ev.type !== "meeting" || PARTNERS[ev.e]) return [];
+  return RETAILERS_BY_COMPANY[companyKey(ev.e)] || [];
+}
 const SPEAKERS = {
   keynote: {
     name: "Dustin Delay",
@@ -3929,7 +3951,7 @@ const AppComponent = function App() {
       fontWeight: 700,
       marginBottom: 8
     }
-  }, "On iPhone (use Safari):"), /*#__PURE__*/React.createElement("div", null, "1. Tap the ", /*#__PURE__*/React.createElement("b", null, "\u22EF"), " button at the bottom of Safari"), /*#__PURE__*/React.createElement("div", null, "2. Tap ", /*#__PURE__*/React.createElement("b", null, "Share"), " ", /*#__PURE__*/React.createElement("span", {
+  }, "On iPhone (use Safari):"), /*#__PURE__*/React.createElement("div", null, "1. Tap ", /*#__PURE__*/React.createElement("b", null, "Share"), " ", /*#__PURE__*/React.createElement("span", {
     style: {
       display: "inline-flex",
       verticalAlign: "middle",
@@ -3948,7 +3970,13 @@ const AppComponent = function App() {
     strokeLinejoin: "round"
   }, /*#__PURE__*/React.createElement("path", {
     d: "M12 2v14M7 6l5-5 5 5M5 12H4v14h16V12h-1"
-  })))), /*#__PURE__*/React.createElement("div", null, "3. Scroll down and tap ", /*#__PURE__*/React.createElement("b", null, "Add to Home Screen")), /*#__PURE__*/React.createElement("div", null, "4. Tap ", /*#__PURE__*/React.createElement("b", null, "Add"), ", then open the app from your home screen")) : /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+  }))), " at the bottom of Safari"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 13,
+      opacity: 0.75,
+      margin: "2px 0 4px 16px"
+    }
+  }, "See a ", /*#__PURE__*/React.createElement("b", null, "\u22EF"), " button instead? Tap it first, then ", /*#__PURE__*/React.createElement("b", null, "Share"), "."), /*#__PURE__*/React.createElement("div", null, "2. Scroll down and tap ", /*#__PURE__*/React.createElement("b", null, "Add to Home Screen")), /*#__PURE__*/React.createElement("div", null, "3. Tap ", /*#__PURE__*/React.createElement("b", null, "Add"), ", then open the app from your home screen")) : /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     style: {
       fontWeight: 700,
       marginBottom: 8
@@ -4082,6 +4110,16 @@ const AppComponent = function App() {
   const roleLabel = user.r === "partner" ? "Partner" : user.r === "retailer" ? "Retailer" : "Staff";
   const partnerList = Object.entries(PARTNERS).sort((a, b) => a[0].localeCompare(b[0]));
   const retailerUsers = USERS.filter(u => u.r === "retailer").sort((a, b) => a.c.localeCompare(b.c));
+  const openProfile = u => {
+    setTab(2);
+    setSearch("");
+    setDetail({
+      type: "profile",
+      user: u,
+      p: PROFILES[u.n] || {}
+    });
+    window.scrollTo(0, 0);
+  };
   const meetingKeys = MEETINGS_LIVE ? [...user.w.map((m, i) => m ? `wed-${i}` : null), ...user.t.map((m, i) => m ? `thu-${i}` : null)].filter(Boolean) : [];
   const allMeetings = MEETINGS_LIVE ? [...user.w.map((m, i) => m ? {
     key: `wed-${i}`,
@@ -5138,25 +5176,31 @@ const AppComponent = function App() {
     }).map((ev, i) => {
       const start = eventStartDate(day, ev.t);
       const isCurrent = upNext && upNext.day === day && upNext.idx === i;
+      const isPartnerRow = ev.type === "meeting" && !!PARTNERS[ev.e];
+      const met = meetingAttendees(ev);
+      // One counterpart: the whole row opens them. Two from the same company:
+      // the row stays inert and each name is its own target, so a partner can
+      // pick the exact person instead of guessing.
+      const openRow = isPartnerRow ? () => {
+        setTab(1);
+        setSearch("");
+        setDetail({
+          type: "partner",
+          name: ev.e,
+          info: PARTNERS[ev.e]
+        });
+      } : met.length === 1 ? () => openProfile(met[0]) : undefined;
       return /*#__PURE__*/React.createElement("div", {
         key: i,
         "data-sched-idx": i,
-        onClick: ev.type === "meeting" && PARTNERS[ev.e] ? () => {
-          setTab(1);
-          setSearch("");
-          setDetail({
-            type: "partner",
-            name: ev.e,
-            info: PARTNERS[ev.e]
-          });
-        } : undefined,
+        onClick: openRow,
         style: {
           ...S.card,
           display: "flex",
           alignItems: "stretch",
           border: isCurrent ? `2px solid ${BLUE}` : S.card.border,
           boxShadow: isCurrent ? "0 2px 12px rgba(14,90,138,0.2)" : S.card.boxShadow,
-          cursor: ev.type === "meeting" && PARTNERS[ev.e] ? "pointer" : "default"
+          cursor: openRow ? "pointer" : "default"
         }
       }, /*#__PURE__*/React.createElement("div", {
         style: S.badge(ev.type)
@@ -5208,7 +5252,79 @@ const AppComponent = function App() {
           minWidth: 0,
           overflowWrap: "break-word"
         }
-      }, ev.e)), ev.l && !(ev.type === "meeting" && /Suite/i.test(ev.l)) && /*#__PURE__*/React.createElement("div", {
+      }, ev.e)), met.length > 0 && /*#__PURE__*/React.createElement("div", {
+        style: {
+          display: "flex",
+          alignItems: "center",
+          gap: 6,
+          marginTop: 6,
+          flexWrap: "wrap"
+        }
+      }, met.map(pr => /*#__PURE__*/React.createElement("div", {
+        key: pr.n,
+        onClick: e => {
+          e.stopPropagation();
+          openProfile(pr);
+        },
+        style: {
+          display: "flex",
+          alignItems: "center",
+          gap: 4,
+          background: LBLUE,
+          borderRadius: 16,
+          padding: "3px 8px 3px 3px",
+          cursor: "pointer"
+        }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: {
+          width: 24,
+          height: 24,
+          borderRadius: "50%",
+          overflow: "hidden",
+          background: "#546E7A",
+          color: "#fff",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontWeight: 700,
+          fontSize: 9,
+          flexShrink: 0
+        }
+      }, HEADSHOTS[pr.n] ? /*#__PURE__*/React.createElement("img", {
+        loading: "lazy",
+        decoding: "async",
+        src: "headshots/" + HEADSHOTS[pr.n] + "?v=" + APP_VERSION,
+        alt: "",
+        style: {
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          objectPosition: "center top"
+        }
+      }) : getInitials(pr.n)), /*#__PURE__*/React.createElement("div", {
+        style: {
+          minWidth: 0
+        }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 13,
+          fontWeight: 700,
+          color: BLUE,
+          lineHeight: 1.2
+        }
+      }, pr.n), PROFILES[pr.n] && /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 10.5,
+          color: "var(--lpg-text-muted)",
+          lineHeight: 1.2
+        }
+      }, PROFILES[pr.n].title)), /*#__PURE__*/React.createElement(ChevronRight, {
+        size: 13,
+        color: BLUE,
+        style: {
+          flexShrink: 0
+        }
+      })))), ev.l && !(ev.type === "meeting" && /Suite/i.test(ev.l)) && /*#__PURE__*/React.createElement("div", {
         style: {
           fontSize: 13,
           color: "var(--lpg-text-muted)",
@@ -7247,7 +7363,7 @@ const AppComponent = function App() {
         color: "#E65100",
         marginTop: 8
       }
-    }, "On iPhone/iPad, push only works after you install the app. In Safari tap the \u22EF button, then Share, then \"Add to Home Screen,\" then open the app from the icon and enable here."));
+    }, "On iPhone/iPad, push only works after you install the app. In Safari tap Share (on newer iPhones: \u22EF first, then Share), then \"Add to Home Screen,\" then open the app from the icon and enable here."));
   })(), /*#__PURE__*/React.createElement("div", {
     style: {
       ...S.card,
@@ -7987,7 +8103,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(
 // release triggers a fresh install + old caches get cleared.
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    const v = "2026.08.27.20";
+    const v = "2026.10.12.01";
     navigator.serviceWorker.register('sw.js?v=' + v, { scope: './' }).catch(() => {});
   });
 }
