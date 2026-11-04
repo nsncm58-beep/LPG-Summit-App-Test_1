@@ -1353,7 +1353,7 @@ const MTIMES = ["8:15 AM", "8:37 AM", "8:59 AM", "9:21 AM", "9:43 AM", "10:05 AM
 const BLUE = "#005D8C";
 const LBLUE = "#C1E0EC";
 const DBLUE = "#004870";
-const APP_VERSION = "2026.10.12.01";
+const APP_VERSION = "2026.11.04.1";
 const HEADSHOTS = {
   "Alexander Delavan": "alexander-delevan.jpg",
   "Ashley Carmon": "ashley-carmon.jpg",
@@ -8038,7 +8038,7 @@ const AppComponent = function App() {
     })));
   })()))), /*#__PURE__*/React.createElement("div", {
     className: "lpg-tabbar"
-  }, [["Schedule", Calendar, 0], ["Partners", Building2, 1], ["Attendees", Users, 2], ["Notes", StickyNote, 4], ["Info", Info, 3], ...(user.r === "staff" ? [["Check-In", ClipboardCheck, 5]] : [])].map(([t, Icon, ti]) => /*#__PURE__*/React.createElement("div", {
+  }, [["Schedule", Calendar, 0], ["Partners", Building2, 1], ["Attendees", Users, 2], ...(user.r === "staff" ? [] : [["Notes", StickyNote, 4]]), ["Info", Info, 3], ...(user.r === "staff" ? [["Check-In", ClipboardCheck, 5]] : [])].map(([t, Icon, ti]) => /*#__PURE__*/React.createElement("div", {
     key: t,
     onClick: () => {
       setTab(ti);
@@ -8103,7 +8103,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(
 // release triggers a fresh install + old caches get cleared.
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    const v = "2026.10.12.01";
+    const v = "2026.11.04.1";
     navigator.serviceWorker.register('sw.js?v=' + v, { scope: './' }).catch(() => {});
   });
 }
