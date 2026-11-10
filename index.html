@@ -1418,7 +1418,7 @@ const MTIMES = ["8:15 AM", "8:37 AM", "8:59 AM", "9:21 AM", "9:43 AM", "10:05 AM
 const BLUE = "#005D8C";
 const LBLUE = "#C1E0EC";
 const DBLUE = "#004870";
-const APP_VERSION = "2026.11.10.2";
+const APP_VERSION = "2026.11.10.3";
 const HEADSHOTS = {
   "Alexander Delavan": "alexander-delevan.jpg",
   "Ashley Carmon": "ashley-carmon.jpg",
@@ -2346,6 +2346,53 @@ const EVENT_DATES = {
 // Account deactivation unlocks only after the Summit ends (guards against
 // accidentally locking someone out mid-event). Reactivate is never locked.
 const DEACTIVATION_UNLOCK_MS = new Date(2026, 8, 4).getTime(); // Fri Sept 4, 2026 00:00
+// BETWEEN SHOWS (automatic). The full app is open from OFF_DAYS_BEFORE days before the first day in
+// EVENT_DATES until OFF_DAYS_AFTER days after the last day. Outside that window everyone sees a simple
+// screen instead ("see you soon" before, thank-you after); staff get a button into the full app.
+// Nothing to switch by hand: load the next Summit's EVENT_DATES and data and the window moves with it.
+const OFF_DAYS_BEFORE = 7;
+const OFF_DAYS_AFTER = 7;
+function summitPhase(now) {
+  const d = Object.values(EVENT_DATES),
+    f = d[0],
+    l = d[d.length - 1];
+  if (now < new Date(f[0], f[1], f[2] - OFF_DAYS_BEFORE)) return "before";
+  if (now >= new Date(l[0], l[1], l[2] + 1 + OFF_DAYS_AFTER)) return "after";
+  return "open";
+}
+// What the thank-you screens say about the NEXT Summit. Dates are optional: without `start` the
+// screens say "Dates coming soon". Update this when next year's details are announced.
+const NEXT_SUMMIT = {
+  "year": 2027,
+  "dates": "Sept. 14-16, 2027",
+  "start": [2027, 8, 14],
+  "venue": "Reunion Resort, Orlando",
+  "applyUrl": "https://northcoast.wufoo.com/forms/lp-gas-growth-summit-application-2027/",
+  "partnerUrl": "https://lpgasgrowthsummit.com/partner/",
+  "contacts": [{
+    "n": "Brian Kanaba",
+    "t": "Brand Manager, LP Gas",
+    "p": "216-706-3745",
+    "e": "bkanaba@northcoastmedia.net"
+  }, {
+    "n": "Kelli Velasquez",
+    "t": "Account Executive, LP Gas",
+    "p": "216-706-3767",
+    "e": "kvelasquez@northcoastmedia.net"
+  }]
+};
+// Testing only: add ?open=1 to the address to use the full app outside the window on this device
+// (until the tab or app is closed); ?open=0 turns it back off.
+const OFF_EARLY = (() => {
+  try {
+    const q = location.search;
+    if (/[?&]open=1\b/.test(q)) sessionStorage.setItem("lpg-open", "1");
+    if (/[?&]open=0\b/.test(q)) sessionStorage.removeItem("lpg-open");
+    return sessionStorage.getItem("lpg-open") === "1";
+  } catch (e) {
+    return false;
+  }
+})();
 function parseTime12(t) {
   // accepts "7:00 AM" or "12:30 PM"; returns {h:0-23,m:0-59} or null
   if (!t) return null;
@@ -4253,6 +4300,19 @@ const AppComponent = function App() {
       b.style.overflow = prev;
     };
   }, [meetingSheet]);
+
+  // Between-shows state: staff using the full app, a signed-out visitor choosing to sign in, and
+  // staff previewing what attendees or partners see. All reset on sign-out.
+  const [archiveView, setArchiveView] = useState(false);
+  const [offSignIn, setOffSignIn] = useState(false);
+  const [offPreview, setOffPreview] = useState(null);
+  useEffect(() => {
+    if (!user) {
+      setArchiveView(false);
+      setOffSignIn(false);
+      setOffPreview(null);
+    }
+  }, [user]);
   const installOverlayEl = installPrompt ? /*#__PURE__*/React.createElement("div", {
     style: {
       position: "fixed",
@@ -4341,6 +4401,560 @@ const AppComponent = function App() {
       cursor: "pointer"
     }
   }, "Continue in browser for now")) : null;
+
+  // ================= BETWEEN SHOWS (automatic) =================
+  // The full app is open from OFF_DAYS_BEFORE days before the Summit until OFF_DAYS_AFTER days
+  // after it (see summitPhase). Outside that window, opening the app shows a simple screen instead:
+  //   "after"  = thank-you. Attendees are not invited back the following year (the Summit is for new
+  //              attendees), so theirs has no next-year details: thank-you and notes download only.
+  //              Partners get next-Summit details and contacts. (Nate, 2026-11-10)
+  //   "before" = "see you soon" with the Summit dates and the day the app opens.
+  // Staff always get a button into the full app, plus previews of what everyone else sees.
+  const offPhase = OFF_EARLY ? "open" : summitPhase(now);
+  const BETWEEN_SHOWS = offPhase !== "open";
+  const evAll = Object.values(EVENT_DATES),
+    evF = evAll[0],
+    evL = evAll[evAll.length - 1];
+  const SHOW_YEAR = evF[0];
+  const showDates = `${AP_MONTHS[evF[1]]} ${evF[2]}-${evL[2]}, ${evF[0]}`;
+  const openDay = new Date(evF[0], evF[1], evF[2] - OFF_DAYS_BEFORE);
+  const openText = `${AP_MONTHS[openDay.getMonth()]} ${openDay.getDate()}`;
+  // Next-Summit details only count if they are for a show after the one loaded in this app.
+  const nextKnown = !!(NEXT_SUMMIT.start && new Date(NEXT_SUMMIT.start[0], NEXT_SUMMIT.start[1], NEXT_SUMMIT.start[2]) > new Date(evL[0], evL[1], evL[2]));
+  const offSignOut = () => {
+    setUser(null);
+    setTab(0);
+    setSelName("");
+    setPw("");
+    try {
+      localStorage.removeItem("lpg-session");
+    } catch (e) {}
+  };
+  const offScreen = (role, preview) => {
+    const pre = offPhase === "before";
+    const first = preview ? "[first name]" : user ? String(user.n).split(" ")[0] : "";
+    const noteCount = Object.values(notes || {}).filter(n => n && (n.text || n.flag)).length;
+    const target = pre ? new Date(evF[0], evF[1], evF[2]) : nextKnown ? new Date(NEXT_SUMMIT.start[0], NEXT_SUMMIT.start[1], NEXT_SUMMIT.start[2]) : null;
+    const daysOut = target ? Math.max(0, Math.ceil((target.getTime() - now.getTime()) / 86400000)) : null;
+    const city = "Reunion Resort, Orlando".split(", ").pop();
+    const head = pre ? {
+      guest: {
+        over: "LP Gas Growth Summit",
+        title: `Opens ${openText}`,
+        sub: "The app opens a week before the Summit with schedules, partners and event details."
+      },
+      attendee: {
+        over: `${SHOW_YEAR} Summit`,
+        title: `See you soon, ${first}`,
+        sub: `Your schedule and meeting details will be here starting ${openText}.`
+      },
+      partner: {
+        over: `${SHOW_YEAR} Summit`,
+        title: `See you soon, ${first}`,
+        sub: `Your schedule and meeting details will be here starting ${openText}.`
+      },
+      staff: {
+        over: "Staff",
+        title: "Before the show",
+        sub: `Attendees and partners see a "see you soon" screen until ${openText}. Staff can use the app now.`
+      }
+    }[role] : {
+      guest: {
+        over: "LP Gas Growth Summit",
+        title: nextKnown ? `See you in ${NEXT_SUMMIT.year}` : "Thank you",
+        sub: `The ${SHOW_YEAR} Summit has wrapped. Thank you to everyone who joined us in ${city}.`
+      },
+      attendee: {
+        over: `${SHOW_YEAR} Summit complete`,
+        title: `Thank you, ${first}`,
+        sub: `The ${SHOW_YEAR} LP Gas Growth Summit has wrapped. We hope the conversations keep paying off.`
+      },
+      partner: {
+        over: `${SHOW_YEAR} Summit complete`,
+        title: `Thank you, ${first}`,
+        sub: `The ${SHOW_YEAR} Summit has wrapped. Thank you for partnering with us.`
+      },
+      staff: {
+        over: "Staff",
+        title: "Between shows",
+        sub: `Attendees and partners now see a thank-you screen. The ${SHOW_YEAR} app is still here for staff.`
+      }
+    }[role];
+    const linkBtn = {
+      ...N.btn,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 8,
+      textDecoration: "none",
+      boxSizing: "border-box"
+    };
+    const lineBtn = {
+      ...N.btnLine,
+      display: "flex",
+      width: "100%",
+      boxSizing: "border-box",
+      padding: "13px 14px"
+    };
+    const person = c => /*#__PURE__*/React.createElement("div", {
+      key: c.n,
+      className: "lpg-row",
+      style: {
+        padding: "12px 0",
+        gap: 12
+      }
+    }, /*#__PURE__*/React.createElement(Avatar, {
+      name: c.n,
+      file: HEADSHOTS[c.n],
+      size: 44
+    }), /*#__PURE__*/React.createElement("div", {
+      style: {
+        flex: 1,
+        minWidth: 0
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 16,
+        fontWeight: 700
+      }
+    }, c.n), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 13.5,
+        color: C.muted,
+        marginTop: 1
+      }
+    }, c.t)), c.e && /*#__PURE__*/React.createElement("a", {
+      href: `mailto:${c.e}`,
+      "aria-label": `Email ${c.n}`,
+      style: {
+        width: 42,
+        height: 42,
+        borderRadius: 21,
+        background: C.tint,
+        color: C.tintText,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        flexShrink: 0,
+        textDecoration: "none"
+      }
+    }, /*#__PURE__*/React.createElement(Mail, {
+      size: 18
+    })), c.p && /*#__PURE__*/React.createElement("a", {
+      href: `tel:${String(c.p).replace(/\D/g, "")}`,
+      "aria-label": `Call ${c.n}`,
+      style: {
+        width: 42,
+        height: 42,
+        borderRadius: 21,
+        background: C.fill,
+        color: "#fff",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        flexShrink: 0,
+        textDecoration: "none"
+      }
+    }, /*#__PURE__*/React.createElement(Phone, {
+      size: 18
+    })));
+    const showCard = pre || role !== "attendee";
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        ...S.root,
+        background: `linear-gradient(135deg,${DBLUE} 0%,${BLUE} 100%)`
+      }
+    }, installOverlayEl, /*#__PURE__*/React.createElement("div", {
+      style: {
+        padding: "clamp(30px,7vh,54px) 26px clamp(20px,4vh,30px)",
+        color: "#fff",
+        textAlign: "center"
+      }
+    }, /*#__PURE__*/React.createElement("img", {
+      src: SUMMIT_LOGO_IMG,
+      alt: "LPGas Growth Summit",
+      style: {
+        maxWidth: "52%",
+        maxHeight: "min(110px,15vh)",
+        filter: "brightness(0) invert(1)",
+        animation: "fadeSlideUp 0.6s ease-out both"
+      }
+    }), /*#__PURE__*/React.createElement("div", {
+      style: {
+        ...OVER,
+        opacity: 0.7,
+        marginTop: 22,
+        animation: "fadeSlideUp 0.6s ease-out both",
+        animationDelay: "0.1s"
+      }
+    }, head.over), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 30,
+        fontWeight: 900,
+        lineHeight: 1.12,
+        marginTop: 6,
+        animation: "fadeSlideUp 0.6s ease-out both",
+        animationDelay: "0.15s"
+      }
+    }, head.title), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 15.5,
+        opacity: 0.85,
+        lineHeight: 1.5,
+        marginTop: 10,
+        animation: "fadeSlideUp 0.6s ease-out both",
+        animationDelay: "0.2s"
+      }
+    }, head.sub)), /*#__PURE__*/React.createElement("div", {
+      style: {
+        flex: 1,
+        background: "var(--lpg-bg)",
+        color: "var(--lpg-text)",
+        borderRadius: "26px 26px 0 0",
+        padding: `18px 0 calc(${preview ? 92 : 28}px + env(safe-area-inset-bottom))`,
+        boxShadow: "0 -10px 40px rgba(0,0,0,0.18)",
+        animation: "lpgSheet 0.5s cubic-bezier(.2,.8,.2,1) both"
+      }
+    }, role !== "staff" && broadcasts.length > 0 && broadcasts.map(b => /*#__PURE__*/React.createElement("div", {
+      key: b.id,
+      style: {
+        ...N.card,
+        display: "flex",
+        gap: 12,
+        alignItems: "flex-start",
+        borderColor: "transparent",
+        background: C.tint
+      }
+    }, /*#__PURE__*/React.createElement(Megaphone, {
+      size: 18,
+      style: {
+        color: C.tintText,
+        flexShrink: 0,
+        marginTop: 2
+      }
+    }), /*#__PURE__*/React.createElement("div", {
+      style: {
+        flex: 1,
+        minWidth: 0
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        ...OVER,
+        color: C.tintText
+      }
+    }, "Announcement"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 15.5,
+        lineHeight: 1.45,
+        marginTop: 3,
+        whiteSpace: "pre-wrap",
+        overflowWrap: "break-word"
+      }
+    }, b.text), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 12.5,
+        color: C.muted,
+        marginTop: 4
+      }
+    }, b.by, " \xB7 ", b.at)))), showCard && /*#__PURE__*/React.createElement("div", {
+      style: N.card
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        alignItems: "flex-start",
+        gap: 12
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        flex: 1,
+        minWidth: 0
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        ...OVER,
+        color: C.accent
+      }
+    }, pre ? "The Summit" : "Next Summit"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 27,
+        fontWeight: 900,
+        lineHeight: 1.15,
+        marginTop: 4
+      }
+    }, pre ? showDates : nextKnown ? NEXT_SUMMIT.dates : "Dates coming soon"), (pre || nextKnown) && /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 15.5,
+        color: C.muted,
+        marginTop: 5,
+        display: "flex",
+        alignItems: "center",
+        gap: 6
+      }
+    }, /*#__PURE__*/React.createElement(MapPin, {
+      size: 15
+    }), pre ? "Reunion Resort, Orlando" : NEXT_SUMMIT.venue)), daysOut !== null && (pre || role === "staff") && /*#__PURE__*/React.createElement("div", {
+      style: {
+        flexShrink: 0,
+        textAlign: "center",
+        background: C.tint,
+        borderRadius: 14,
+        padding: "8px 14px"
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 26,
+        fontWeight: 900,
+        color: C.tintText,
+        lineHeight: 1.05
+      }
+    }, daysOut), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 10.5,
+        fontWeight: 700,
+        letterSpacing: "0.1em",
+        color: C.tintText,
+        opacity: 0.8
+      }
+    }, daysOut === 1 ? "DAY" : "DAYS"))), !pre && role === "guest" && nextKnown && NEXT_SUMMIT.applyUrl && /*#__PURE__*/React.createElement("a", {
+      href: NEXT_SUMMIT.applyUrl,
+      target: "_blank",
+      rel: "noopener noreferrer",
+      style: {
+        ...linkBtn,
+        marginTop: 16
+      }
+    }, "Apply to attend in ", NEXT_SUMMIT.year, /*#__PURE__*/React.createElement(ChevronRight, {
+      size: 17
+    })), !pre && role === "guest" && NEXT_SUMMIT.partnerUrl && /*#__PURE__*/React.createElement("a", {
+      href: NEXT_SUMMIT.partnerUrl,
+      target: "_blank",
+      rel: "noopener noreferrer",
+      style: {
+        ...lineBtn,
+        marginTop: nextKnown && NEXT_SUMMIT.applyUrl ? 10 : 16
+      }
+    }, nextKnown ? `Become a ${NEXT_SUMMIT.year} partner` : "Visit the Summit website"), !pre && role === "partner" && NEXT_SUMMIT.partnerUrl && /*#__PURE__*/React.createElement("a", {
+      href: NEXT_SUMMIT.partnerUrl,
+      target: "_blank",
+      rel: "noopener noreferrer",
+      style: {
+        ...linkBtn,
+        marginTop: 16
+      }
+    }, nextKnown ? `Partner with us in ${NEXT_SUMMIT.year}` : "Partner with us again", /*#__PURE__*/React.createElement(ChevronRight, {
+      size: 17
+    })), role === "staff" && /*#__PURE__*/React.createElement("div", {
+      onClick: () => {
+        setOffPreview(null);
+        setArchiveView(true);
+      },
+      style: {
+        ...linkBtn,
+        marginTop: 16
+      }
+    }, pre ? "Open the app" : `View the ${SHOW_YEAR} app`, /*#__PURE__*/React.createElement(ChevronRight, {
+      size: 17
+    }))), !pre && role === "partner" && (NEXT_SUMMIT.contacts || []).length > 0 && /*#__PURE__*/React.createElement("div", {
+      style: {
+        ...N.card,
+        paddingTop: 14,
+        paddingBottom: 4
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        ...OVER,
+        color: C.faint
+      }
+    }, "Talk to us about ", nextKnown ? NEXT_SUMMIT.year : "the next Summit"), NEXT_SUMMIT.contacts.map(person)), !pre && (role === "attendee" || role === "partner") && /*#__PURE__*/React.createElement("div", {
+      style: N.card
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        ...OVER,
+        color: C.faint
+      }
+    }, "Your ", SHOW_YEAR, " notes"), noteCount > 0 ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 16,
+        lineHeight: 1.45,
+        margin: "6px 0 12px"
+      }
+    }, "You saved notes on ", /*#__PURE__*/React.createElement("b", null, noteCount, " meeting", noteCount === 1 ? "" : "s"), ". They are stored only on this phone, so download a copy to keep them."), /*#__PURE__*/React.createElement("div", {
+      onClick: exportMyNotes,
+      style: {
+        ...N.btnSoft,
+        display: "flex",
+        padding: "13px 14px"
+      }
+    }, /*#__PURE__*/React.createElement(Download, {
+      size: 16
+    }), "Download my notes")) : /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 15,
+        color: C.muted,
+        lineHeight: 1.45,
+        marginTop: 6
+      }
+    }, "No meeting notes are saved on this phone.")), (pre && (role === "attendee" || role === "partner") || !pre && role === "partner") && /*#__PURE__*/React.createElement("div", {
+      style: {
+        ...N.card,
+        display: "flex",
+        gap: 12,
+        alignItems: "flex-start"
+      }
+    }, /*#__PURE__*/React.createElement(Info, {
+      size: 18,
+      style: {
+        color: C.accent,
+        flexShrink: 0,
+        marginTop: 2
+      }
+    }), /*#__PURE__*/React.createElement("div", {
+      style: {
+        flex: 1,
+        minWidth: 0,
+        fontSize: 15,
+        lineHeight: 1.5
+      }
+    }, pre ? `Keep this app on your phone. Your schedule appears here on ${openText}.` : `Keep this app on your phone. It will update for the ${nextKnown ? NEXT_SUMMIT.year : "next"} Summit.`)), role === "staff" && /*#__PURE__*/React.createElement("div", {
+      style: N.card
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        ...OVER,
+        color: C.faint
+      }
+    }, "What everyone else sees"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 15,
+        lineHeight: 1.5,
+        margin: "6px 0 12px"
+      }
+    }, pre ? `Attendees and partners see the Summit dates and a note that their schedule appears on ${openText}. The full app opens for them that day and closes ${OFF_DAYS_AFTER} days after the Summit.` : `Attendees get a thank-you and a download of their notes. Partners also get ${nextKnown ? `the ${NEXT_SUMMIT.year} dates` : "next-Summit details"}, the partnership link and contacts.`), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        gap: 10
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      onClick: () => setOffPreview("attendee"),
+      style: {
+        ...N.btnLine,
+        flex: 1,
+        minWidth: 0,
+        padding: "12px 8px"
+      }
+    }, "Attendee screen"), /*#__PURE__*/React.createElement("div", {
+      onClick: () => setOffPreview("partner"),
+      style: {
+        ...N.btnLine,
+        flex: 1,
+        minWidth: 0,
+        padding: "12px 8px"
+      }
+    }, "Partner screen"))), role === "staff" && /*#__PURE__*/React.createElement("div", {
+      style: {
+        ...N.card,
+        display: "flex",
+        gap: 12,
+        alignItems: "flex-start"
+      }
+    }, /*#__PURE__*/React.createElement(Megaphone, {
+      size: 18,
+      style: {
+        color: C.accent,
+        flexShrink: 0,
+        marginTop: 2
+      }
+    }), /*#__PURE__*/React.createElement("div", {
+      style: {
+        flex: 1,
+        minWidth: 0,
+        fontSize: 15,
+        lineHeight: 1.5
+      }
+    }, "Announcements still reach everyone who kept notifications on, and show on their screen. Open the app to send one.")), role === "guest" && /*#__PURE__*/React.createElement("div", {
+      onClick: () => setOffSignIn(true),
+      style: {
+        ...N.card,
+        display: "flex",
+        alignItems: "center",
+        gap: 12,
+        cursor: "pointer"
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        flex: 1,
+        minWidth: 0
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 16,
+        fontWeight: 700
+      }
+    }, pre ? "Sign in" : `Attended in ${SHOW_YEAR}?`), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 14,
+        color: C.muted,
+        marginTop: 2
+      }
+    }, pre ? "Staff can use the app now." : "Sign in to download your meeting notes.")), /*#__PURE__*/React.createElement(ChevronRight, {
+      size: 18,
+      style: {
+        color: C.faint
+      }
+    })), /*#__PURE__*/React.createElement("div", {
+      style: {
+        textAlign: "center",
+        fontSize: 13.5,
+        color: C.faint,
+        padding: "8px 20px 0",
+        lineHeight: 1.6
+      }
+    }, user && !preview && /*#__PURE__*/React.createElement("div", null, "Signed in as ", user.n, " \xB7 ", /*#__PURE__*/React.createElement("span", {
+      onClick: offSignOut,
+      style: {
+        color: C.accent,
+        fontWeight: 700,
+        cursor: "pointer"
+      }
+    }, "Sign out")), /*#__PURE__*/React.createElement("div", null, "LPGas Growth Summit app \xB7 version ", APP_VERSION))), preview && /*#__PURE__*/React.createElement("div", {
+      onClick: () => setOffPreview(null),
+      style: {
+        position: "fixed",
+        left: "50%",
+        transform: "translateX(-50%)",
+        bottom: "calc(16px + env(safe-area-inset-bottom))",
+        width: "min(440px, calc(100% - 28px))",
+        background: "#17212b",
+        color: "#fff",
+        borderRadius: 20,
+        padding: "13px 16px",
+        display: "flex",
+        alignItems: "center",
+        gap: 10,
+        boxShadow: "0 10px 34px rgba(0,0,0,0.35)",
+        cursor: "pointer",
+        zIndex: 50
+      }
+    }, /*#__PURE__*/React.createElement(ArrowLeft, {
+      size: 18
+    }), /*#__PURE__*/React.createElement("div", {
+      style: {
+        flex: 1,
+        minWidth: 0,
+        fontSize: 14.5,
+        lineHeight: 1.35
+      }
+    }, /*#__PURE__*/React.createElement("b", null, "Staff preview:"), " what ", role === "partner" ? "partners" : "attendees", " see"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 14,
+        fontWeight: 700,
+        opacity: 0.85
+      }
+    }, "Back")));
+  };
+  if (BETWEEN_SHOWS && !archiveView) {
+    if (!user && !offSignIn) return offScreen("guest", false);
+    if (user) return offScreen(user.r === "staff" ? offPreview || "staff" : user.r === "partner" ? "partner" : "attendee", user.r === "staff" && !!offPreview);
+  }
   if (!user) {
     const allNames = (() => {
       const s = USERS.map(u => u.n).sort();
@@ -4417,14 +5031,14 @@ const AppComponent = function App() {
         fontWeight: 900,
         lineHeight: 1.15
       }
-    }, "Welcome"), /*#__PURE__*/React.createElement("div", {
+    }, offPhase === "after" ? "Welcome back" : "Welcome"), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 15,
         color: C.muted,
         margin: "5px 0 20px",
         lineHeight: 1.45
       }
-    }, "Choose your name to open your personal schedule."), /*#__PURE__*/React.createElement("label", {
+    }, offPhase === "after" ? `Sign in with your ${SHOW_YEAR} Summit name${PASSWORDS_ON ? " and password" : ""} to download your notes.` : offPhase === "before" ? `Staff can use the app now. Everyone else gets their schedule on ${openText}.` : "Choose your name to open your personal schedule."), /*#__PURE__*/React.createElement("label", {
       style: {
         ...OVER,
         color: C.faint,
@@ -4484,7 +5098,17 @@ const AppComponent = function App() {
         fontSize: 17,
         opacity: selName ? 1 : 0.45
       }
-    }, "Sign In")));
+    }, "Sign In"), BETWEEN_SHOWS && /*#__PURE__*/React.createElement("div", {
+      onClick: () => setOffSignIn(false),
+      style: {
+        textAlign: "center",
+        marginTop: 16,
+        fontSize: 15.5,
+        fontWeight: 700,
+        color: C.accent,
+        cursor: "pointer"
+      }
+    }, "Back")));
   }
   const schedule = buildSchedule(user);
   // ---- 2026-11-10 refresh: helpers for the meeting sheet, Directory, Notes and Event Info ----
@@ -4806,7 +5430,39 @@ const AppComponent = function App() {
   }, /*#__PURE__*/React.createElement(Bell, {
     size: 16,
     color: "#fff"
-  }))), !online && /*#__PURE__*/React.createElement("div", {
+  }))), BETWEEN_SHOWS && archiveView && /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "#17212b",
+      color: "#fff",
+      padding: "10px 14px",
+      display: "flex",
+      alignItems: "center",
+      gap: 10,
+      fontSize: 13.5,
+      lineHeight: 1.35
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      minWidth: 0
+    }
+  }, offPhase === "before" ? /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("b", null, "Staff early access."), " Everyone else gets the app on ", openText, ".") : /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("b", null, SHOW_YEAR, " Summit app."), " Staff only. Everyone else sees the between-shows screen.")), /*#__PURE__*/React.createElement("div", {
+    onClick: () => {
+      setArchiveView(false);
+      setTab(0);
+      setDetail(null);
+      setInfoSection(null);
+      setSearch("");
+    },
+    style: {
+      flexShrink: 0,
+      background: "rgba(255,255,255,0.16)",
+      borderRadius: 14,
+      padding: "7px 13px",
+      fontWeight: 700,
+      cursor: "pointer"
+    }
+  }, "Exit")), !online && /*#__PURE__*/React.createElement("div", {
     style: {
       background: "#91003D",
       color: "#fff",
@@ -8962,7 +9618,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(
 // release triggers a fresh install + old caches get cleared.
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    const v = "2026.11.10.2";
+    const v = "2026.11.10.3";
     navigator.serviceWorker.register('sw.js?v=' + v, { scope: './' }).catch(() => {});
   });
 }
